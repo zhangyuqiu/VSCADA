@@ -8,12 +8,15 @@ SOURCES += \
     db_engine.cpp \
     datamonitor.cpp \
     datacontrol.cpp \
-    iocontrol.cpp
+    iocontrol.cpp \
+    config.cpp
 
 HEADERS += \
     db_engine.h \
     datamonitor.h \
     datacontrol.h \
-    iocontrol.h
+    iocontrol.h \
+    typedefs.h \
+    config.h
 
 QT += serialbus widgets

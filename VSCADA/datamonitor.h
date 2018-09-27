@@ -6,6 +6,13 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include "typedefs.h"
+
+#define GLV 0
+#define TSI 1
+#define TSV 2
+#define COOLING 3
+#define SENSOR_DATA_SIZE 6
 
 using namespace std;
 
@@ -14,16 +21,11 @@ class DataMonitor
 public:
     DataMonitor();
     ~DataMonitor();
-    int initThresholds();
-    int checkThreshold(int dataPoint);
+    int initThresholds(vector<vector<string>> config_info);
+    int checkThreshold(datapoint * pt);
+    int initiateRxn(uint32_t rxnCode);
 
-    typedef struct{
-        int minimum;
-        int maximum;
-        string sensor;
-    }threshold;
-
-    vector<threshold> thresholdVector;
+    vector<meta> metaVector;
 };
 
 #endif // DATAMONITOR_H
