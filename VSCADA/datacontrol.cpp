@@ -1,7 +1,7 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, iocontrol * io, GLV_Thread * glvTh, TSI_Thread *tsiTh, TSV_Thread *tsvTh, COOL_Thread *coolTh)
-{
+DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, iocontrol * io,GLV_Thread * glvTh,
+                         TSI_Thread *tsiTh, TSV_Thread *tsvTh, COOL_Thread *coolTh){
     // assign global objects
     monitor = mtr;
     dbase = db;
@@ -12,8 +12,7 @@ DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, iocontrol * io, GLV_
     cool_thread = coolTh;
 }
 
-DataControl::~DataControl()
-{
+DataControl::~DataControl(){
 
 }
 
@@ -109,7 +108,11 @@ int DataControl::change_system_state(int newState){
 int DataControl::collectData(){
     glv_thread->StartInternalThread();
     tsi_thread->StartInternalThread();
+    tsv_thread->StartInternalThread();
+    cool_thread->StartInternalThread();
     glv_thread->WaitForInternalThreadToExit();
     tsi_thread->WaitForInternalThreadToExit();
+    tsv_thread->WaitForInternalThreadToExit();
+    cool_thread->WaitForInternalThreadToExit();
     return 0;
 }
