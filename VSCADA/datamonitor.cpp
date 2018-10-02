@@ -1,8 +1,10 @@
 #include "datamonitor.h"
 
-DataMonitor::DataMonitor()
+DataMonitor::DataMonitor(vector<meta> sensorMetaData, vector<response> responseData)
 {
     //constructor
+    metaVector = sensorMetaData;
+    responseVector = responseData;
 }
 
 DataMonitor::~DataMonitor(){
@@ -29,6 +31,11 @@ int DataMonitor::initThresholds(vector<vector<string>> config_info){
     return 0;
 }
 
+int DataMonitor::setMode(int md){
+    mode = md;
+    return 0;
+}
+
 int DataMonitor::checkThreshold(datapoint * pt){
     //check whether datapoint crosses thresholds
     if (pt->value > metaVector.at(pt->sensorIndex).maximum){
@@ -44,7 +51,7 @@ int DataMonitor::checkThreshold(datapoint * pt){
     return 0;
 }
 
-int initiateRxn(uint32_t rxnCode){
+int DataMonitor::initiateRxn(uint32_t rxnCode){
     // execute configured reactions here
     return 0;
 }

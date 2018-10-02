@@ -12,6 +12,8 @@ using namespace std;
 class DB_Engine
 {
 public:
+
+    // member function declarations
     DB_Engine();
     ~DB_Engine();
 
@@ -31,6 +33,7 @@ public:
     vector<string> search_part_word(string table, vector<string> cols, string column, string thread, int row_num);
     int update_value(string table, string column, string col_id, string id, string new_value);
 
+    // global items
     string db_file = "./system.db";
     sqlite3 * db;
 };

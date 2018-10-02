@@ -17,13 +17,13 @@
 #define COOLING 3
 
 typedef struct{
-    int sensorIndex;
-    int minimum;
-    int maximum;
-    int subsystem;
-    int defSamplingRate;
-    int maxRxnCode;
-    int minRxnCode;
+    uint32_t sensorIndex;
+    uint32_t minimum;
+    uint32_t maximum;
+    uint32_t subsystem;
+    uint32_t defSamplingRate;
+    uint32_t maxRxnCode;
+    uint32_t minRxnCode;
 }meta;
 
 typedef struct{
@@ -50,15 +50,15 @@ typedef struct{
 }response;
 
 typedef struct{
-    int mode;
-    int GLV_max;
-    int GLV_min;
-    int TSI_max;
-    int TSI_min;
-    int TSV_max;
-    int TSV_min;
-    int COOL_max;
-    int COOL_min;
+    uint32_t mode;
+    uint32_t GLV_max;
+    uint32_t GLV_min;
+    uint32_t TSI_max;
+    uint32_t TSI_min;
+    uint32_t TSV_max;
+    uint32_t TSV_min;
+    uint32_t COOL_max;
+    uint32_t COOL_min;
 }system_states;
 
 #endif // TYPEDEFS_H

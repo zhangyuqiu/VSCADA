@@ -1,22 +1,18 @@
-﻿#include "config.h"
+#include "conf.h"
 
-Config::Config(){
-    cout << "Data Control Initialized" << endl;
-}
-
-Config::~Config(){
+conf::conf(){
 
 }
 
-bool Config::read_config_file_data(string configFile){
+conf::~conf(){
+
+}
+
+bool conf::read_config_file_data(string configFile){
     ifstream inFile;
     inFile.open(configFile);
     vector<string> splitLine;
     vector<meta> sensorMetaData;
-    vector<meta> GLVmeta;
-    vector<meta> TSImeta;
-    vector<meta> TSVmeta;
-    vector<meta> COOLmeta;
     vector<response> responseVector;
     cout << "Opening file" << endl;
     if(!inFile){
@@ -53,9 +49,9 @@ start_comp:
             splitLine = split(line,",");
             if((int)splitLine.size() > 1){
                 string bufRate = splitLine.at(0);
-                states->GLV_max = (int)stoi(bufRate);
+                states->GLV_max = (uint32_t)stoi(bufRate);
                 bufRate = splitLine.at(1);
-                states->GLV_min = (int)stoi(bufRate);
+                states->GLV_min = (uint32_t)stoi(bufRate);
             } else {
                 // error in config file
                 cout << "Error In Config File: GLV Rates" << endl;
@@ -66,9 +62,9 @@ start_comp:
             splitLine = split(line,",");
             if((int)splitLine.size() > 1){
                 string bufRate = splitLine.at(0);
-                states->TSI_max = (int)stoi(bufRate);
+                states->TSI_max = (uint32_t)stoi(bufRate);
                 bufRate = splitLine.at(1);
-                states->TSI_min = (int)stoi(bufRate);
+                states->TSI_min = (uint32_t)stoi(bufRate);
             } else {
                 // error in config file
                 cout << "Error In Config File: TSI Rates" << endl;
@@ -79,9 +75,9 @@ start_comp:
             splitLine = split(line,",");
             if((int)splitLine.size() > 1){
                 string bufRate = splitLine.at(0);
-                states->TSV_max = (int)stoi(bufRate);
+                states->TSV_max = (uint32_t)stoi(bufRate);
                 bufRate = splitLine.at(1);
-                states->TSV_min = (int)stoi(bufRate);
+                states->TSV_min = (uint32_t)stoi(bufRate);
             } else {
                 // error in config file
                 cout << "Error In Config File: TSV Rates" << endl;
@@ -92,9 +88,9 @@ start_comp:
             splitLine = split(line,",");
             if((int)splitLine.size() > 1){
                 string bufRate = splitLine.at(0);
-                states->COOL_max = (int)stoi(bufRate);
+                states->COOL_max = (uint32_t)stoi(bufRate);
                 bufRate = splitLine.at(1);
-                states->COOL_min = (int)stoi(bufRate);
+                states->COOL_min = (uint32_t)stoi(bufRate);
             } else {
                 // error in config file
                 cout << "Error In Config File: COOLING Rates" << endl;
@@ -119,7 +115,7 @@ start_comp:
                 arg = splitLine.at(0);
                 if(arg[0] == '$') goto start_comp;
                 meta bufMeta;
-                bufMeta.sensorIndex = (int)stoi(splitLine.at(0));
+                bufMeta.sensorIndex = (uint32_t)stoi(splitLine.at(0));
 
                 if (splitLine.at(2).compare("GLV") == 0) bufMeta.subsystem = GLV;
                 else if (splitLine.at(2).compare("TSI") == 0) bufMeta.subsystem = TSI;
@@ -130,19 +126,12 @@ start_comp:
                     cout << "Error in config file: subsystem" << endl;
                 }
 
-                bufMeta.defSamplingRate = (int)stoi(splitLine.at(3));
-                bufMeta.minimum = (int)stoi(splitLine.at(4));
-                bufMeta.maximum = (int)stoi(splitLine.at(5));
-                bufMeta.minRxnCode = (int)stoi(splitLine.at(6));
-                bufMeta.maxRxnCode = (int)stoi(splitLine.at(7));
+                bufMeta.defSamplingRate = (uint32_t)stoi(splitLine.at(3));
+                bufMeta.minimum = (uint32_t)stoi(splitLine.at(4));
+                bufMeta.maximum = (uint32_t)stoi(splitLine.at(5));
+                bufMeta.minRxnCode = (uint32_t)stoi(splitLine.at(6));
+                bufMeta.maxRxnCode = (uint32_t)stoi(splitLine.at(7));
                 sensorMetaData.push_back(bufMeta);
-
-                switch(bufMeta.subsystem){
-                    case GLV:       GLVmeta.push_back(bufMeta);     break;
-                    case TSI:       TSImeta.push_back(bufMeta);     break;
-                    case TSV:       TSVmeta.push_back(bufMeta);     break;
-                    case COOLING:   COOLmeta.push_back(bufMeta);    break;
-                }
 
 #ifdef CONFIG_PRINTOUTS
                 cout << "Sensor index: " << bufMeta.sensorIndex << endl;
@@ -190,38 +179,11 @@ start_comp:
     }
     inFile.close();
 
-    //initialize all submodules
-    dbase = new DB_Engine();
-    ioControl = new iocontrol();
-    dataMtr = new DataMonitor(sensorMetaData,responseVector);
-    glv_thread = new GLV_Thread(dataMtr);
-    tsi_thread = new TSI_Thread(dataMtr);
-    tsv_thread = new TSV_Thread(dataMtr);
-    cool_thread = new COOL_Thread(dataMtr);
-    dataCtrl = new DataControl(dataMtr,dbase,ioControl,glv_thread,tsi_thread,tsv_thread,cool_thread);
-
-    //initialize configured values for submodules
-    dataMtr->setMode(states->mode);
-    dataCtrl->setMode(states->mode);
-    dataCtrl->init_meta_vector(sensorMetaData);
-    dataCtrl->set_GLV_rate(states->GLV_max);
-    dataCtrl->set_TSI_rate(states->TSI_max);
-    dataCtrl->set_TSV_rate(states->TSV_max);
-    dataCtrl->set_COOL_rate(states->COOL_max);
-    dataCtrl->init_GLV_sensors(GLVmeta);
-    dataCtrl->init_TSI_sensors(TSImeta);
-    dataCtrl->init_TSV_sensors(TSVmeta);
-    dataCtrl->init_COOL_sensors(COOLmeta);
-
-
-#ifdef CONFIG_PRINTOUTS
-    cout << "Data Monitor Initialized" << endl;
-#endif
-
     return true;
 }
 
-vector<string> Config::split(string s, string delim){
+vector<string> conf::split(string s, string delim){
+
     vector<string> splittedString;
     int startIndex = 0;
     int endIndex = 0;
@@ -237,3 +199,4 @@ vector<string> Config::split(string s, string delim){
     return splittedString;
 
 }
+
