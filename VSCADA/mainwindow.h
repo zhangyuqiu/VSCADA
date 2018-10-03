@@ -9,6 +9,7 @@
 #include <QtWidgets>
 #include <qcustomplot.h>
 #include <string>
+#include "typedefs.h"
 
 
 
@@ -24,9 +25,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void update();
-    void drawEdit(QLineEdit * edit, int x, int y);
-    void plotGraph();
+    void update(datapoint data);
+    void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
 
     QGridLayout * mainLayout;
@@ -84,9 +84,40 @@ public:
     QListWidget * message;
     QCustomPlot * plot;
 
+    QString dataDisplayGLV1;
+    QString dataDisplayGLV2;
+    QString dataDisplayGLV3;
+
+    QString dataDisplayTSI1;
+    QString dataDisplayTSI2;
+    QString dataDisplayTSI3;
+
+    QString dataDisplayTSV11;
+    QString dataDisplayTSV21;
+    QString dataDisplayTSV31;
+
+    QString dataDisplayTSV12;
+    QString dataDisplayTSV22;
+    QString dataDisplayTSV32;
+
+    QString dataDisplayTSV13;
+    QString dataDisplayTSV23;
+    QString dataDisplayTSV33;
+
+    QString dataDisplayTSV14;
+    QString dataDisplayTSV24;
+    QString dataDisplayTSV34;
+
+
+
     int editsize;
     int xinit;
     int yinit;
+
+    datapoint data;
+
+private slots:
+    void plotGraph();
 
 
 private:
