@@ -6,19 +6,27 @@
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
+#include <QTimer>
 #include "typedefs.h"
 #include "datamonitor.h"
 class DataMonitor;
 
 using namespace std;
 
-class TSI_Thread
+class TSI_Thread : public QObject
 {
+
+    Q_OBJECT
 
 public:
     DataMonitor * monitor;                          // pointer to a datamonitor object
+    QTimer * timer;
 
-    TSI_Thread(DataMonitor * mtr){ monitor = mtr;}  // class object constructor
+    TSI_Thread(DataMonitor * mtr){
+        timer = new QTimer;
+        connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
+        monitor = mtr;
+    }                                               // class object constructor
     virtual ~TSI_Thread(){}                         // class object destructor
 
     bool running = true;                            // to control running of collection thread
@@ -31,10 +39,12 @@ public:
          // should call a method from IO control to read cooling sensor data
     }
 
-    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-    bool StartInternalThread()
-    {
-       return (pthread_create(&_thread, NULL, InternalTSIThreadEntryFunc, this) == 0);
+    void start(){
+        timer->start(TSI_rate);
+    }
+
+    void stop(){
+        timer->stop();
     }
 
     /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
@@ -47,19 +57,21 @@ public:
 protected:
     /** Active cooling data collection method */
     virtual void InternalThreadEntry(){
-        while(running){
-            // go through all collected cooling data
             cout << "TSI Data Collected" << endl;
-            sleep(TSI_rate);                            // wait to achieve sampling rate
-        }
     }
-
 
 private:
     /** Links the member function to ordinary space */
     static void * InternalTSIThreadEntryFunc(void * This) {((TSI_Thread *)This)->InternalThreadEntry(); return NULL;}
 
     pthread_t _thread;
+
+public slots:
+    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
+    void StartInternalThread()
+    {
+       pthread_create(&_thread, NULL, InternalTSIThreadEntryFunc, this);
+    }
 };
 
 #endif // TSI_THREAD_H

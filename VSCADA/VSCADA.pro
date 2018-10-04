@@ -8,6 +8,11 @@ QT       += core gui printsupport sql
 DEFINES += QT_DEPRECATED_WARNINGS
 
 LIBS += -l sqlite3
+LIBS += -pthread
+LIBS += -lltdl
+LIBS += -lcrypt
+LIBS += -lm
+LIBS += -lltdl
 
 SOURCES += \
         main.cpp \
@@ -45,6 +50,7 @@ QT += serialbus widgets
 QT += core
 QMAKE_CXXFLAGS += -std=gnu++0x -pthread
 QMAKE_CFLAGS += -std=gnu++0x -pthread
+LIBS += -lboost_system
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

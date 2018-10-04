@@ -6,19 +6,26 @@
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
+#include <QTimer>
 #include "typedefs.h"
 #include "datamonitor.h"
 class DataMonitor;
 
 using namespace std;
 
-class TSV_Thread
+class TSV_Thread : public QObject
 {
 
+    Q_OBJECT
 public:
     DataMonitor * monitor;                          // pointer to a datamonitor object
+    QTimer * timer;
 
-    TSV_Thread(DataMonitor * mtr){ monitor = mtr;}  // class object constructor
+    TSV_Thread(DataMonitor * mtr){
+        timer = new QTimer;
+        connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
+        monitor = mtr;
+    }                                               // class object constructor
     virtual ~TSV_Thread(){}                         // class object destructor
 
     bool running = true;                             // to control running of collection thread
@@ -31,10 +38,12 @@ public:
         // should call a method from IO control to read tsi sensor data
     }
 
-    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-    bool StartInternalThread()
-    {
-       return (pthread_create(&_thread, NULL, InternalThreadEntryFunc, this) == 0);
+    void start(){
+        timer->start(TSV_rate);
+    }
+
+    void stop(){
+        timer->stop();
     }
 
     /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
@@ -60,6 +69,13 @@ private:
     static void * InternalThreadEntryFunc(void * This) {((TSV_Thread *)This)->InternalThreadEntry(); return NULL;}
 
     pthread_t _thread;
+
+public slots:
+    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
+    void StartInternalThread()
+    {
+       pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
+    }
 };
 
 #endif // TSV_THREAD_H

@@ -6,18 +6,24 @@
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
+#include <QTimer>
 #include "typedefs.h"
 #include "datamonitor.h"
 class DataMonitor;
 
 using namespace std;
 
-class COOL_Thread{
-
+class COOL_Thread : public QObject
+{
+    Q_OBJECT
 public:
-    DataMonitor * monitor;                          // pointer to a datamonitor object
+    DataMonitor * monitor;  // pointer to a datamonitor object
+    QTimer * timer;
 
-    COOL_Thread(DataMonitor * mtr){ monitor = mtr;} // class object constructor
+    COOL_Thread(DataMonitor * mtr){
+        timer = new QTimer;
+        connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
+        monitor = mtr;} // class object constructor
     virtual ~COOL_Thread(){}                        // class object destructor
 
     bool running = true;                             // to control running of collection thread
@@ -31,10 +37,12 @@ public:
        // should call a method from IO control to read cooling sensor data
     }
 
-    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-    bool StartInternalThread()
-    {
-       return (pthread_create(&_thread, NULL, InternalCOOLThreadEntryFunc, this) == 0);
+    void start(){
+        timer->start(COOL_rate);
+    }
+
+    void stop(){
+        timer->stop();
     }
 
     /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
@@ -47,11 +55,7 @@ public:
 protected:
     /** Active cooling data collection method */
     virtual void InternalThreadEntry(){
-        while(running){
-            // go through all collected cooling data
             cout << "COOLING Data Collected" << endl;
-            sleep(COOL_rate);                           //wait to achieve sampling rate
-        }
     }
 
 private:
@@ -59,6 +63,13 @@ private:
     static void * InternalCOOLThreadEntryFunc(void * This) {((COOL_Thread *)This)->InternalThreadEntry(); return NULL;}
 
     pthread_t _thread;
+
+public slots:
+    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
+    void StartInternalThread()
+    {
+       pthread_create(&_thread, NULL, InternalCOOLThreadEntryFunc, this);
+    }
 };
 
 #endif // COOL_THREAD_H

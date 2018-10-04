@@ -212,7 +212,9 @@ start_comp:
     dataCtrl->init_TSV_sensors(TSVmeta);
     dataCtrl->init_COOL_sensors(COOLmeta);
 
-
+    dataCtrl->glv_thread->start();
+    dataCtrl->cool_thread->start();
+    dataCtrl->tsi_thread->start();
 #ifdef CONFIG_PRINTOUTS
     cout << "Data Monitor Initialized" << endl;
 #endif

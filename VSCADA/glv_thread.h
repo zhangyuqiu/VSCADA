@@ -5,19 +5,26 @@
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
+#include <QTimer>
 #include "typedefs.h"
 #include "datamonitor.h"
 class DataMonitor;
 
 using namespace std;
 
-class GLV_Thread
+class GLV_Thread : public QObject
 {
 
+    Q_OBJECT
 public:
     DataMonitor * monitor;                          // pointer to datamonitor object
+    QTimer * timer;
 
-    GLV_Thread(DataMonitor * mtr){ monitor = mtr;}  // object class constructor
+    GLV_Thread(DataMonitor * mtr){
+        timer = new QTimer;
+        connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
+        monitor = mtr;
+    }  // object class constructor
     virtual ~GLV_Thread(){}                         // object class destructor
 
     bool running = true;                            // to control running of collection thread
@@ -29,11 +36,13 @@ public:
         // should call a method from IO control to read GLV sensor data
     }
 
-   /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-   bool StartInternalThread()
-   {
-      return (pthread_create(&_thread, NULL, InternalThreadEntryFunc, this) == 0);
-   }
+    void start(){
+        timer->start(GLV_rate);
+    }
+
+    void stop(){
+        timer->stop();
+    }
 
     /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
    void WaitForInternalThreadToExit()
@@ -44,10 +53,10 @@ public:
 protected:
    /** Active cooling data collection method */
    virtual void InternalThreadEntry(){
-       while(running){
+//       while(running){
            cout << "GLV Data Collected" << endl;
-           sleep(GLV_rate);
-       }
+//           sleep(GLV_rate);
+//       }
    }
 
 
@@ -56,6 +65,10 @@ private:
    static void * InternalThreadEntryFunc(void * This) {((GLV_Thread *)This)->InternalThreadEntry(); return NULL;}
 
    pthread_t _thread;
+
+public slots:
+   /** Returns true if the thread was successfully started, false if there was an error starting the thread */
+   void StartInternalThread();
 };
 
 #endif // GLV_THREAD_H
