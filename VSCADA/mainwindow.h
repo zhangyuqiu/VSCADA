@@ -11,6 +11,7 @@
 #include <string>
 #include "config.h"
 #include "typedefs.h"
+#include "canbus_interface.h"
 
 
 

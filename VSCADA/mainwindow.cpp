@@ -57,6 +57,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
     timer->start(500);
+
+    // can bus init here
+    canbus_interface *c = new canbus_interface();
+
 }
 
 MainWindow::~MainWindow()

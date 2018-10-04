@@ -26,7 +26,8 @@ SOURCES += \
     tsv_thread.cpp \
     cool_thread.cpp \
     mainwindow.cpp\
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    canbus_interface.cpp
 
 HEADERS += \
     db_engine.h \
@@ -41,7 +42,8 @@ HEADERS += \
     cool_thread.h \
     mainwindow.h\
     qcustomplot.h\
-    typedefs.h
+    typedefs.h \
+    canbus_interface.h
 
 FORMS += \
         mainwindow.ui
