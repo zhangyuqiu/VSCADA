@@ -21,8 +21,7 @@ SOURCES += \
     tsv_thread.cpp \
     cool_thread.cpp \
     mainwindow.cpp\
-    qcustomplot.cpp \
-    dashboard.cpp
+    qcustomplot.cpp
 
 HEADERS += \
     db_engine.h \
@@ -37,12 +36,10 @@ HEADERS += \
     cool_thread.h \
     mainwindow.h\
     qcustomplot.h\
-    typedefs.h \
-    dashboard.h
+    typedefs.h
 
 FORMS += \
-        mainwindow.ui \
-    dashboard.ui
+        mainwindow.ui
 
 QT += serialbus widgets
 QT += core

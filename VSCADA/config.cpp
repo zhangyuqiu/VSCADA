@@ -1,7 +1,6 @@
 ﻿#include "config.h"
 
 Config::Config(){
-    cout << "Data Control Initialized" << endl;
 }
 
 Config::~Config(){

@@ -1,0 +1,7 @@
+/home/mwauras/LEFV_software/VSCADA_gitted/VSCADA/VSCADA/build/CMakeFiles/install/strip.dir
+/home/mwauras/LEFV_software/VSCADA_gitted/VSCADA/VSCADA/build/CMakeFiles/edit_cache.dir
+/home/mwauras/LEFV_software/VSCADA_gitted/VSCADA/VSCADA/build/CMakeFiles/VSCADA.dir
+/home/mwauras/LEFV_software/VSCADA_gitted/VSCADA/VSCADA/build/CMakeFiles/list_install_components.dir
+/home/mwauras/LEFV_software/VSCADA_gitted/VSCADA/VSCADA/build/CMakeFiles/install/local.dir
+/home/mwauras/LEFV_software/VSCADA_gitted/VSCADA/VSCADA/build/CMakeFiles/rebuild_cache.dir
+/home/mwauras/LEFV_software/VSCADA_gitted/VSCADA/VSCADA/build/CMakeFiles/install.dir

@@ -9,6 +9,7 @@
 #include <QtWidgets>
 #include <qcustomplot.h>
 #include <string>
+#include "config.h"
 #include "typedefs.h"
 
 
@@ -116,6 +117,7 @@ public:
 
     datapoint data;
 
+    Config * conf;
 private slots:
     void plotGraph();
 

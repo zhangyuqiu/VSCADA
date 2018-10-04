@@ -10,9 +10,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     central = new QWidget();
     mainLayout = new QGridLayout();
+    conf = new Config();
 
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     central->setLayout(mainLayout);
+    conf->read_config_file_data("config_test.txt");
 
     //central->setStyleSheet("background-color: red;");
 
