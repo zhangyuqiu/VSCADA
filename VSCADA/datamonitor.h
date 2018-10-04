@@ -30,6 +30,7 @@ public:
 
     // Overall system mode
     int mode;
+
 };
 
 #endif // DATAMONITOR_H

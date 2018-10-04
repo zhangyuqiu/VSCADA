@@ -20,6 +20,7 @@ public:
     DataMonitor * monitor;  // pointer to a datamonitor object
     QTimer * timer;
 
+    int testVal = 0;
     COOL_Thread(DataMonitor * mtr){
         timer = new QTimer;
         connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
@@ -55,7 +56,8 @@ public:
 protected:
     /** Active cooling data collection method */
     virtual void InternalThreadEntry(){
-            cout << "COOLING Data Collected" << endl;
+        testVal++;
+        cout << "COOLING Data Collected" << endl;
     }
 
 private:

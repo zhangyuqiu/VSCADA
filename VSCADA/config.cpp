@@ -215,6 +215,7 @@ start_comp:
     dataCtrl->glv_thread->start();
     dataCtrl->cool_thread->start();
     dataCtrl->tsi_thread->start();
+    dataCtrl->tsv_thread->start();
 #ifdef CONFIG_PRINTOUTS
     cout << "Data Monitor Initialized" << endl;
 #endif

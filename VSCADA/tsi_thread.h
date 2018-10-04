@@ -29,6 +29,7 @@ public:
     }                                               // class object constructor
     virtual ~TSI_Thread(){}                         // class object destructor
 
+    int testVal = 0;
     bool running = true;                            // to control running of collection thread
     int TSI_rate = 0;                               // sampling rate of tsi subsystem
     std::vector<meta> TSISensorMeta;                // tsi sensor metadata
@@ -57,7 +58,8 @@ public:
 protected:
     /** Active cooling data collection method */
     virtual void InternalThreadEntry(){
-            cout << "TSI Data Collected" << endl;
+        testVal++;
+        cout << "TSI Data Collected" << endl;
     }
 
 private:

@@ -20,6 +20,7 @@ public:
     DataMonitor * monitor;                          // pointer to datamonitor object
     QTimer * timer;
 
+    int testVal = 0;
     GLV_Thread(DataMonitor * mtr){
         timer = new QTimer;
         connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
@@ -34,6 +35,10 @@ public:
     /** Reads Specified Cooling Sensor Data*/
     datapoint * read_CAN(meta sensor){
         // should call a method from IO control to read GLV sensor data
+    }
+
+    int getVal(){
+        return testVal;
     }
 
     void start(){
@@ -53,10 +58,8 @@ public:
 protected:
    /** Active cooling data collection method */
    virtual void InternalThreadEntry(){
-//       while(running){
-           cout << "GLV Data Collected" << endl;
-//           sleep(GLV_rate);
-//       }
+        testVal++;
+        cout << "GLV Data Collected" << endl;
    }
 
 
@@ -68,7 +71,10 @@ private:
 
 public slots:
    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-   void StartInternalThread();
+   void StartInternalThread(){
+
+       pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
+    }
 };
 
 #endif // GLV_THREAD_H

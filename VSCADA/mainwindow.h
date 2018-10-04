@@ -109,7 +109,7 @@ public:
     QString dataDisplayTSV24;
     QString dataDisplayTSV34;
 
-
+    QTimer * timer;
 
     int editsize;
     int xinit;
@@ -120,7 +120,7 @@ public:
     Config * conf;
 private slots:
     void plotGraph();
-
+    void updateVals();
 
 private:
     Ui::MainWindow *ui;

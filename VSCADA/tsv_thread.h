@@ -28,6 +28,7 @@ public:
     }                                               // class object constructor
     virtual ~TSV_Thread(){}                         // class object destructor
 
+    int testVal = 0;
     bool running = true;                             // to control running of collection thread
     int TSV_rate = 0;                                    // sampling rate of cooling system
     std::vector<meta> TSVSensorMeta;                 // tsv sensor metadata
@@ -56,11 +57,8 @@ public:
 protected:
     /** Active tsi data collection method */
     virtual void InternalThreadEntry(){
-        while(running){
-            // go through all collected cooling data
-            cout << "TSV Data Collected" << endl;
-            sleep(TSV_rate);                            //wait to achieve sampling rate
-        }
+        testVal++;
+        cout << "TSV Data Collected" << endl;
     }
 
 

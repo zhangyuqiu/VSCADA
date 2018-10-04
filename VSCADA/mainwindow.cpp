@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     central = new QWidget();
     mainLayout = new QGridLayout();
     conf = new Config();
+    timer = new QTimer();
 
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     central->setLayout(mainLayout);
@@ -52,8 +53,10 @@ MainWindow::MainWindow(QWidget *parent) :
     scrollArea->setWidgetResizable(true);
     scrollArea->setWidget(central);
 
-
     this->setCentralWidget(scrollArea);
+
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
+    timer->start(500);
 }
 
 MainWindow::~MainWindow()
@@ -124,9 +127,6 @@ void MainWindow::update(datapoint data){
     tsiLabel3->setText("TSI sensor3");
     tsiLabel3->setStyleSheet("font:24pt;");
     mainLayout->addWidget(tsiLabel3,3,2);
-
-
-
 
     //tsv
     QLabel * blank3= new QLabel();
@@ -285,3 +285,10 @@ void MainWindow::addErrorMessage(QString eMessage){
     message->addItem(eMessage);
 }
 
+void MainWindow::updateVals(){
+    dataDisplayGLV1 = QString::fromStdString(to_string(conf->dataCtrl->glv_thread->testVal));
+    dataDisplayTSI1 = QString::fromStdString(to_string(conf->dataCtrl->tsi_thread->testVal));
+    dataDisplayTSV11 = QString::fromStdString(to_string(conf->dataCtrl->tsv_thread->testVal));
+    datapoint d;
+    update(d);
+}
