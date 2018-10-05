@@ -5,6 +5,14 @@ canbus_interface::canbus_interface(std::vector<meta> sensorVector) {
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
 //    connect(can_bus, &QCanBusDevice::framesReceived, this, &MainWindow::recieve_frame);
+    datapoint dpt;
+    dpt.displayed = 0;
+    dpt.monitored = 0;
+    dpt.sensorIndex = 0;
+    dpt.value = 0;
+    for(int i = 0; i < (int)sensorVector.size(); i++){
+        dpa.push_back(dpt);
+    }
 }
 
 canbus_interface::~canbus_interface()
