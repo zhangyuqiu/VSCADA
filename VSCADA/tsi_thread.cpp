@@ -4,7 +4,7 @@ TSI_Thread::TSI_Thread(DataMonitor * mtr, vector<meta> TSISensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface();
+    canInterface = new canbus_interface(TSISensors);
     TSISensorMeta = TSISensors;
     init_TSI_data();
 }

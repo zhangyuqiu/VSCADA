@@ -3,7 +3,7 @@ TSV_Thread::TSV_Thread(DataMonitor * mtr, vector<meta> TSVSensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface();
+    canInterface = new canbus_interface(TSVSensors);
     TSVSensorMeta = TSVSensors;
     init_TSV_data();
 }

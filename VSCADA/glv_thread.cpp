@@ -4,7 +4,7 @@ GLV_Thread::GLV_Thread(DataMonitor * mtr, vector<meta> GLVSensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface();
+    canInterface = new canbus_interface(GLVSensors);
     GLVSensorMeta = GLVSensors;
     init_GLV_data();
 }
