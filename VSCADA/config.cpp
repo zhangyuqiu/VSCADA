@@ -131,6 +131,8 @@ start_comp:
                 bufMeta.maximum = (int)stoi(splitLine.at(5));
                 bufMeta.minRxnCode = (int)stoi(splitLine.at(6));
                 bufMeta.maxRxnCode = (int)stoi(splitLine.at(7));
+                bufMeta.canAddress = (int)stoi(splitLine.at(8));
+                bufMeta.gpioPin = (int)stoi(splitLine.at(9));
                 sensorMetaData.push_back(bufMeta);
 
                 switch(bufMeta.subsystem){

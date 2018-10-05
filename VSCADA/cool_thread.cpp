@@ -65,9 +65,8 @@ void COOL_Thread::WaitForInternalThreadToExit()
 void COOL_Thread::COOLINGCollectionTasks(){
     testVal++;
     for (int i = 0; i < (int)COOLSensorMeta.size(); i++){
-//        datapoint data = canInterface->getdatapoint(COOLSensorMeta.at(i).sensorIndex);
-//        COOLData.at(i) = data.value;
-        COOLData.at(i)++;
+        datapoint data = canInterface->getdatapoint(COOLSensorMeta.at(i).sensorIndex);
+        COOLData.at(i) = data.value;
     }
     cout << "COOLING Data Collected" << endl;
 }

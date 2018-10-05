@@ -58,9 +58,8 @@ void GLV_Thread::init_GLV_data(){
 void GLV_Thread::GLVCollectionTasks(){
     testVal++;
     for (int i = 0; i < (int)GLVSensorMeta.size(); i++){
-//        datapoint data = canInterface->getdatapoint(GLVSensorMeta.at(i).sensorIndex);
-//        GLVData.at(i) = data.value;
-        GLVData.at(i)++;
+        datapoint data = canInterface->getdatapoint(GLVSensorMeta.at(i).sensorIndex);
+        GLVData.at(i) = data.value;
     }
     cout << "GLV Data Collected" << endl;
 }
