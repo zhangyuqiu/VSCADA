@@ -10,7 +10,7 @@ canbus_interface::canbus_interface(std::vector<meta> sensorVector, std::string m
     std::cout << "CAN Int for " << modulename << " vector size: " << sensorVector.size() << endl;
         datapoint dpt;
     int a = sensorVector.size();
-    for(int i = 0; i < (int)sensorVector.size(); i++){
+    for(int i = 0; i < a; i++){
         dpt.displayed = 0;
         dpt.monitored = 0;
         dpt.sensorIndex = sensorVector.back().sensorIndex;
@@ -68,7 +68,7 @@ void canbus_interface::recieve_frame() {
         if(it.base()->canAddress == recframe.frameId()) {
             int data = 0;
             for (char i:a) {
-                data = data + (int)i;
+                data = data + static_cast<int>(i);
             }
 
             datapoint dp = *it;
