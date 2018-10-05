@@ -9,7 +9,7 @@ COOL_Thread::COOL_Thread(DataMonitor * mtr, vector<meta> COOLSensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface(COOLSensors);
+    canInterface = new canbus_interface(COOLSensors, "COOLING Thread");
     COOLSensorMeta = COOLSensors;
     init_COOL_data();
 }
