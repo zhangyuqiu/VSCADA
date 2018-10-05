@@ -30,7 +30,8 @@ public:
 
     bool running = true;                            // to control running of collection thread
     int GLV_rate = 0;                               // sampling rate of GLV sensors
-    std::vector<meta> GLVSensorMeta;                // GLV sensor metadata
+    vector<meta> GLVSensorMeta;                     // GLV sensor metadata
+    vector<int> GLVData;
 
     /** Reads Specified Cooling Sensor Data*/
     datapoint * read_CAN(meta sensor){
@@ -47,6 +48,10 @@ public:
 
     void stop(){
         timer->stop();
+    }
+
+    vector<int> get_GLV_Data(){
+
     }
 
     /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
