@@ -13,7 +13,7 @@ class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface(std::vector<meta> sensorVector);
+    canbus_interface(std::vector<meta> sensorVector, std::string modulename);
     ~canbus_interface();
     datapoint getdatapoint(uint32_t index);
     datapoint getdatapoint_canadd(uint32_t canaddrss);
@@ -28,6 +28,7 @@ private:
 
 private slots:
     void recieve_frame();
+    std::string modulename;
 };
 
 
