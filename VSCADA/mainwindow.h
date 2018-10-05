@@ -30,7 +30,7 @@ public:
     void update();
     void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
-    void updateData(vector <int> glvVector,vector <int> tsiVector,vector <int> tsvVector,vector <int> cooling);
+    void updateData(vector <int> glvVector, vector <int> tsiVector, vector <int> tsvVector, vector <int> coolingVector);
     void exit();
     void initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling);
 
@@ -38,6 +38,12 @@ public:
     vector<meta> TSI_meta;
     vector<meta> TSV_meta;
     vector<meta> COOLING_meta;
+
+    vector<QLineEdit *> GLVEdits;
+    vector<QLineEdit *> TSIEdits;
+    vector<QLineEdit *> TSVEdits;
+    vector<QLineEdit *> COOLINGEdits;
+
 
     QGridLayout * mainLayout;
     QWidget * central;
