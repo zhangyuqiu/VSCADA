@@ -24,6 +24,7 @@ public:
     void stop();                                                //stops data collection
     void start();                                               //starts data collection
     void init_COOL_data();                                      //retrieves GLV Data
+    vector<int> get_COOL_data();                                //initializes GLV data vector
     void WaitForInternalThreadToExit();                         //stops code until this thread is destroyed
 
     QTimer * timer;                                             //timer to implement sampling frequency

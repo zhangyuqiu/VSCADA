@@ -1,5 +1,10 @@
 #include "tsi_thread.h"
 
+/**
+ * @brief TSI_Thread::TSI_Thread - class constructor
+ * @param mtr - data monitor object
+ * @param TSISensors - vector of TSI sensors as configured
+ */
 TSI_Thread::TSI_Thread(DataMonitor * mtr, vector<meta> TSISensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
@@ -9,30 +14,46 @@ TSI_Thread::TSI_Thread(DataMonitor * mtr, vector<meta> TSISensors){
     init_TSI_data();
 }
 
+/**
+ * @brief TSI_Thread::~TSI_Thread - class destructor
+ */
 TSI_Thread::~TSI_Thread(){
 
 }
 
+/**
+ * @brief TSI_Thread::init_TSI_data - initializes tsi data to 0 on startup
+ */
 void TSI_Thread::init_TSI_data(){
     for(int i = 0; i < (int)TSISensorMeta.size(); i++){
         TSIData.push_back(0);
     }
 }
 
+/**
+ * @brief TSI_Thread::start - starts data collection
+ */
 void TSI_Thread::start(){
     timer->start(TSI_rate);
 }
 
+/**
+ * @brief TSI_Thread::stop - stops data collection
+ */
 void TSI_Thread::stop(){
     timer->stop();
 }
 
+/**
+ * @brief TSI_Thread::get_TSI_Data - retrieves tsi data
+ * @return
+ */
 vector<int> TSI_Thread::get_TSI_Data(){
     return TSIData;
 }
 
 /**
- * Will not return until the internal thread has exited. If exists, waits until thread has completed
+ * @brief TSI_Thread::WaitForInternalThreadToExit - waits until thread is destroyed
  */
 void TSI_Thread::WaitForInternalThreadToExit()
 {
@@ -40,7 +61,7 @@ void TSI_Thread::WaitForInternalThreadToExit()
 }
 
 /**
- * Active cooling data collection method
+ * @brief TSI_Thread::TSICollectionTasks - runs data collection tasks
  */
 void TSI_Thread::TSICollectionTasks(){
     testVal++;
@@ -52,7 +73,7 @@ void TSI_Thread::TSICollectionTasks(){
 }
 
 /**
- * Returns true if the thread was successfully started, false if there was an error starting the thread
+ * @brief TSI_Thread::StartInternalThread - launches thread
  */
 void TSI_Thread::StartInternalThread()
 {
