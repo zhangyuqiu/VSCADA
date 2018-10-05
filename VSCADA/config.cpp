@@ -12,10 +12,6 @@ bool Config::read_config_file_data(string configFile){
     inFile.open(configFile);
     vector<string> splitLine;
     vector<meta> sensorMetaData;
-    vector<meta> GLVmeta;
-    vector<meta> TSImeta;
-    vector<meta> TSVmeta;
-    vector<meta> COOLmeta;
     vector<response> responseVector;
     cout << "Opening file" << endl;
     if(!inFile){

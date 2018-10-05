@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     conf->read_config_file_data("config_test.txt");
 
 //    central->setStyleSheet("background-color: red;");
-
+    initMetadata(conf->GLVmeta,conf->TSImeta,conf->TSVmeta,conf->COOLmeta);
 
     editsize=100;
     xinit=0;
@@ -294,6 +294,13 @@ void MainWindow::updateVals(){
     vector<int> tsvData = conf->tsv_thread->get_TSV_Data();
     vector<int> coolData = conf->cool_thread->get_COOL_data();
     updateData(glvData,tsiData,tsvData,coolData);
+}
+
+void MainWindow::initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling){
+    GLV_meta = glv;
+    TSI_meta = tsi;
+    TSV_meta = tsv;
+    COOLING_meta = cooling;
 }
 
 void MainWindow::updateData(vector <int> glvVector,vector <int> tsiVector,vector <int> tsvVector,vector <int> cooling ){

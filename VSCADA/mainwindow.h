@@ -32,6 +32,12 @@ public:
     void addErrorMessage(QString message);
     void updateData(vector <int> glvVector,vector <int> tsiVector,vector <int> tsvVector,vector <int> cooling);
     void exit();
+    void initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling);
+
+    vector<meta> GLV_meta;
+    vector<meta> TSI_meta;
+    vector<meta> TSV_meta;
+    vector<meta> COOLING_meta;
 
     QGridLayout * mainLayout;
     QWidget * central;
