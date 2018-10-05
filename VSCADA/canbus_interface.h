@@ -13,7 +13,7 @@ class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface();
+    canbus_interface(std::vector<meta> sensorVector);
     ~canbus_interface();
     datapoint getdatapoint(uint32_t index);
 

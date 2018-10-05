@@ -1,6 +1,6 @@
 #include "canbus_interface.h"
 
-canbus_interface::canbus_interface() {
+canbus_interface::canbus_interface(std::vector<meta> sensorVector) {
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
