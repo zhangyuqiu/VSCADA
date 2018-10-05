@@ -16,6 +16,7 @@ public:
     canbus_interface(std::vector<meta> sensorVector);
     ~canbus_interface();
     datapoint getdatapoint(uint32_t index);
+    std::string get_curr_time();
 
 private:
 

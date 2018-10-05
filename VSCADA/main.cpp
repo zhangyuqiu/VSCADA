@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.setWindowState((w.windowState()^Qt::WindowFullScreen));
     datapoint d;
-    w.update(d);
+//    w.update(d);
     w.show();
 
     return a.exec();

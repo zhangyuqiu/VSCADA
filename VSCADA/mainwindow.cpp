@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setCentralWidget(scrollArea);
 
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateData()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
     timer->start(500);
 
     // can bus init here
@@ -289,26 +289,26 @@ void MainWindow::addErrorMessage(QString eMessage){
 }
 
 void MainWindow::updateVals(){
-    dataDisplayGLV1 = QString::fromStdString(to_string(conf->dataCtrl->glv_thread->testVal));
-    dataDisplayTSI1 = QString::fromStdString(to_string(conf->dataCtrl->tsi_thread->testVal));
-    dataDisplayTSV11 = QString::fromStdString(to_string(conf->dataCtrl->tsv_thread->testVal));
-    //datapoint d;
-    update();
+    vector<int> glvData = conf->glv_thread->get_GLV_Data();
+    vector<int> tsiData = conf->tsi_thread->get_TSI_Data();
+    vector<int> tsvData = conf->tsv_thread->get_TSV_Data();
+    vector<int> coolData = conf->cool_thread->get_COOL_data();
+    updateData(glvData,tsiData,tsvData,coolData);
 }
 
 void MainWindow::updateData(vector <int> glvVector,vector <int> tsiVector,vector <int> tsvVector,vector <int> cooling ){
-    dataDisplayGLV1 = QString::fromStdString(to_string(glvVector[0]));
-    dataDisplayGLV2 = QString::fromStdString(to_string(glvVector[1]));
-    dataDisplayGLV3 = QString::fromStdString(to_string(glvVector[2]));
-    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[0]));
-    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[1]));
-    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[2]));
-    dataDisplayTSV11 = QString::fromStdString(to_string(tsvVector[0]));
-    dataDisplayTSV12 = QString::fromStdString(to_string(tsvVector[1]));
-    dataDisplayTSV21 = QString::fromStdString(to_string(tsvVector[2]));
-    dataDisplayTSV22 = QString::fromStdString(to_string(tsvVector[3]));
-    dataDisplayTSV31 = QString::fromStdString(to_string(tsvVector[4]));
-    dataDisplayTSV32 = QString::fromStdString(to_string(tsvVector[5]));
+//    dataDisplayGLV1 = QString::fromStdString(to_string(glvVector[0]));
+//    dataDisplayGLV2 = QString::fromStdString(to_string(glvVector[1]));
+//    dataDisplayGLV3 = QString::fromStdString(to_string(glvVector[2]));
+//    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[0]));
+//    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[1]));
+//    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[2]));
+//    dataDisplayTSV11 = QString::fromStdString(to_string(tsvVector[0]));
+//    dataDisplayTSV12 = QString::fromStdString(to_string(tsvVector[1]));
+//    dataDisplayTSV21 = QString::fromStdString(to_string(tsvVector[2]));
+//    dataDisplayTSV22 = QString::fromStdString(to_string(tsvVector[3]));
+//    dataDisplayTSV31 = QString::fromStdString(to_string(tsvVector[4]));
+//    dataDisplayTSV32 = QString::fromStdString(to_string(tsvVector[5]));
     update();
 
 }

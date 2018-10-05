@@ -96,5 +96,11 @@ datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint
     return edp;
 }
 
-
+std::string canbus_interface::get_curr_time(){
+    time_t t = time(0);
+    struct tm now = *localtime(&t);
+    char buf[20];
+    strftime(buf, sizeof(buf),"%X",&now);
+    return buf;
+}
 
