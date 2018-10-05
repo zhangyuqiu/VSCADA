@@ -25,10 +25,11 @@ private:
     QString errmsg;
     bool canconnect();
     std::vector<datapoint> dpa;
+    std::string modulename;
 
 private slots:
     void recieve_frame();
-    std::string modulename;
+
 };
 
 
