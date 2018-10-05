@@ -115,7 +115,7 @@ start_comp:
                 if(arg[0] == '$') goto start_comp;
                 meta bufMeta;
                 bufMeta.sensorIndex = (int)stoi(splitLine.at(0));
-
+                bufMeta.sensorName = splitLine.at(1);
                 if (splitLine.at(2).compare("GLV") == 0) bufMeta.subsystem = GLV;
                 else if (splitLine.at(2).compare("TSI") == 0) bufMeta.subsystem = TSI;
                 else if (splitLine.at(2).compare("TSV") == 0) bufMeta.subsystem = TSV;

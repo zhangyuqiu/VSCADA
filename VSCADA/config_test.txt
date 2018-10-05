@@ -9,6 +9,12 @@ $sensors
 2,Pack3Curr,TSV,2,0.01,2,1,0,600,20
 3,S_LoopStats,GLV,1,0,40,0,4,894,21
 4,TSV_Voltage,TSV,1,3,5,1,3,5422,889,22
+5,TSI_Temp,TSI,1,3,4,5,6,45,23,90
+6,COOLING_State,COOLING,3,4,5,6,7,23,234,75
+7,COOLING_Temp,COOLING,1,2,3,4,5,6,7,8
+8,COOLING_Voltage,COOLING,1,2,3,4,5,6,7
+9,COOL_Nothing,COOLING,1,2,3,4,5,6,7
+10,COOL_Everything,COOLING,1,2,3,4,5,6,7
 $responses
 0,234,14,back_disp,0
 1,345,15,dash_disp,4
