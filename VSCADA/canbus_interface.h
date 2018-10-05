@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QString>
 #include <array>
+#include <vector>
 #include "typedefs.h"
 
 class canbus_interface : public QObject
@@ -14,14 +15,15 @@ class canbus_interface : public QObject
 public:
     canbus_interface();
     ~canbus_interface();
+    datapoint getdatapoint(uint32_t index);
 
 private:
 
     QCanBusDevice *can_bus = nullptr;
     QString errmsg;
     bool canconnect();
-    datapoint dpa[10];
-    datapoint getdatapoint(int index);
+    std::vector<datapoint> dpa;
+
 
 private slots:
     void recieve_frame();

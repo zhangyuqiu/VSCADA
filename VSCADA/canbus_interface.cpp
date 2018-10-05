@@ -59,15 +59,34 @@ void canbus_interface::recieve_frame() {
     dp.sensorIndex = recframe.frameId();
     dp.value = data;
 
-    for (int i = 0; i < 10; i++) {
-        if (dpa[i].sensorIndex == dp.sensorIndex) {
-            dpa[i] = dp;
+    if (dpa.empty()) {
+        dpa.push_back(dp);
+    }
+
+    for (std::vector<datapoint>::iterator it = dpa.begin(); it != dpa.end(); ++it) {
+        if (it+1 == dpa.end()) {
+            dpa.push_back(dp);
+        }
+        if(it.base()->sensorIndex == dp.sensorIndex) {
+            *it = dp;
             break;
         }
     }
 
     qDebug() << "frame recieved" <<endl;
-    qDebug() << QString::number(data) <<endl;
+    qDebug() << QString::number(getdatapoint(recframe.frameId()).value) <<endl;
 }
+
+datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
+    for (datapoint d:dpa) {
+        if (d.sensorIndex == index) {
+            return d;
+        }
+    }
+    datapoint edp;
+    edp.sensorIndex = -1;
+    return edp;
+}
+
 
 
