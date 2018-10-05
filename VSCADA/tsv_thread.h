@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <QTimer>
 #include "typedefs.h"
+#include "canbus_interface.h"
 #include "datamonitor.h"
 class DataMonitor;
 
@@ -18,62 +19,38 @@ class TSV_Thread : public QObject
 
     Q_OBJECT
 public:
-    DataMonitor * monitor;                          // pointer to a datamonitor object
-    QTimer * timer;
 
-    TSV_Thread(DataMonitor * mtr){
-        timer = new QTimer;
-        connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
-        monitor = mtr;
-    }                                               // class object constructor
-    virtual ~TSV_Thread(){}                         // class object destructor
+    TSV_Thread(DataMonitor * mtr, vector<meta> TSVSensors); //class object constructor                                          // class object constructor
+    virtual ~TSV_Thread();                                  //class object destructor
 
-    int testVal = 0;
-    bool running = true;                             // to control running of collection thread
-    int TSV_rate = 0;                                    // sampling rate of cooling system
-    std::vector<meta> TSVSensorMeta;                 // tsv sensor metadata
+    void stop();                                            //stops data collection
+    void start();                                           //starts data collection
+    void init_TSV_data();                                   //initializes TSV data vector
+    vector<int> get_TSV_Data();                             //retrieves TSV Data
+    void WaitForInternalThreadToExit();                     //stops code until this thread is destroyed
 
+    QTimer * timer;                                         //timer to control data collection frequency
+    DataMonitor * monitor;                                  //pointer to datamonitor object
+    canbus_interface * canInterface;                        //can interface to enable reading from CAN
 
-    /** Reads Specified Cooling Sensor Data*/
-    datapoint * read_CAN(meta sensor){
-        // should call a method from IO control to read tsi sensor data
-    }
+    int testVal = 0;                                        //dummy data for testing
 
-    void start(){
-        timer->start(TSV_rate);
-    }
-
-    void stop(){
-        timer->stop();
-    }
-
-    /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
-    void WaitForInternalThreadToExit()
-    {
-       (void) pthread_join(_thread, NULL);
-    }
-
+    int TSV_rate = 0;                                       //sampling rate of cooling system
+    vector<int> TSVData;                                    //most recent tsv sensor data samples
+    vector<meta> TSVSensorMeta;                             //tsv sensor metadata
 
 protected:
-    /** Active tsi data collection method */
-    virtual void InternalThreadEntry(){
-        testVal++;
-        cout << "TSV Data Collected" << endl;
-    }
+    virtual void TSVCollectionTasks();                      //runs thread tasks
 
 
 private:
     /** Links the member function to ordinary space */
-    static void * InternalThreadEntryFunc(void * This) {((TSV_Thread *)This)->InternalThreadEntry(); return NULL;}
+    static void * InternalThreadEntryFunc(void * This) {((TSV_Thread *)This)->TSVCollectionTasks(); return NULL;}
 
     pthread_t _thread;
 
 public slots:
-    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-    void StartInternalThread()
-    {
-       pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
-    }
+    void StartInternalThread();
 };
 
 #endif // TSV_THREAD_H

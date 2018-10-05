@@ -16,9 +16,6 @@ MainWindow::MainWindow(QWidget *parent) :
     central->setLayout(mainLayout);
     conf->read_config_file_data("config_test.txt");
 
-//    central->setStyleSheet("background-color: red;");
-
-
     editsize=100;
     xinit=0;
     yinit=0;

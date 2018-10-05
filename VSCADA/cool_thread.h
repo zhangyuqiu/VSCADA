@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <QTimer>
 #include "typedefs.h"
+#include "canbus_interface.h"
 #include "datamonitor.h"
 class DataMonitor;
 
@@ -17,61 +18,36 @@ class COOL_Thread : public QObject
 {
     Q_OBJECT
 public:
-    DataMonitor * monitor;  // pointer to a datamonitor object
-    QTimer * timer;
+    COOL_Thread(DataMonitor * mtr, vector<meta> COOLSensors);   //class object destructor
+    virtual ~COOL_Thread();                                     //class object destructor
 
-    int testVal = 0;
-    COOL_Thread(DataMonitor * mtr){
-        timer = new QTimer;
-        connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
-        monitor = mtr;} // class object constructor
-    virtual ~COOL_Thread(){}                        // class object destructor
+    void stop();                                                //stops data collection
+    void start();                                               //starts data collection
+    void init_COOL_data();                                      //retrieves GLV Data
+    void WaitForInternalThreadToExit();                         //stops code until this thread is destroyed
 
-    bool running = true;                             // to control running of collection thread
-    int COOL_rate = 0;                               // sampling rate of cooling system
-    std::vector<meta> COOLSensorMeta;                // cooling sensor metadata
+    QTimer * timer;                                             //timer to implement sampling frequency
+    DataMonitor * monitor;                                      //pointer to a datamonitor object
+    canbus_interface * canInterface;                            //canInterface to provide read access to CAN
 
+    int testVal = 0;                                            //dummy variable for testing
 
-    /** Reads Specified Cooling Sensor Data*/
-    datapoint * read_CAN(meta sensor)
-    {
-       // should call a method from IO control to read cooling sensor data
-    }
-
-    void start(){
-        timer->start(COOL_rate);
-    }
-
-    void stop(){
-        timer->stop();
-    }
-
-    /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
-    void WaitForInternalThreadToExit()
-    {
-       (void) pthread_join(_thread, NULL);
-    }
-
+    int COOL_rate = 0;                                          //sampling rate of cooling system
+    bool running = true;                                        //to control running of collection thread
+    vector<int> COOLData;                                       //cooling sensor data
+    std::vector<meta> COOLSensorMeta;                           //cooling sensor metadata
 
 protected:
-    /** Active cooling data collection method */
-    virtual void InternalThreadEntry(){
-        testVal++;
-        cout << "COOLING Data Collected" << endl;
-    }
+    virtual void COOLINGCollectionTasks();                      //runs collection tasks
 
 private:
     /** Links the member function to ordinary space */
-    static void * InternalCOOLThreadEntryFunc(void * This) {((COOL_Thread *)This)->InternalThreadEntry(); return NULL;}
+    static void * InternalCOOLThreadEntryFunc(void * This) {((COOL_Thread *)This)->COOLINGCollectionTasks(); return NULL;}
 
     pthread_t _thread;
 
 public slots:
-    /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-    void StartInternalThread()
-    {
-       pthread_create(&_thread, NULL, InternalCOOLThreadEntryFunc, this);
-    }
+    void StartInternalThread();                                 //starts thread
 };
 
 #endif // COOL_THREAD_H
