@@ -2,16 +2,18 @@
 
 canbus_interface::canbus_interface(std::vector<meta> sensorVector, std::string modulename) {
     this->modulename = modulename;
+    std::vector<meta> sensorVec = sensorVector;
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
 
-    for(int i = 0; i < (int)sensorVector.size(); i++){
         datapoint dpt;
+    int a = sensorVector.size();
+    for(int i = 0; i < (int)sensorVector.size(); i++){
         dpt.displayed = 0;
         dpt.monitored = 0;
         dpt.sensorIndex = sensorVector.back().sensorIndex;
-        dpt.sensorIndex = sensorVector.back().canAddress;
+        dpt.canAddress = sensorVector.back().canAddress;
         dpt.gpioPin = sensorVector.back().gpioPin;
         sensorVector.pop_back();
         dpt.value = 0;
