@@ -14,6 +14,7 @@
 #include "tsi_thread.h"
 #include "tsv_thread.h"
 #include "cool_thread.h"
+#include "canbus_interface.h"
 
 class DataControl;
 class DataMonitor;
@@ -50,6 +51,7 @@ public:
     TSI_Thread * tsi_thread;
     TSV_Thread * tsv_thread;
     COOL_Thread * cool_thread;
+    canbus_interface * canInterface;
 
 };
 

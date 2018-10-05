@@ -20,7 +20,7 @@ class TSI_Thread : public QObject
     Q_OBJECT
 
 public:
-    TSI_Thread(DataMonitor * mtr, vector<meta> TSISensors); //class object constructor
+    TSI_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> TSISensors); //class object constructor
     virtual ~TSI_Thread();                                  //class object destructor
 
     void stop();                                            //stops data collection

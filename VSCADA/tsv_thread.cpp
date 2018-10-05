@@ -5,11 +5,11 @@
  * @param mtr - data monitor object
  * @param TSVSensors - vector of tsv sensors as configured
  */
-TSV_Thread::TSV_Thread(DataMonitor * mtr, vector<meta> TSVSensors){
+TSV_Thread::TSV_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> TSVSensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface(TSVSensors, "TSV Thread");
+    canInterface = can;
     TSVSensorMeta = TSVSensors;
     init_TSV_data();
 }

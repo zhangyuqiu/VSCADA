@@ -5,11 +5,11 @@
  * @param mtr - data monitor object
  * @param TSISensors - vector of TSI sensors as configured
  */
-TSI_Thread::TSI_Thread(DataMonitor * mtr, vector<meta> TSISensors){
+TSI_Thread::TSI_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> TSISensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface(TSISensors, "TSI Thread");
+    canInterface = can;
     TSISensorMeta = TSISensors;
     init_TSI_data();
 }

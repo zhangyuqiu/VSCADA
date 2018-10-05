@@ -18,7 +18,7 @@ class COOL_Thread : public QObject
 {
     Q_OBJECT
 public:
-    COOL_Thread(DataMonitor * mtr, vector<meta> COOLSensors);   //class object destructor
+    COOL_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> COOLSensors);   //class object destructor
     virtual ~COOL_Thread();                                     //class object destructor
 
     void stop();                                                //stops data collection

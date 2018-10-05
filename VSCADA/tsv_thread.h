@@ -20,7 +20,7 @@ class TSV_Thread : public QObject
     Q_OBJECT
 public:
 
-    TSV_Thread(DataMonitor * mtr, vector<meta> TSVSensors); //class object constructor                                          // class object constructor
+    TSV_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> TSVSensors); //class object constructor                                          // class object constructor
     virtual ~TSV_Thread();                                  //class object destructor
 
     void stop();                                            //stops data collection

@@ -5,11 +5,11 @@
  * @param mtr - data monitor module
  * @param COOLSensors - vector of COOLING systems sensors configured
  */
-COOL_Thread::COOL_Thread(DataMonitor * mtr, vector<meta> COOLSensors){
+COOL_Thread::COOL_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> COOLSensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface(COOLSensors, "COOLING Thread");
+    canInterface = can;
     COOLSensorMeta = COOLSensors;
     init_COOL_data();
 }

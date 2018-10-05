@@ -5,11 +5,11 @@
  * @param mtr - data monitor object
  * @param GLVSensors - vector of GLV sensors configured
  */
-GLV_Thread::GLV_Thread(DataMonitor * mtr, vector<meta> GLVSensors){
+GLV_Thread::GLV_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> GLVSensors){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     monitor = mtr;
-    canInterface = new canbus_interface(GLVSensors, "GLV Thread");
+    canInterface = can;
     GLVSensorMeta = GLVSensors;
     init_GLV_data();
 }

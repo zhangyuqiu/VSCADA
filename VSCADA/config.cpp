@@ -191,11 +191,12 @@ start_comp:
     //initialize all submodules
     dbase = new DB_Engine();
     ioControl = new iocontrol();
+    canInterface = new canbus_interface(sensorMetaData);
     dataMtr = new DataMonitor(sensorMetaData,responseVector);
-    glv_thread = new GLV_Thread(dataMtr,GLVmeta);
-    tsi_thread = new TSI_Thread(dataMtr,TSImeta);
-    tsv_thread = new TSV_Thread(dataMtr,TSVmeta);
-    cool_thread = new COOL_Thread(dataMtr,COOLmeta);
+    glv_thread = new GLV_Thread(dataMtr, canInterface, GLVmeta);
+    tsi_thread = new TSI_Thread(dataMtr, canInterface, TSImeta);
+    tsv_thread = new TSV_Thread(dataMtr, canInterface, TSVmeta);
+    cool_thread = new COOL_Thread(dataMtr, canInterface, COOLmeta);
     dataCtrl = new DataControl(dataMtr,dbase,ioControl,glv_thread,tsi_thread,tsv_thread,cool_thread);
 
     //initialize configured values for submodules
