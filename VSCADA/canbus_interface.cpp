@@ -4,20 +4,23 @@ canbus_interface::canbus_interface(std::vector<meta> sensorVector) {
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
-//    connect(can_bus, &QCanBusDevice::framesReceived, this, &MainWindow::recieve_frame);
-    datapoint dpt;
-    dpt.displayed = 0;
-    dpt.monitored = 0;
-    dpt.sensorIndex = 0;
-    dpt.value = 0;
+
     for(int i = 0; i < (int)sensorVector.size(); i++){
+        datapoint dpt;
+        dpt.displayed = 0;
+        dpt.monitored = 0;
+        dpt.sensorIndex = sensorVector.back().sensorIndex;
+        dpt.sensorIndex = sensorVector.back().canAddress;
+        dpt.gpioPin = sensorVector.back().gpioPin;
+        sensorVector.pop_back();
+        dpt.value = 0;
         dpa.push_back(dpt);
     }
 }
 
 canbus_interface::~canbus_interface()
 {
-
+    delete can_bus;
 }
 
 
@@ -49,45 +52,52 @@ bool canbus_interface::canconnect() {
 
 void canbus_interface::recieve_frame() {
     qDebug() << "revieve_frame called" << endl;
-//    bool ok;
     QCanBusFrame recframe = can_bus->readFrame();
-//    ui->textOut->append(recframe.toString());
-//    ui->textOut->append(QString::number(recframe.frameId()));
-//    ui->textOut->append(QString::number(recframe.payload().toDouble(&ok)));
     QByteArray a = recframe.payload();
 
-    int data = 0;
-    for (char i:a) {
-        data = data + (int)i;
-    }
-
-    datapoint dp;
-    dp.displayed = 0;
-    dp.monitored = 0;
-    dp.sensorIndex = recframe.frameId();
-    dp.value = data;
-
     if (dpa.empty()) {
-        dpa.push_back(dp);
+        qDebug() << "Datapoint array has no item" <<endl;
+        return;
     }
 
     for (std::vector<datapoint>::iterator it = dpa.begin(); it != dpa.end(); ++it) {
-        if (it+1 == dpa.end()) {
-            dpa.push_back(dp);
-        }
-        if(it.base()->sensorIndex == dp.sensorIndex) {
+        if(it.base()->canAddress == recframe.frameId()) {
+            int data = 0;
+            for (char i:a) {
+                data = data + (int)i;
+            }
+
+            datapoint dp = *it;
+            dp.value = data;
+
             *it = dp;
             break;
+        }
+
+        if (it+1 == dpa.end()) {
+//            qDebug() << "SensorIndex does not match configuration file" << endl;;
+            return;
         }
     }
 
     qDebug() << "frame recieved" <<endl;
-    qDebug() << QString::number(getdatapoint(recframe.frameId()).value) <<endl;
+    qDebug() << QString::number(getdatapoint_canadd(recframe.frameId()).value) <<endl;
 }
 
 datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
     for (datapoint d:dpa) {
         if (d.sensorIndex == index) {
+            return d;
+        }
+    }
+    datapoint edp;
+    edp.sensorIndex = -1;
+    return edp;
+}
+
+datapoint canbus_interface::getdatapoint_canadd(uint32_t canadd) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
+    for (datapoint d:dpa) {
+        if (d.canAddress == canadd) {
             return d;
         }
     }
@@ -103,4 +113,6 @@ std::string canbus_interface::get_curr_time(){
     strftime(buf, sizeof(buf),"%X",&now);
     return buf;
 }
+
+
 

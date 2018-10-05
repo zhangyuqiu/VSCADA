@@ -24,6 +24,8 @@ typedef struct{
     int defSamplingRate;
     int maxRxnCode;
     int minRxnCode;
+    int canAddress;
+    int gpioPin;
 }meta;
 
 typedef struct{
@@ -31,6 +33,8 @@ typedef struct{
     uint32_t value;
     bool monitored;
     bool displayed;
+    int canAddress;
+    int gpioPin;
     std::string timestamp;
 }datapoint;
 
@@ -44,10 +48,10 @@ typedef struct{
 
 typedef struct{
     int responseIndex;
-    int canAddress;
-    int gpioPin;
     int displayTarget;
     int value;
+    int canAddress;
+    int gpioPin;
 }response;
 
 typedef struct{

@@ -16,6 +16,7 @@ public:
     canbus_interface(std::vector<meta> sensorVector);
     ~canbus_interface();
     datapoint getdatapoint(uint32_t index);
+    datapoint getdatapoint_canadd(uint32_t canaddrss);
     std::string get_curr_time();
 
 private:
@@ -24,7 +25,6 @@ private:
     QString errmsg;
     bool canconnect();
     std::vector<datapoint> dpa;
-
 
 private slots:
     void recieve_frame();
