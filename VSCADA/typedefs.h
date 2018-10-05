@@ -31,6 +31,7 @@ typedef struct{
     uint32_t value;
     bool monitored;
     bool displayed;
+    std::string timestamp;
 }datapoint;
 
 typedef struct{

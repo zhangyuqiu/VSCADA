@@ -35,6 +35,12 @@ public:
     vector<string> csv_split(string str);
     vector<string> split(string s, string delim);
 
+    //sensor vectors
+    vector<meta> GLVmeta;
+    vector<meta> TSImeta;
+    vector<meta> TSVmeta;
+    vector<meta> COOLmeta;
+
     // submodule declarations
     DataControl * dataCtrl;
     DataMonitor * dataMtr;

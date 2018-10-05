@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     conf->read_config_file_data("config_test.txt");
 
 //    central->setStyleSheet("background-color: red;");
-
+    initMetadata(conf->GLVmeta,conf->TSImeta,conf->TSVmeta,conf->COOLmeta);
 
     editsize=100;
     xinit=0;
@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
     timer->start(500);
 
     // can bus init here
-    canbus_interface *c = new canbus_interface();
+    //canbus_interface *c = new canbus_interface();
 
 }
 
@@ -68,16 +68,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::update(datapoint data){
-
-
-
-    if(data.sensorIndex==1){
-       dataDisplayGLV1=  QString::number(data.value);
-    }else if(data.sensorIndex==5){
-        dataDisplayTSI2=  QString::number(data.value);
-     }
-
+void MainWindow::update(){
 
     QLabel * blank1= new QLabel();
     blank1->setText("                   ");
@@ -210,6 +201,13 @@ void MainWindow::update(datapoint data){
     tsvButton->setMinimumHeight(50);
     mainLayout->addWidget(tsvButton,5,5);
 
+    exitButton =new QPushButton();
+    exitButton->setText("EXIT");
+    //tsvButton->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Preferred);
+    exitButton->setMinimumWidth(50);
+    exitButton->setMinimumHeight(50);
+    mainLayout->addWidget(exitButton,0,9);
+
     glvBox = new QComboBox();
     //glvBox->setStyleSheet("font:24pt;");
     glvBox->addItem("GlV sensor1");
@@ -256,6 +254,7 @@ void MainWindow::update(datapoint data){
 
 
    QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
+   QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
 
 }
 
@@ -290,9 +289,36 @@ void MainWindow::addErrorMessage(QString eMessage){
 }
 
 void MainWindow::updateVals(){
-    dataDisplayGLV1 = QString::fromStdString(to_string(conf->dataCtrl->glv_thread->testVal));
-    dataDisplayTSI1 = QString::fromStdString(to_string(conf->dataCtrl->tsi_thread->testVal));
-    dataDisplayTSV11 = QString::fromStdString(to_string(conf->dataCtrl->tsv_thread->testVal));
-    datapoint d;
-    update(d);
+    vector<int> glvData = conf->glv_thread->get_GLV_Data();
+    vector<int> tsiData = conf->tsi_thread->get_TSI_Data();
+    vector<int> tsvData = conf->tsv_thread->get_TSV_Data();
+    vector<int> coolData = conf->cool_thread->get_COOL_data();
+    updateData(glvData,tsiData,tsvData,coolData);
 }
+
+void MainWindow::initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling){
+    GLV_meta = glv;
+    TSI_meta = tsi;
+    TSV_meta = tsv;
+    COOLING_meta = cooling;
+}
+
+void MainWindow::updateData(vector <int> glvVector,vector <int> tsiVector,vector <int> tsvVector,vector <int> cooling ){
+//    dataDisplayGLV1 = QString::fromStdString(to_string(glvVector[0]));
+//    dataDisplayGLV2 = QString::fromStdString(to_string(glvVector[1]));
+//    dataDisplayGLV3 = QString::fromStdString(to_string(glvVector[2]));
+//    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[0]));
+//    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[1]));
+//    dataDisplayTSI1 = QString::fromStdString(to_string(tsiVector[2]));
+//    dataDisplayTSV11 = QString::fromStdString(to_string(tsvVector[0]));
+//    dataDisplayTSV12 = QString::fromStdString(to_string(tsvVector[1]));
+//    dataDisplayTSV21 = QString::fromStdString(to_string(tsvVector[2]));
+//    dataDisplayTSV22 = QString::fromStdString(to_string(tsvVector[3]));
+//    dataDisplayTSV31 = QString::fromStdString(to_string(tsvVector[4]));
+//    dataDisplayTSV32 = QString::fromStdString(to_string(tsvVector[5]));
+    update();
+
+}
+
+
+

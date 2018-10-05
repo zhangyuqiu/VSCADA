@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <QTimer>
 #include "typedefs.h"
+#include "canbus_interface.h"
 #include "datamonitor.h"
 class DataMonitor;
 
@@ -17,64 +18,38 @@ class GLV_Thread : public QObject
 
     Q_OBJECT
 public:
-    DataMonitor * monitor;                          // pointer to datamonitor object
-    QTimer * timer;
 
-    int testVal = 0;
-    GLV_Thread(DataMonitor * mtr){
-        timer = new QTimer;
-        connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
-        monitor = mtr;
-    }  // object class constructor
-    virtual ~GLV_Thread(){}                         // object class destructor
+    GLV_Thread(DataMonitor * mtr, vector<meta> GLVSensors); //class constructor
+    virtual ~GLV_Thread();                                  //class destructor
 
-    bool running = true;                            // to control running of collection thread
-    int GLV_rate = 0;                               // sampling rate of GLV sensors
-    std::vector<meta> GLVSensorMeta;                // GLV sensor metadata
+    void stop();                                            //stops data collection
+    void start();                                           //starts data collection
+    void init_GLV_data();                                   //initializes GLV data vector
+    vector<int> get_GLV_Data();                             //retrieves GLV Data
+    void WaitForInternalThreadToExit();                     //stops code until this thread is destroyed
 
-    /** Reads Specified Cooling Sensor Data*/
-    datapoint * read_CAN(meta sensor){
-        // should call a method from IO control to read GLV sensor data
-    }
+    QTimer * timer;                                         //timer to control data collection frequency
+    DataMonitor * monitor;                                  //pointer to datamonitor object
+    canbus_interface * canInterface;                        //can interface to enable reading from CAN
 
-    int getVal(){
-        return testVal;
-    }
+    int testVal = 0;                                        //dummy data for testing
 
-    void start(){
-        timer->start(GLV_rate);
-    }
-
-    void stop(){
-        timer->stop();
-    }
-
-    /** Will not return until the internal thread has exited. If exists, waits until thread has completed */
-   void WaitForInternalThreadToExit()
-   {
-      (void) pthread_join(_thread, NULL);
-   }
+    int GLV_rate = 0;                                       //sampling rate of GLV sensors
+    vector<int> GLVData;                                    //last GLV data sampled
+    vector<meta> GLVSensorMeta;                             //GLV sensor metadata
 
 protected:
-   /** Active cooling data collection method */
-   virtual void InternalThreadEntry(){
-        testVal++;
-        cout << "GLV Data Collected" << endl;
-   }
+   virtual void GLVCollectionTasks();                       //runs thread tasks
 
 
 private:
    /** Links the member function to ordinary space */
-   static void * InternalThreadEntryFunc(void * This) {((GLV_Thread *)This)->InternalThreadEntry(); return NULL;}
+   static void * InternalThreadEntryFunc(void * This) {((GLV_Thread *)This)->GLVCollectionTasks(); return NULL;}
 
    pthread_t _thread;
 
 public slots:
-   /** Returns true if the thread was successfully started, false if there was an error starting the thread */
-   void StartInternalThread(){
-
-       pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
-    }
+   void StartInternalThread();                              //starts thread
 };
 
 #endif // GLV_THREAD_H

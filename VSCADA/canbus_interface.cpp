@@ -1,10 +1,18 @@
 #include "canbus_interface.h"
 
-canbus_interface::canbus_interface() {
+canbus_interface::canbus_interface(std::vector<meta> sensorVector) {
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
 //    connect(can_bus, &QCanBusDevice::framesReceived, this, &MainWindow::recieve_frame);
+    datapoint dpt;
+    dpt.displayed = 0;
+    dpt.monitored = 0;
+    dpt.sensorIndex = 0;
+    dpt.value = 0;
+    for(int i = 0; i < (int)sensorVector.size(); i++){
+        dpa.push_back(dpt);
+    }
 }
 
 canbus_interface::~canbus_interface()
@@ -88,5 +96,11 @@ datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint
     return edp;
 }
 
-
+std::string canbus_interface::get_curr_time(){
+    time_t t = time(0);
+    struct tm now = *localtime(&t);
+    char buf[20];
+    strftime(buf, sizeof(buf),"%X",&now);
+    return buf;
+}
 

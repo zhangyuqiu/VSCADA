@@ -12,10 +12,6 @@ bool Config::read_config_file_data(string configFile){
     inFile.open(configFile);
     vector<string> splitLine;
     vector<meta> sensorMetaData;
-    vector<meta> GLVmeta;
-    vector<meta> TSImeta;
-    vector<meta> TSVmeta;
-    vector<meta> COOLmeta;
     vector<response> responseVector;
     cout << "Opening file" << endl;
     if(!inFile){
@@ -129,6 +125,7 @@ start_comp:
                     cout << "Error in config file: subsystem" << endl;
                 }
 
+
                 bufMeta.defSamplingRate = (int)stoi(splitLine.at(3));
                 bufMeta.minimum = (int)stoi(splitLine.at(4));
                 bufMeta.maximum = (int)stoi(splitLine.at(5));
@@ -193,10 +190,10 @@ start_comp:
     dbase = new DB_Engine();
     ioControl = new iocontrol();
     dataMtr = new DataMonitor(sensorMetaData,responseVector);
-    glv_thread = new GLV_Thread(dataMtr);
-    tsi_thread = new TSI_Thread(dataMtr);
-    tsv_thread = new TSV_Thread(dataMtr);
-    cool_thread = new COOL_Thread(dataMtr);
+    glv_thread = new GLV_Thread(dataMtr,GLVmeta);
+    tsi_thread = new TSI_Thread(dataMtr,TSImeta);
+    tsv_thread = new TSV_Thread(dataMtr,TSVmeta);
+    cool_thread = new COOL_Thread(dataMtr,COOLmeta);
     dataCtrl = new DataControl(dataMtr,dbase,ioControl,glv_thread,tsi_thread,tsv_thread,cool_thread);
 
     //initialize configured values for submodules
@@ -211,6 +208,7 @@ start_comp:
     dataCtrl->init_TSI_sensors(TSImeta);
     dataCtrl->init_TSV_sensors(TSVmeta);
     dataCtrl->init_COOL_sensors(COOLmeta);
+
 
     dataCtrl->glv_thread->start();
     dataCtrl->cool_thread->start();
