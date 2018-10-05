@@ -66,7 +66,7 @@ void TSV_Thread::WaitForInternalThreadToExit()
 void TSV_Thread::TSVCollectionTasks(){
     testVal++;
     for (int i = 0; i < (int)TSVSensorMeta.size(); i++){
-        datapoint data = canInterface->getdatapoint(TSVSensorMeta.at(i).sensorIndex);
+        datapoint data = canInterface->getdatapoint_canadd(TSVSensorMeta.at(i).canAddress);
         TSVData.at(i) = data.value;
     }
 }

@@ -66,7 +66,7 @@ void TSI_Thread::WaitForInternalThreadToExit()
 void TSI_Thread::TSICollectionTasks(){
     testVal++;
     for (int i = 0; i < (int)TSISensorMeta.size(); i++){
-        datapoint data = canInterface->getdatapoint(TSISensorMeta.at(i).sensorIndex);
+        datapoint data = canInterface->getdatapoint_canadd(TSISensorMeta.at(i).canAddress);
         TSIData.at(i) = data.value;
     }
     cout << "TSI Data Collected" << endl;
