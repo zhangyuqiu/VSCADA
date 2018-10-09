@@ -12,9 +12,7 @@
 #include "config.h"
 #include "typedefs.h"
 #include "canbus_interface.h"
-
-
-
+#include "subsystemthread.h"
 
 namespace Ui {
 class MainWindow;
@@ -27,7 +25,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void update();
     void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
     void updateData(vector <int> glvVector, vector <int> tsiVector, vector <int> tsvVector, vector <int> coolingVector);
@@ -136,6 +133,7 @@ public:
     Config * conf;
 private slots:
     void plotGraph();
+    void update();
     void updateVals();
 
 private:

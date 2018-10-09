@@ -1,0 +1,8 @@
+<node1>
+	<child1>
+		<name>MyChildName</name>
+	</child1>
+	<child2>
+		<name>MyOtherCildName</name>
+	</child2>
+</node1>

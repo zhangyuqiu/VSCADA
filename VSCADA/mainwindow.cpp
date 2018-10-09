@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     conf->read_config_file_data("config_test.txt");
 
 //    central->setStyleSheet("background-color: red;");
-    initMetadata(conf->GLVmeta,conf->TSImeta,conf->TSVmeta,conf->COOLmeta);
+//    initMetadata(conf->GLVmeta,conf->TSImeta,conf->TSVmeta,conf->COOLmeta);
 
     editsize=100;
     xinit=0;
@@ -55,12 +55,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setCentralWidget(scrollArea);
 
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(500);
 
     // can bus init here
-    //canbus_interface *c = new canbus_interface();
-
 }
 
 MainWindow::~MainWindow()
@@ -69,93 +67,140 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::update(){
-    int maxSensorSize = (int)GLVEdits.size();
-    if ((int)TSIEdits.size() > maxSensorSize) maxSensorSize = (int)TSIEdits.size();
-    if ((int)TSVEdits.size() > maxSensorSize) maxSensorSize = (int)TSVEdits.size();
-    if ((int)COOLINGEdits.size() > maxSensorSize) maxSensorSize = (int)COOLINGEdits.size();
-
-    for (int i = 0; i < (int)GLVEdits.size(); i++){
-        QLabel * label = new QLabel;
-        if (i == 0){
-            QLabel * label1 = new QLabel;
-            label1->setText("GLV SENSORS");
-            label1->setStyleSheet("font:27pt;");
-            mainLayout->addWidget(label1,0,0);
-        }
-        label->setText(QString::fromStdString(GLV_meta.at(i).sensorName));
-        label->setStyleSheet("font:17pt;");
-        mainLayout->addWidget(label,i+1,0);
-        mainLayout->addWidget(GLVEdits.at(i),i+1,1);
-    }
-    QFrame *linea0 = new QFrame(this);
-    linea0->setLineWidth(2);
-    linea0->setMidLineWidth(1);
-    linea0->setFrameShape(QFrame::VLine);
-    linea0->setFrameShadow(QFrame::Raised);
-    mainLayout->addWidget(linea0,0,2,maxSensorSize+1,1);
-
-    for (int i = 0; i < (int)TSIEdits.size(); i++){
-        QLabel * label = new QLabel;
-        if (i == 0){
-            QLabel * label1 = new QLabel;
-            label1->setText("TSI SENSORS");
-            label1->setStyleSheet("font:27pt;");
-            mainLayout->addWidget(label1,0,3);
-        }
-        label->setText(QString::fromStdString(TSI_meta.at(i).sensorName));
-        label->setStyleSheet("font:17pt;");
-        mainLayout->addWidget(label,i+1,3);
-        mainLayout->addWidget(TSIEdits.at(i),i+1,4);
+    int maxSensorRow = 0;
+    int sectionCount = 0;
+    int fieldVCount = 0;
+    int fieldHCount = 0;
+    vector<SubsystemThread *> subs;
+    subs = conf->subsystems;
+    cout << "Subs vector size: " << subs.size() << endl;
+    for (int i = 0; i < subs.size(); i++){
+        vector<meta> subMeta = subs.at(i)->get_metadata();
+        if (subMeta.size() > maxSensorRow) maxSensorRow = subMeta.size();
     }
 
-    QFrame *linea1 = new QFrame(this);
-    linea1->setLineWidth(2);
-    linea1->setMidLineWidth(1);
-    linea1->setFrameShape(QFrame::VLine);
-    linea1->setFrameShadow(QFrame::Raised);
-    mainLayout->addWidget(linea1,0,5,maxSensorSize+1,1);
-
-    for (int i = 0; i < (int)TSVEdits.size(); i++){
-        QLabel * label = new QLabel;
-        if (i == 0){
-            QLabel * label1 = new QLabel;
-            label1->setText("TSV SENSORS");
-            label1->setStyleSheet("font:27pt;");
-            mainLayout->addWidget(label1,0,6);
+    for (int i = 0; i < subs.size(); i++){
+        SubsystemThread * currSub = subs.at(i);
+        vector<meta> subMeta = currSub->get_metadata();
+        if(subMeta.size() > 0){
+            for (int j = 0; j < (int)subMeta.size(); j++){
+                fieldVCount = sectionCount;
+                fieldVCount++;
+                QLabel * label = new QLabel;
+                if (j == 0){
+                    QLabel * label1 = new QLabel;
+                    label1->setText(QString::fromStdString(currSub->subsystemId));
+                    label1->setStyleSheet("font:40pt;");
+                    mainLayout->addWidget(label1,fieldHCount,fieldVCount);
+                    fieldHCount++;
+                }
+                label->setText(QString::fromStdString(subMeta.at(j).sensorName));
+                label->setStyleSheet("font:20pt;");
+                mainLayout->addWidget(label,fieldHCount,fieldVCount);
+                fieldVCount++;
+                currSub->edits.at(j)->setText(QString::fromStdString(to_string(currSub->rawData.at(j))));
+                currSub->edits.at(j)->setStyleSheet("font:20pt;");
+                mainLayout->addWidget(currSub->edits.at(j),fieldHCount,fieldVCount);
+                fieldHCount++;
+            }
+            sectionCount += 3;
+            fieldHCount = 0;
+            QFrame *linea0 = new QFrame(this);
+            linea0->setLineWidth(2);
+            linea0->setMidLineWidth(1);
+            linea0->setFrameShape(QFrame::VLine);
+            linea0->setFrameShadow(QFrame::Raised);
+            mainLayout->addWidget(linea0,fieldHCount,sectionCount,maxSensorRow+1,1);
         }
-        label->setText(QString::fromStdString(TSV_meta.at(i).sensorName));
-        label->setStyleSheet("font:17pt;");
-        mainLayout->addWidget(label,i+1,6);
-        mainLayout->addWidget(TSVEdits.at(i),i+1,7);
     }
 
-    QFrame *linea2 = new QFrame(this);
-    linea2->setLineWidth(2);
-    linea2->setMidLineWidth(1);
-    linea2->setFrameShape(QFrame::VLine);
-    linea2->setFrameShadow(QFrame::Raised);
-    mainLayout->addWidget(linea2,0,8,maxSensorSize+1,1);
+//    int maxSensorSize = (int)GLVEdits.size();
+//    if ((int)TSIEdits.size() > maxSensorSize) maxSensorSize = (int)TSIEdits.size();
+//    if ((int)TSVEdits.size() > maxSensorSize) maxSensorSize = (int)TSVEdits.size();
+//    if ((int)COOLINGEdits.size() > maxSensorSize) maxSensorSize = (int)COOLINGEdits.size();
 
-    for (int i = 0; i < (int)COOLINGEdits.size(); i++){
-        QLabel * label = new QLabel;
-        if (i == 0){
-            QLabel * label1 = new QLabel;
-            label1->setText("COOLING SENSORS");
-            label1->setStyleSheet("font:27pt;");
-            mainLayout->addWidget(label1,0,9);
-        }
-        label->setText(QString::fromStdString(COOLING_meta.at(i).sensorName));
-        label->setStyleSheet("font:17pt;");
-        mainLayout->addWidget(label,i+1,9);
-        mainLayout->addWidget(COOLINGEdits.at(i),i+1,10);
-    }
+//    for (int i = 0; i < (int)GLVEdits.size(); i++){
+//        QLabel * label = new QLabel;
+//        if (i == 0){
+//            QLabel * label1 = new QLabel;
+//            label1->setText("GLV SENSORS");
+//            label1->setStyleSheet("font:27pt;");
+//            mainLayout->addWidget(label1,0,0);
+//        }
+//        label->setText(QString::fromStdString(GLV_meta.at(i).sensorName));
+//        label->setStyleSheet("font:17pt;");
+//        mainLayout->addWidget(label,i+1,0);
+//        mainLayout->addWidget(GLVEdits.at(i),i+1,1);
+//    }
+//    QFrame *linea0 = new QFrame(this);
+//    linea0->setLineWidth(2);
+//    linea0->setMidLineWidth(1);
+//    linea0->setFrameShape(QFrame::VLine);
+//    linea0->setFrameShadow(QFrame::Raised);
+//    mainLayout->addWidget(linea0,0,2,maxSensorSize+1,1);
 
-    QFrame *linea3 = new QFrame(this);
-    linea3->setLineWidth(2);
-    linea3->setMidLineWidth(1);
-    linea3->setFrameShape(QFrame::HLine);
-    linea3->setFrameShadow(QFrame::Raised);
-    mainLayout->addWidget(linea3,maxSensorSize+2,0,1,11);
+//    for (int i = 0; i < (int)TSIEdits.size(); i++){
+//        QLabel * label = new QLabel;
+//        if (i == 0){
+//            QLabel * label1 = new QLabel;
+//            label1->setText("TSI SENSORS");
+//            label1->setStyleSheet("font:27pt;");
+//            mainLayout->addWidget(label1,0,3);
+//        }
+//        label->setText(QString::fromStdString(TSI_meta.at(i).sensorName));
+//        label->setStyleSheet("font:17pt;");
+//        mainLayout->addWidget(label,i+1,3);
+//        mainLayout->addWidget(TSIEdits.at(i),i+1,4);
+//    }
+
+//    QFrame *linea1 = new QFrame(this);
+//    linea1->setLineWidth(2);
+//    linea1->setMidLineWidth(1);
+//    linea1->setFrameShape(QFrame::VLine);
+//    linea1->setFrameShadow(QFrame::Raised);
+//    mainLayout->addWidget(linea1,0,5,maxSensorSize+1,1);
+
+//    for (int i = 0; i < (int)TSVEdits.size(); i++){
+//        QLabel * label = new QLabel;
+//        if (i == 0){
+//            QLabel * label1 = new QLabel;
+//            label1->setText("TSV SENSORS");
+//            label1->setStyleSheet("font:27pt;");
+//            mainLayout->addWidget(label1,0,6);
+//        }
+//        label->setText(QString::fromStdString(TSV_meta.at(i).sensorName));
+//        label->setStyleSheet("font:17pt;");
+//        mainLayout->addWidget(label,i+1,6);
+//        mainLayout->addWidget(TSVEdits.at(i),i+1,7);
+//    }
+
+//    QFrame *linea2 = new QFrame(this);
+//    linea2->setLineWidth(2);
+//    linea2->setMidLineWidth(1);
+//    linea2->setFrameShape(QFrame::VLine);
+//    linea2->setFrameShadow(QFrame::Raised);
+//    mainLayout->addWidget(linea2,0,8,maxSensorSize+1,1);
+
+//    for (int i = 0; i < (int)COOLINGEdits.size(); i++){
+//        QLabel * label = new QLabel;
+//        if (i == 0){
+//            QLabel * label1 = new QLabel;
+//            label1->setText("COOLING SENSORS");
+//            label1->setStyleSheet("font:27pt;");
+//            mainLayout->addWidget(label1,0,9);
+//        }
+//        label->setText(QString::fromStdString(COOLING_meta.at(i).sensorName));
+//        label->setStyleSheet("font:17pt;");
+//        mainLayout->addWidget(label,i+1,9);
+//        mainLayout->addWidget(COOLINGEdits.at(i),i+1,10);
+//    }
+
+//    QFrame *linea3 = new QFrame(this);
+//    linea3->setLineWidth(2);
+//    linea3->setMidLineWidth(1);
+//    linea3->setFrameShape(QFrame::HLine);
+//    linea3->setFrameShadow(QFrame::Raised);
+//    mainLayout->addWidget(linea3,maxSensorSize+2,0,1,11);
 
 //    QLabel * blank1= new QLabel();
 //    blank1->setText("                   ");
@@ -337,12 +382,8 @@ void MainWindow::update(){
 //    //message->setMinimumWidth(10);
 //    mainLayout->addWidget(message,7,5,7,6);
 
-
-
-
 //   QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
 //   QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
-
 }
 
 
@@ -376,11 +417,7 @@ void MainWindow::addErrorMessage(QString eMessage){
 }
 
 void MainWindow::updateVals(){
-    vector<int> glvData = conf->glv_thread->get_GLV_Data();
-    vector<int> tsiData = conf->tsi_thread->get_TSI_Data();
-    vector<int> tsvData = conf->tsv_thread->get_TSV_Data();
-    vector<int> coolData = conf->cool_thread->get_COOL_data();
-    updateData(glvData,tsiData,tsvData,coolData);
+
 }
 
 void MainWindow::initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling){

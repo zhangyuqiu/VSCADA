@@ -19,7 +19,7 @@ class GLV_Thread : public QObject
     Q_OBJECT
 public:
 
-    GLV_Thread(DataMonitor * mtr, vector<meta> GLVSensors); //class constructor
+    GLV_Thread(DataMonitor * mtr, canbus_interface * can, vector<meta> GLVSensors); //class constructor
     virtual ~GLV_Thread();                                  //class destructor
 
     void stop();                                            //stops data collection

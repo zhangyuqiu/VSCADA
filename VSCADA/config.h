@@ -11,19 +11,21 @@
 #include "datacontrol.h"
 #include "iocontrol.h"
 #include "db_engine.h"
-#include "tsi_thread.h"
-#include "tsv_thread.h"
-#include "cool_thread.h"
 #include "canbus_interface.h"
+#include "subsystemthread.h"
+#include <rapidxml/rapidxml_utils.hpp>
+#include <QtXml/QtXml>
 
 class DataControl;
 class DataMonitor;
 class iocontrol;
 class DB_Engine;
+class SubsystemThread;
 
 #define CONFIG_PRINTOUTS
 
 using namespace std;
+using namespace rapidxml;
 
 class Config
 {
@@ -37,22 +39,15 @@ public:
     vector<string> split(string s, string delim);
 
     //sensor vectors
-    vector<meta> GLVmeta;
-    vector<meta> TSImeta;
-    vector<meta> TSVmeta;
-    vector<meta> COOLmeta;
 
     // submodule declarations
     DataControl * dataCtrl;
     DataMonitor * dataMtr;
     DB_Engine * dbase;
     iocontrol * ioControl;
-    GLV_Thread * glv_thread;
-    TSI_Thread * tsi_thread;
-    TSV_Thread * tsv_thread;
-    COOL_Thread * cool_thread;
+    SubsystemThread * genericThread;
     canbus_interface * canInterface;
-
+    std::vector<SubsystemThread *> subsystems;
 };
 
 #endif // CONFIG_H

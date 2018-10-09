@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include "typedefs.h"
+#include "config.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,11 +27,10 @@ int main(int argc, char *argv[])
     palette.setColor(QPalette::HighlightedText, Qt::black);
     QApplication::setPalette(palette);
 
-    MainWindow w;
-    w.setWindowState((w.windowState()^Qt::WindowFullScreen));
+    MainWindow * w = new MainWindow;
+    w->setWindowState((w->windowState()^Qt::WindowFullScreen));
     datapoint d;
-//    w.update(d);
-    w.show();
+    w->show();
 
     return a.exec();
 }

@@ -4,7 +4,8 @@ CONFIG += app_bundle
 CONFIG += qt
 
 TARGET = VSCADA
-QT       += core gui printsupport sql
+QT     += xml
+QT     += core gui printsupport sql
 DEFINES += QT_DEPRECATED_WARNINGS
 
 LIBS += -l sqlite3
@@ -21,13 +22,10 @@ SOURCES += \
     datacontrol.cpp \
     iocontrol.cpp \
     config.cpp \
-    glv_thread.cpp \
-    tsi_thread.cpp \
-    tsv_thread.cpp \
-    cool_thread.cpp \
     mainwindow.cpp\
     qcustomplot.cpp \
-    canbus_interface.cpp
+    canbus_interface.cpp \
+    subsystemthread.cpp
 
 HEADERS += \
     db_engine.h \
@@ -36,14 +34,11 @@ HEADERS += \
     iocontrol.h \
     typedefs.h \
     config.h \
-    glv_thread.h \
-    tsi_thread.h \
-    tsv_thread.h \
-    cool_thread.h \
     mainwindow.h\
     qcustomplot.h\
     typedefs.h \
-    canbus_interface.h
+    canbus_interface.h \
+    subsystemthread.h
 
 FORMS += \
         mainwindow.ui
