@@ -9,6 +9,11 @@ Config::~Config(){
 
 bool Config::read_config_file_data(string configFile){
 
+    vector<vector<meta>> sensorVector;
+    vector<meta> allSensors;
+    vector<response> allResponses;
+    vector<int> minrates;
+
     qDebug("Inside the PARSE Slot");
         QDomDocument doc;
         QFile f("config.xml");
@@ -52,6 +57,8 @@ bool Config::read_config_file_data(string configFile){
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
                             thisSensor.sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
+                            thisSensor.canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
                             thisSensor.minimum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
@@ -63,6 +70,7 @@ bool Config::read_config_file_data(string configFile){
                         }
                     }
                     sensors.push_back(thisSensor);
+                    allSensors.push_back(thisSensor);
                 }
 
                 for (int n = 0; n < sensors.size(); n++){
@@ -77,11 +85,21 @@ bool Config::read_config_file_data(string configFile){
         cout << "subsystem ID: " << subSystemId << endl;
         cout << "subsystem min: " << minrate << endl;
         cout << "subsystem max: " << maxrate << endl;
-
-        SubsystemThread * thread = new SubsystemThread(dataMtr,canInterface,sensors,subSystemId);
-        thread->set_rate(minrate);
-        thread->start();
+        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId);
         subsystems.push_back(thread);
+        sensorVector.push_back(sensors);
+        minrates.push_back(minrate);
+
+    }
+
+    dataMtr = new DataMonitor(allSensors,allResponses);
+    canInterface = new canbus_interface(allSensors,"STUFF");
+    for (int i = 0; i < subsystems.size(); i++){
+        SubsystemThread * thread = subsystems.at(i);
+        thread->setCAN(canInterface);
+        thread->setMonitor(dataMtr);
+        thread->set_rate(minrates.at(i));
+        subsystems.at(i)->start();
     }
     return true;
 }

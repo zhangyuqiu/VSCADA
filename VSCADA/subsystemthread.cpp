@@ -5,15 +5,13 @@
  * @param mtr - data monitor module
  * @param sensors - vector of subsystem sensors configured
  */
-SubsystemThread::SubsystemThread(DataMonitor * mtr, canbus_interface * can, vector<meta> sensors, string id){
+SubsystemThread::SubsystemThread(vector<meta> sensors, string id){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
-    monitor = mtr;
-    canInterface = can;
     sensorMeta = sensors;
     subsystemId = id;
     init_data();
-    for(int i = 0; i < sensors.size(); i++){
+    for(int i = 0; i < static_cast<int>(sensors.size()); i++){
         QLineEdit * lineEdit = new QLineEdit;
         edits.push_back(lineEdit);
     }
@@ -43,16 +41,24 @@ void SubsystemThread::set_rate(int newRate){
  * @brief SubsystemThread::init_data - initializes vector of data to 0
  */
 void SubsystemThread::init_data(){
-    for(int i = 0; i < (int)sensorMeta.size(); i++){
+    for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
         rawData.push_back(0);
     }
+}
+
+void SubsystemThread::setCAN(canbus_interface * canInt){
+    canInterface = canInt;
+}
+
+void SubsystemThread::setMonitor(DataMonitor * mtr){
+    monitor = mtr;
 }
 
 /**
  * @brief SubsystemThread::updateEdits - updates text edit fields
  */
 void SubsystemThread::updateEdits(){
-    for(int i = 0; i < edits.size(); i++){
+    for(int i = 0; i < static_cast<int>(edits.size()); i++){
         int num = rawData.at(i);
         string val = to_string(num);
         edits.at(i)->setText(QString::fromStdString(val));
@@ -94,16 +100,17 @@ void SubsystemThread::WaitForInternalThreadToExit()
  */
 void SubsystemThread::subsystemCollectionTasks(){
     testVal++;
-//    for (int i = 0; i < (int)sensorMeta.size(); i++){
-//        datapoint data = canInterface->getdatapoint_canadd(sensorMeta.at(i).canAddress);
-//        rawData.at(i) = data.value;
-//    }
-    for(int i = 0; i < rawData.size(); i++){
-        int num = rawData.at(i);
-        rawData.at(i) = num+1;
-//        cout << "Number adding: " << rawData.at(i) << endl;
+    int size = static_cast<int>(sensorMeta.size());
+    for (int i = 0; i < size; i++){
+        int canAddr = sensorMeta.at(i).canAddress;
+        datapoint data = canInterface->getdatapoint_canadd(canAddr);
+        rawData.at(i) = data.value;
+        cout << "Data Collected from " << canAddr << ": " << data.value << endl;
     }
-    cout << subsystemId << " Data Collected" << endl;
+
+//        cout << "Number adding: " << rawData.at(i) << endl;
+//    }
+//    cout << subsystemId << " Data Collected" << endl;
 }
 
 /**

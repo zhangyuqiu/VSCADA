@@ -19,7 +19,7 @@ class SubsystemThread : public QObject
 {
     Q_OBJECT
 public:
-    SubsystemThread(DataMonitor * mtr, canbus_interface * can, vector<meta> COOLSensors, string id);   //class object destructor
+    SubsystemThread(vector<meta> sensors, string id);   //class object destructor
     virtual ~SubsystemThread();                                     //class object destructor
 
     void stop();                                                //stops data collection
@@ -27,6 +27,8 @@ public:
     void init_data();                                           //retrieves GLV Data
     void set_rate(int newRate);                                            //sets rate at which data is checked
     void updateEdits();
+    void setCAN(canbus_interface * canInt);
+    void setMonitor(DataMonitor * mtr);
     vector<meta> get_metadata();
     vector<int> get_data();                                     //initializes GLV data vector
     void WaitForInternalThreadToExit();                         //stops code until this thread is destroyed

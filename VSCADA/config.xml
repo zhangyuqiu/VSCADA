@@ -6,6 +6,7 @@
 		<sensors>
 			<sensor>
 				<name>TSVSensor</name>
+				<canaddress>256</canaddress>
 				<minimum>4</minimum>
 				<maximum>435</maximum>
 				<minreaction>2</minreaction>
@@ -13,8 +14,9 @@
 			</sensor>
 			<sensor>
 				<name>TSVMISC</name>
+				<canaddress>273</canaddress>
 				<minimum>34</minimum>
-				<maximum>7o</maximum>
+				<maximum>70</maximum>
 				<minreaction>4</minreaction>
 				<maxreaction>6</maxreaction>
 			</sensor>
@@ -27,6 +29,7 @@
 		<sensors>
 			<sensor>
 				<name>COOLINGOne</name>
+				<canaddress>546</canaddress>
 				<minimum>3</minimum>
 				<maximum>30</maximum>
 				<minreaction>9</minreaction>
@@ -41,6 +44,7 @@
 		<sensors>
 			<sensor>
 				<name>TSITemp</name>
+				<canaddress>819</canaddress>
 				<minimum>10</minimum>
 				<maximum>40</maximum>
 				<minreaction>0</minreaction>
@@ -54,7 +58,8 @@
 		<minrate>1000</minrate>
 		<sensors>
 			<sensor>
-			<name>GLVTemp</name>
+				<name>GLVTemp</name>
+				<canaddress>1092</canaddress>
 				<minimum>10</minimum>
 				<maximum>30</maximum>
 				<minreaction>0</minreaction>
@@ -62,6 +67,7 @@
 			</sensor>
 			<sensor>
 				<name>GLVStatus</name>
+				<canaddress>1365</canaddress>
 				<minimum>5</minimum>
 				<maximum>20</maximum>
 				<minreaction>0</minreaction>
@@ -69,6 +75,7 @@
 			</sensor>
 			<sensor>
 				<name>GLVOther</name>
+				<canaddress>1638</canaddress>
 				<minimum>2</minimum>
 				<maximum>23</maximum>
 				<minreaction>0</minreaction>

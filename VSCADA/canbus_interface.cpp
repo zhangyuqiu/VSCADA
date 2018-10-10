@@ -58,7 +58,7 @@ void canbus_interface::recieve_frame() {
     qDebug() << "revieve_frame called" << endl;
     QCanBusFrame recframe = can_bus->readFrame();
     QByteArray a = recframe.payload();
-
+    quint32 b = recframe.frameId();
     if (dpa.empty()) {
         qDebug() << "Datapoint array has no item" <<endl;
         return;
