@@ -21,12 +21,17 @@ typedef struct{
     std::string sensorName;
     int minimum;
     int maximum;
-    int subsystem;
+    std::string subsystem;
     int defSamplingRate;
     int maxRxnCode;
     int minRxnCode;
     int canAddress;
     int gpioPin;
+    int val;
+    void updateVal(int newVal)
+      {
+        val = newVal;
+      }
 }meta;
 
 typedef struct{

@@ -39,6 +39,8 @@ public:
     vector<string> split(string s, string delim);
 
     //sensor vectors
+    meta * storedSensor;
+    vector<meta *> storedSensors;
 
     // submodule declarations
     DataControl * dataCtrl;

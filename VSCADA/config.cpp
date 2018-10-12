@@ -9,7 +9,7 @@ Config::~Config(){
 
 bool Config::read_config_file_data(string configFile){
 
-    vector<vector<meta>> sensorVector;
+    vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;
     vector<response> allResponses;
     vector<int> minrates;
@@ -36,7 +36,7 @@ bool Config::read_config_file_data(string configFile){
         int minrate = 0;
         int maxrate = 0;
         string subSystemId;
-        vector<meta> sensors;
+        vector<meta *> sensors;
         cout << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
 
         //get subsystem characteristics: subsystemId, minrate and maxrate
@@ -52,34 +52,47 @@ bool Config::read_config_file_data(string configFile){
                 QDomNodeList sensorsList = subsystemXteristics.at(j).childNodes();
                 for (int k = 0; k < sensorsList.size(); k++){
                     meta thisSensor;
+                    storedSensor = new meta;
+                    storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
+                    cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
-                            thisSensor.sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+//                            thisSensor.sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+                            storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
                         } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
-                            thisSensor.canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+//                            thisSensor.canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
-                            thisSensor.minimum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+//                            thisSensor.minimum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->minimum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
-                            thisSensor.maximum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+//                            thisSensor.maximum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->maximum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minreaction") == 0){
-                            thisSensor.minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+//                            thisSensor.minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maxreaction") == 0){
-                            thisSensor.maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+//                            thisSensor.maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         }
+                        storedSensor->val = 0;
                     }
-                    sensors.push_back(thisSensor);
+                    storedSensors.push_back(storedSensor);
+                    sensors.push_back(storedSensor);
                     allSensors.push_back(thisSensor);
                 }
 
+                cout << "All Sensors: " << sensors.size() << endl;
                 for (int n = 0; n < sensors.size(); n++){
-                    cout << "Sensor Name: " << sensors.at(n).sensorName << endl;
-                    cout << "Sensor Max: " << sensors.at(n).maximum << endl;
-                    cout << "Sensor Min: " << sensors.at(n).minimum << endl;
-                    cout << "Sensor MaxRxn: " << sensors.at(n).maxRxnCode << endl;
-                    cout << "Sensor MinRxn: " << sensors.at(n).minRxnCode << endl;
+                    cout << "Sensor Name: " << storedSensors.at(n)->sensorName << endl;
+                    cout << "Sensor Max: " << storedSensors.at(n)->maximum << endl;
+                    cout << "Sensor Min: " << storedSensors.at(n)->minimum << endl;
+                    cout << "Sensor MaxRxn: " << storedSensors.at(n)->maxRxnCode << endl;
+                    cout << "Sensor MinRxn: " << storedSensors.at(n)->minRxnCode << endl;
                 }
+
             }
         }
         cout << "subsystem ID: " << subSystemId << endl;
@@ -92,13 +105,67 @@ bool Config::read_config_file_data(string configFile){
 
     }
 
+    //********************************************************//
+    //              PREPARE DATABASE INIT SCRIPT
+    //********************************************************//
+
+    ofstream dbScript;
+    dbScript.open ("script.sql");
+
+    // write create universal tables
+    dbScript << "create table if not exists system_log(" << endl;
+    dbScript << "time char not null," << endl;
+    dbScript << "reactionId char not null," << endl;
+    dbScript << "message char not null" << endl;
+    dbScript << ");" << endl;
+
+    dbScript << "create table if not exists sensors(" << endl;
+    dbScript << "sensorIndex char not null," << endl;
+    dbScript << "sensorName char not null," << endl;
+    dbScript << "subsystem char not null," << endl;
+    dbScript << "minThreshold char not null," << endl;
+    dbScript << "maxThreshold char not null," << endl;
+    dbScript << "maxReactionId char not null," << endl;
+    dbScript << "minReactionId char not null" << endl;
+    dbScript << ");" << endl;
+
+    dbScript << "create table if not exists reactions(" << endl;
+    dbScript << "reactionId char not null," << endl;
+    dbScript << "message char not null" << endl;
+    dbScript << ");" << endl;
+
+    dbScript << "create table if not exists system_info(" << endl;
+    dbScript << "runId char not null," << endl;
+    dbScript << "startTime char not null," << endl;
+    dbScript << "endTime char not null" << endl;
+    dbScript << ");" << endl;
+
+    //create subsystem tables
+    for (int i = 0; i < subsystems.size(); i++){
+        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_data(";
+        dbScript << scriptTableArg << endl;
+        dbScript << "time char not null," << endl;
+        dbScript << "sensorindex char not null," << endl;
+        dbScript << "sensorName char not null," << endl;
+        dbScript << "value char not null" << endl;
+        dbScript << ");" << endl;
+    }
+    dbScript.close();
+
+    //run script
+    dbase = new DB_Engine();
+    dbase->runScript("script.sql");
+    //************************FINISH**************************//
+
+
     dataMtr = new DataMonitor(allSensors,allResponses);
-    canInterface = new canbus_interface(allSensors,"STUFF");
+    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems);
     for (int i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
-        thread->setCAN(canInterface);
+//        thread->setCAN(canInterface);
         thread->setMonitor(dataMtr);
         thread->set_rate(minrates.at(i));
+        thread->setDB(dbase);
         subsystems.at(i)->start();
     }
     return true;

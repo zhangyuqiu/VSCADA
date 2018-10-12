@@ -55,7 +55,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setCentralWidget(scrollArea);
 
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    update();
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
     timer->start(500);
 
     // can bus init here
@@ -75,13 +76,13 @@ void MainWindow::update(){
     subs = conf->subsystems;
     cout << "Subs vector size: " << subs.size() << endl;
     for (int i = 0; i < subs.size(); i++){
-        vector<meta> subMeta = subs.at(i)->get_metadata();
+        vector<meta*> subMeta = subs.at(i)->get_metadata();
         if (subMeta.size() > maxSensorRow) maxSensorRow = subMeta.size();
     }
 
     for (int i = 0; i < subs.size(); i++){
         SubsystemThread * currSub = subs.at(i);
-        vector<meta> subMeta = currSub->get_metadata();
+        vector<meta *> subMeta = currSub->get_metadata();
         if(subMeta.size() > 0){
             for (int j = 0; j < (int)subMeta.size(); j++){
                 fieldVCount = sectionCount;
@@ -94,7 +95,7 @@ void MainWindow::update(){
                     mainLayout->addWidget(label1,fieldHCount,fieldVCount);
                     fieldHCount++;
                 }
-                label->setText(QString::fromStdString(subMeta.at(j).sensorName));
+                label->setText(QString::fromStdString(subMeta.at(j)->sensorName));
                 label->setStyleSheet("font:20pt;");
                 mainLayout->addWidget(label,fieldHCount,fieldVCount);
                 fieldVCount++;
@@ -417,7 +418,11 @@ void MainWindow::addErrorMessage(QString eMessage){
 }
 
 void MainWindow::updateVals(){
-
+    vector<SubsystemThread *> subs;
+    subs = conf->subsystems;
+    for (int i = 0; i < subs.size(); i++){
+        subs.at(i)->updateEdits();
+    }
 }
 
 void MainWindow::initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling){

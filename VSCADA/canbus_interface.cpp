@@ -1,8 +1,9 @@
 #include "canbus_interface.h"
 
-canbus_interface::canbus_interface(std::vector<meta> sensorVector, std::string modulename) {
+canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs) {
     this->modulename = modulename;
-    std::vector<meta> sensorVec = sensorVector;
+    sensorVector = sensorVec;
+    subsystems = subs;
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
@@ -13,10 +14,10 @@ canbus_interface::canbus_interface(std::vector<meta> sensorVector, std::string m
     for(int i = 0; i < a; i++){
         dpt.displayed = 0;
         dpt.monitored = 0;
-        dpt.sensorIndex = sensorVector.back().sensorIndex;
-        dpt.canAddress = sensorVector.back().canAddress;
-        dpt.gpioPin = sensorVector.back().gpioPin;
-        sensorVector.pop_back();
+        dpt.sensorIndex = sensorVector.at(i)->sensorIndex;
+        dpt.canAddress = sensorVector.at(i)->canAddress;
+        dpt.gpioPin = sensorVector.at(i)->gpioPin;
+//        sensorVector.pop_back();
         dpt.value = 0;
         dpa.push_back(dpt);
     }
@@ -64,9 +65,10 @@ void canbus_interface::recieve_frame() {
         return;
     }
 
+    int data = 0;
     for (std::vector<datapoint>::iterator it = dpa.begin(); it != dpa.end(); ++it) {
         if(it.base()->canAddress == recframe.frameId()) {
-            int data = 0;
+
             for (char i:a) {
                 data = data + static_cast<int>(i);
             }
@@ -84,6 +86,22 @@ void canbus_interface::recieve_frame() {
         }
     }
 
+    for(int i = 0; i < sensorVector.size(); i++){
+        if(sensorVector.at(i)->canAddress == recframe.frameId()){
+            meta * currSensor = sensorVector.at(i);
+            if (currSensor->val != data) {
+                currSensor->val = data;
+                for (int j = 0; j < subsystems.size(); j++){
+                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+                        subsystems.at(j)->logData(currSensor);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    cout << "recframe ID: " << recframe.frameId();
     qDebug() << "frame recieved" <<endl;
     qDebug() << QString::number(getdatapoint_canadd(recframe.frameId()).value) <<endl;
 }

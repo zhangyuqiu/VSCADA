@@ -5,7 +5,7 @@
  * @param mtr - data monitor module
  * @param sensors - vector of subsystem sensors configured
  */
-SubsystemThread::SubsystemThread(vector<meta> sensors, string id){
+SubsystemThread::SubsystemThread(vector<meta *> sensors, string id){
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
@@ -25,7 +25,34 @@ SubsystemThread::~SubsystemThread(){
 
 }
 
-vector<meta> SubsystemThread::get_metadata(){
+void SubsystemThread::setDB(DB_Engine * db){
+    dbase = db;
+}
+
+void SubsystemThread::logData(meta * currSensor){
+    vector<string> cols;
+    cols.push_back("time");
+    cols.push_back("sensorIndex");
+    cols.push_back("sensorName");
+    cols.push_back("value");
+    vector<string> rows;
+    string table = subsystemId + "_data";
+    cout << "Debug dbase write" << endl;
+    for (int i = 0; i < sensorMeta.size(); i++){
+        if (sensorMeta.at(i) == currSensor){
+            rows.push_back(get_curr_time());
+            rows.push_back(currSensor->sensorName);
+            rows.push_back(currSensor->sensorName);
+            rows.push_back(to_string(currSensor->val));
+            dbase->insert_row(table,cols,rows);
+            return;
+        }
+        cout << "Debug dbase write " << i << endl;
+    }
+    cout << "Sensor Not Found. System Error" << endl;
+}
+
+vector<meta *> SubsystemThread::get_metadata(){
     return sensorMeta;
 }
 
@@ -46,10 +73,6 @@ void SubsystemThread::init_data(){
     }
 }
 
-void SubsystemThread::setCAN(canbus_interface * canInt){
-    canInterface = canInt;
-}
-
 void SubsystemThread::setMonitor(DataMonitor * mtr){
     monitor = mtr;
 }
@@ -59,7 +82,7 @@ void SubsystemThread::setMonitor(DataMonitor * mtr){
  */
 void SubsystemThread::updateEdits(){
     for(int i = 0; i < static_cast<int>(edits.size()); i++){
-        int num = rawData.at(i);
+        int num = sensorMeta.at(i)->val;
         string val = to_string(num);
         edits.at(i)->setText(QString::fromStdString(val));
         rawData.at(i) = num+1;
@@ -102,15 +125,8 @@ void SubsystemThread::subsystemCollectionTasks(){
     testVal++;
     int size = static_cast<int>(sensorMeta.size());
     for (int i = 0; i < size; i++){
-        int canAddr = sensorMeta.at(i).canAddress;
-        datapoint data = canInterface->getdatapoint_canadd(canAddr);
-        rawData.at(i) = data.value;
-        cout << "Data Collected from " << canAddr << ": " << data.value << endl;
-    }
 
-//        cout << "Number adding: " << rawData.at(i) << endl;
-//    }
-//    cout << subsystemId << " Data Collected" << endl;
+    }
 }
 
 /**
@@ -119,4 +135,12 @@ void SubsystemThread::subsystemCollectionTasks(){
 void SubsystemThread::StartInternalThread()
 {
    pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
+}
+
+string SubsystemThread::get_curr_time(){
+    time_t t = time(0);
+    struct tm now = *localtime(&t);
+    char buf[20];
+    strftime(buf, sizeof(buf),"%X",&now);
+    return buf;
 }
