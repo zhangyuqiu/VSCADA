@@ -53,8 +53,6 @@ bool canbus_interface::canconnect() {
 
 }
 
-
-
 void canbus_interface::recieve_frame() {
     qDebug() << "revieve_frame called" << endl;
     QCanBusFrame recframe = can_bus->readFrame();
