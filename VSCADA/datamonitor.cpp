@@ -20,7 +20,7 @@ int DataMonitor::initThresholds(vector<vector<string>> config_info){
         if ((int)(configItem.size()) == SENSOR_DATA_SIZE){
             meta metaItem;
             metaItem.sensorIndex = (uint32_t)stoi(configItem.at(0));
-            metaItem.defSamplingRate = (uint32_t)stoi(configItem.at(1));
+            metaItem.checkRate = (uint32_t)stoi(configItem.at(1));
             metaItem.subsystem = (uint32_t)stoi(configItem.at(2));
             metaItem.minimum = (uint32_t)stoi(configItem.at(3));
             metaItem.maximum = (uint32_t)stoi(configItem.at(4));
@@ -38,20 +38,25 @@ int DataMonitor::setMode(int md){
 
 int DataMonitor::checkThreshold(datapoint * pt){
     //check whether datapoint crosses thresholds
-    if (pt->value > metaVector.at(pt->sensorIndex).maximum){
-        initiateRxn(metaVector.at(pt->sensorIndex).maxRxnCode);
-        pt->monitored = true;
-        return 1;
-    } else if (pt->value < metaVector.at(pt->sensorIndex).minimum){
-        initiateRxn(metaVector.at(pt->sensorIndex).minRxnCode);
-        pt->monitored = true;
-        return 1;
-    }
-    pt->monitored = true;
-    return 0;
+//    if (pt->value > metaVector.at(pt->sensorIndex).maximum){
+//        initiateRxn(metaVector.at(pt->sensorIndex).maxRxnCode);
+//        pt->monitored = true;
+//        return 1;
+//    } else if (pt->value < metaVector.at(pt->sensorIndex).minimum){
+//        initiateRxn(metaVector.at(pt->sensorIndex).minRxnCode,);
+//        pt->monitored = true;
+//        return 1;
+//    }
+//    pt->monitored = true;
+//    return 0;
 }
 
-int DataMonitor::initiateRxn(uint32_t rxnCode){
-    // execute configured reactions here
+int DataMonitor::initiateRxn(uint32_t rxnCode, meta *sensor){
+    //print to log
+//    for (int i = 0; i < responseVector.size(); i++){
+//        if (rxnCode == responseVector.at(i).responseIndex){
+
+//        }
+//    }
     return 0;
 }

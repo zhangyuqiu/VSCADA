@@ -91,7 +91,17 @@ void canbus_interface::recieve_frame() {
                 currSensor->val = data;
                 for (int j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+                        subsystems.at(j)->updateEdits(currSensor);
                         subsystems.at(j)->logData(currSensor);
+                        subsystems.at(j)->checkThresholds(currSensor);
+                        break;
+                    }
+                }
+            } else {
+                for (int j = 0; j < subsystems.size(); j++){
+                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+                        subsystems.at(j)->updateEdits(currSensor);
+                        subsystems.at(j)->checkThresholds(currSensor);
                         break;
                     }
                 }

@@ -12,10 +12,16 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id){
     subsystemId = id;
     init_data();
     for(int i = 0; i < static_cast<int>(sensors.size()); i++){
-        QLineEdit * lineEdit = new QLineEdit;
+        lineEdit = new QLineEdit;
+        tmr = new QTimer;
+        connect(tmr, SIGNAL(timeout()), tmr, SLOT(stop()));
+        connect(tmr, SIGNAL(timeout()), this, SLOT(checkTimeout()));
+        tmr->start(sensors.at(i)->checkRate);
         edits.push_back(lineEdit);
+        lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
+        editTimers.push_back(tmr);
+        updateEdits(sensors.at(i));
     }
-    updateEdits();
 }
 
 /**
@@ -80,12 +86,49 @@ void SubsystemThread::setMonitor(DataMonitor * mtr){
 /**
  * @brief SubsystemThread::updateEdits - updates text edit fields
  */
-void SubsystemThread::updateEdits(){
+void SubsystemThread::updateEdits(meta * sensor){
     for(int i = 0; i < static_cast<int>(edits.size()); i++){
-        int num = sensorMeta.at(i)->val;
-        string val = to_string(num);
-        edits.at(i)->setText(QString::fromStdString(val));
-        rawData.at(i) = num+1;
+        if(sensorMeta.at(i) == sensor){
+            int num = sensor->val;
+            string val = to_string(num);
+            editTimers.at(i)->start(sensor->checkRate);
+            edits.at(i)->setText(QString::fromStdString(val));
+        }
+    }
+}
+
+void SubsystemThread::checkTimeout(){
+    cout << "Edit timers size: " << edits.size() << " " << subsystemId << endl;
+//    string example = "Sijui";
+    for(int i = 0; i < static_cast<int>(edits.size()); i++){
+        edits.at(i)->setStyleSheet("font: 20pt; color: #A9A9A9");
+    }
+}
+
+void SubsystemThread::checkThresholds(meta * sensor){
+    if (sensor->val > sensor->maximum){
+        for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
+            if (sensorMeta.at(i) == sensor) {
+                edits.at(i)->setStyleSheet("font: 20pt; color: #FF0000");
+                break;
+            }
+        }
+        monitor->initiateRxn(sensor->maximum,sensor);
+    } else if (sensor->val < sensor->minimum){
+        for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
+            if (sensorMeta.at(i) == sensor) {
+                edits.at(i)->setStyleSheet("font: 20pt; color: #1E90FF");
+                break;
+            }
+        }
+        monitor->initiateRxn(sensor->minimum,sensor);
+    } else {
+        for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
+            if (sensorMeta.at(i) == sensor) {
+                edits.at(i)->setStyleSheet("font: 20pt; color: #FFFF00");
+                break;
+            }
+        }
     }
 }
 
@@ -122,11 +165,7 @@ void SubsystemThread::WaitForInternalThreadToExit()
  * @brief SubsystemThread::subsystemCollectionTasks - performs tasks for data collection
  */
 void SubsystemThread::subsystemCollectionTasks(){
-    testVal++;
-    int size = static_cast<int>(sensorMeta.size());
-    for (int i = 0; i < size; i++){
 
-    }
 }
 
 /**

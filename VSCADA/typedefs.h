@@ -22,7 +22,7 @@ typedef struct{
     int minimum;
     int maximum;
     std::string subsystem;
-    int defSamplingRate;
+    int checkRate;
     int maxRxnCode;
     int minRxnCode;
     int canAddress;

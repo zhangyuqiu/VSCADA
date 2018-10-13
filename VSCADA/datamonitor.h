@@ -21,7 +21,7 @@ public:
     ~DataMonitor();
     int initThresholds(vector<vector<string>> config_info);
     int checkThreshold(datapoint * pt);
-    int initiateRxn(uint32_t rxnCode);
+    int initiateRxn(uint32_t rxnCode, meta * sensor);
     int setMode(int md);
 
     // global vectors

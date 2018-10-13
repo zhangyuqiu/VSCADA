@@ -30,6 +30,7 @@ public:
     void set_rate(int newRate);                                            //sets rate at which data is checked
     void logData(meta * currSensor);
     void setMonitor(DataMonitor * mtr);
+    void checkThresholds(meta * sensor);
     string get_curr_time();
     void setDB(DB_Engine * db);
     vector<meta *> get_metadata();
@@ -43,12 +44,15 @@ public:
 
     int testVal = 0;                                            //dummy variable for testing
 
+    QLineEdit * lineEdit;
+    QTimer * tmr;
     string subsystemId;
     int checkRate = 0;                                          //sampling rate of cooling system
     bool running = true;                                        //to control running of collection thread
     vector<int> rawData;                                       //cooling sensor data
     vector<meta *> sensorMeta;                           //cooling sensor metadata
     vector<QLineEdit *> edits;
+    vector<QTimer *> editTimers;
 
 protected:
     virtual void subsystemCollectionTasks();                      //runs collection tasks
@@ -61,7 +65,8 @@ private:
 
 public slots:
     void StartInternalThread();                                 //starts thread
-    void updateEdits();
+    void updateEdits(meta *sensor);
+    void checkTimeout();
 };
 
 #endif // SUBSYSTEMTHREAD_H

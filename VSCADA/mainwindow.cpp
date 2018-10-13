@@ -99,8 +99,7 @@ void MainWindow::update(){
                 label->setStyleSheet("font:20pt;");
                 mainLayout->addWidget(label,fieldHCount,fieldVCount);
                 fieldVCount++;
-                currSub->edits.at(j)->setText(QString::fromStdString(to_string(currSub->rawData.at(j))));
-                currSub->edits.at(j)->setStyleSheet("font:20pt;");
+//                currSub->edits.at(j)->setStyleSheet("font:20pt;");
                 mainLayout->addWidget(currSub->edits.at(j),fieldHCount,fieldVCount);
                 fieldHCount++;
             }
@@ -418,11 +417,7 @@ void MainWindow::addErrorMessage(QString eMessage){
 }
 
 void MainWindow::updateVals(){
-    vector<SubsystemThread *> subs;
-    subs = conf->subsystems;
-    for (int i = 0; i < subs.size(); i++){
-        subs.at(i)->updateEdits();
-    }
+    this->update();
 }
 
 void MainWindow::initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling){

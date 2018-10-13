@@ -7,14 +7,16 @@
 			<sensor>
 				<name>TSVSensor</name>
 				<canaddress>256</canaddress>
+				<checkrate>5000</checkrate>
 				<minimum>4</minimum>
-				<maximum>435</maximum>
+				<maximum>143</maximum>
 				<minreaction>2</minreaction>
 				<maxreaction>6</maxreaction>
 			</sensor>
 			<sensor>
 				<name>TSVMISC</name>
 				<canaddress>273</canaddress>
+				<checkrate>6000</checkrate>
 				<minimum>34</minimum>
 				<maximum>70</maximum>
 				<minreaction>4</minreaction>
@@ -30,6 +32,7 @@
 			<sensor>
 				<name>COOLINGOne</name>
 				<canaddress>546</canaddress>
+				<checkrate>7000</checkrate>
 				<minimum>3</minimum>
 				<maximum>30</maximum>
 				<minreaction>9</minreaction>
@@ -45,6 +48,7 @@
 			<sensor>
 				<name>TSITemp</name>
 				<canaddress>819</canaddress>
+				<checkrate>4000</checkrate>
 				<minimum>10</minimum>
 				<maximum>40</maximum>
 				<minreaction>0</minreaction>
@@ -60,6 +64,7 @@
 			<sensor>
 				<name>GLVTemp</name>
 				<canaddress>1092</canaddress>
+				<checkrate>3000</checkrate>
 				<minimum>10</minimum>
 				<maximum>30</maximum>
 				<minreaction>0</minreaction>
@@ -68,6 +73,7 @@
 			<sensor>
 				<name>GLVStatus</name>
 				<canaddress>1365</canaddress>
+				<checkrate>4500</checkrate>
 				<minimum>5</minimum>
 				<maximum>20</maximum>
 				<minreaction>0</minreaction>
@@ -76,6 +82,7 @@
 			<sensor>
 				<name>GLVOther</name>
 				<canaddress>1638</canaddress>
+				<checkrate>5500</checkrate>
 				<minimum>2</minimum>
 				<maximum>23</maximum>
 				<minreaction>0</minreaction>
@@ -83,4 +90,26 @@
 			</sensor>
 		</sensors>
 	</subsystem>
+	<response>
+		<id>0</id>
+		<description>Ignore Event</description>
+		<gpiopin>None</gpio>
+		<canaddress>None</canaddress>
+		<outstate>0</outstate>
+	</response>
+	<response>
+		<id>1</id>
+		<description>Writing to GPIO pin</description>
+		<gpiopin>20</gpiopin>
+		<canaddress>None</canaddress>
+		<outstate>1</outstate>
+	</response>
+	<response>
+		<id>2</id>
+		<description>Writing to CAN</description>
+		<gpiopin>None</gpiopin>
+		<canaddress>123</canaddress>
+		<outstate>243</outstate>
+	</response>
+	
 </system>

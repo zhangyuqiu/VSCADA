@@ -76,6 +76,9 @@ bool Config::read_config_file_data(string configFile){
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maxreaction") == 0){
 //                            thisSensor.maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
+//                            thisSensor.canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         }
                         storedSensor->val = 0;
                     }
@@ -162,7 +165,6 @@ bool Config::read_config_file_data(string configFile){
     canInterface = new canbus_interface(storedSensors,"STUFF",subsystems);
     for (int i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
-//        thread->setCAN(canInterface);
         thread->setMonitor(dataMtr);
         thread->set_rate(minrates.at(i));
         thread->setDB(dbase);
