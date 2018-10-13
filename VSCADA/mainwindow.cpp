@@ -74,7 +74,6 @@ void MainWindow::update(){
     int fieldHCount = 0;
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
-    cout << "Subs vector size: " << subs.size() << endl;
     for (int i = 0; i < subs.size(); i++){
         vector<meta*> subMeta = subs.at(i)->get_metadata();
         if (subMeta.size() > maxSensorRow) maxSensorRow = subMeta.size();
@@ -99,7 +98,6 @@ void MainWindow::update(){
                 label->setStyleSheet("font:20pt;");
                 mainLayout->addWidget(label,fieldHCount,fieldVCount);
                 fieldVCount++;
-//                currSub->edits.at(j)->setStyleSheet("font:20pt;");
                 mainLayout->addWidget(currSub->edits.at(j),fieldHCount,fieldVCount);
                 fieldHCount++;
             }

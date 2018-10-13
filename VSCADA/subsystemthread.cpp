@@ -98,10 +98,8 @@ void SubsystemThread::updateEdits(meta * sensor){
 }
 
 void SubsystemThread::checkTimeout(){
-    cout << "Edit timers size: " << edits.size() << " " << subsystemId << endl;
-//    string example = "Sijui";
     for(int i = 0; i < static_cast<int>(edits.size()); i++){
-        edits.at(i)->setStyleSheet("font: 20pt; color: #A9A9A9");
+        if (!editTimers.at(i)->isActive()) edits.at(i)->setStyleSheet("font: 20pt; color: #A9A9A9");
     }
 }
 
