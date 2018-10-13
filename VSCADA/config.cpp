@@ -26,9 +26,6 @@ bool Config::read_config_file_data(string configFile){
         f.close();
         qDebug("File was closed Successfully");
 
-
-    // print out the element names of all elements that are direct children
-    // of the outermost element.
     QDomNodeList subsystemNodes = doc.elementsByTagName("subsystem");
 
     cout << "Number of subsystems: " << subsystemNodes.size() << endl;
@@ -98,6 +95,8 @@ bool Config::read_config_file_data(string configFile){
 
             }
         }
+        QDomNodeList responseNodes = doc.elementsByTagName("response");
+        cout << "Number of responses: " << responseNodes.size() << endl << endl;
         cout << "subsystem ID: " << subSystemId << endl;
         cout << "subsystem min: " << minrate << endl;
         cout << "subsystem max: " << maxrate << endl;

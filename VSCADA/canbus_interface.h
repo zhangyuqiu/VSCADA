@@ -19,6 +19,7 @@ public:
     datapoint getdatapoint(uint32_t index);
     datapoint getdatapoint_canadd(uint32_t canaddrss);
     std::string get_curr_time();
+    int sendFrame(int address, int data);
 
     std::vector<meta *> sensorVector;
     std::vector<SubsystemThread * > subsystems;

@@ -114,6 +114,17 @@ void canbus_interface::recieve_frame() {
     qDebug() << QString::number(getdatapoint_canadd(recframe.frameId()).value) <<endl;
 }
 
+int canbus_interface::sendFrame(int address, int data){
+    QByteArray byteArr;
+    QDataStream streamArr(&byteArr, QIODevice::WriteOnly);
+    streamArr << data;
+    QCanBusFrame * outFrame = new QCanBusFrame;
+    outFrame->setFrameId(static_cast<quint32>(address));
+    outFrame->setPayload(byteArr);
+    can_bus->writeFrame(*outFrame);
+    return 0;
+}
+
 datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
     for (datapoint d:dpa) {
         if (d.sensorIndex == index) {

@@ -93,7 +93,7 @@
 	<response>
 		<id>0</id>
 		<description>Ignore Event</description>
-		<gpiopin>None</gpio>
+		<gpiopin>None</gpiopin>
 		<canaddress>None</canaddress>
 		<outstate>0</outstate>
 	</response>

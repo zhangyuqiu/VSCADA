@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <QTimer>
 #include "typedefs.h"
-//#include "canbus_interface.h"
 #include "datamonitor.h"
 #include "db_engine.h"
 
