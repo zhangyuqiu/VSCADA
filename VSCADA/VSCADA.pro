@@ -25,7 +25,8 @@ SOURCES += \
     mainwindow.cpp\
     qcustomplot.cpp \
     canbus_interface.cpp \
-    subsystemthread.cpp
+    subsystemthread.cpp \
+    gpio_interface.cpp
 
 HEADERS += \
     db_engine.h \
@@ -38,7 +39,8 @@ HEADERS += \
     qcustomplot.h\
     typedefs.h \
     canbus_interface.h \
-    subsystemthread.h
+    subsystemthread.h \
+    gpio_interface.h
 
 FORMS += \
         mainwindow.ui
