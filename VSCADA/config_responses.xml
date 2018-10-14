@@ -1,0 +1,26 @@
+<responses>
+	<response>
+		<id>0</id>
+		<description>Ignore Event</description>
+	</response>
+	<response>
+		<id>1</id>
+		<description>Writing to GPIO pin</description>
+		<gpiopin>20</gpiopin>
+		<gpioval>1</gpioval>
+	</response>
+	<response>
+		<id>2</id>
+		<description>Writing to CAN and GPIO</description>
+		<gpiopin>4</gpiopin>
+		<canaddress>123</canaddress>
+		<gpioval>243</gpioval>
+		<canval>345</canval>
+	</response>
+	<response>
+		<id>3</id>
+		<description>Writing to CAN</description>
+		<canaddress>345</canaddress>
+		<canval>33</canval>
+	</response>
+</responses>

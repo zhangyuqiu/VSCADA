@@ -8,6 +8,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <QTimer>
+#include <QQueue>
 #include "typedefs.h"
 #include "datamonitor.h"
 #include "db_engine.h"
@@ -20,7 +21,7 @@ class SubsystemThread : public QObject
 {
     Q_OBJECT
 public:
-    SubsystemThread(vector<meta *> sensors, string id);   //class object destructor
+    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector);   //class object destructor
     virtual ~SubsystemThread();                                     //class object destructor
 
     void stop();                                                //stops data collection
@@ -30,6 +31,8 @@ public:
     void logData(meta * currSensor);
     void setMonitor(DataMonitor * mtr);
     void checkThresholds(meta * sensor);
+    void enqueueMsg(string msg);
+    int initiateRxn(int rxnCode, meta *sensor);
     string get_curr_time();
     void setDB(DB_Engine * db);
     vector<meta *> get_metadata();
@@ -43,6 +46,10 @@ public:
 
     int testVal = 0;                                            //dummy variable for testing
 
+    vector<response> responseVector;
+    QQueue<response> * respCANQueue;
+    QQueue<response> * respGPIOQueue;
+    QQueue<string> * msgQueue;
     QLineEdit * lineEdit;
     QTimer * tmr;
     string subsystemId;
@@ -66,6 +73,10 @@ public slots:
     void StartInternalThread();                                 //starts thread
     void updateEdits(meta *sensor);
     void checkTimeout();
+
+signals:
+    void pushCANItem(response rsp);
+    void pushGPIOtem();
 };
 
 #endif // SUBSYSTEMTHREAD_H

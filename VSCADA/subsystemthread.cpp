@@ -5,11 +5,15 @@
  * @param mtr - data monitor module
  * @param sensors - vector of subsystem sensors configured
  */
-SubsystemThread::SubsystemThread(vector<meta *> sensors, string id){
+SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector){
+    msgQueue = new QQueue<string>;
+    respCANQueue = new QQueue<response>;
+    respGPIOQueue = new QQueue<response>;
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
     subsystemId = id;
+    responseVector = respVector;
     init_data();
     for(int i = 0; i < static_cast<int>(sensors.size()); i++){
         lineEdit = new QLineEdit;
@@ -104,6 +108,7 @@ void SubsystemThread::checkTimeout(){
 }
 
 void SubsystemThread::checkThresholds(meta * sensor){
+    string msg;
     if (sensor->val > sensor->maximum){
         for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
             if (sensorMeta.at(i) == sensor) {
@@ -111,7 +116,10 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
-        monitor->initiateRxn(sensor->maximum,sensor);
+        initiateRxn(sensor->maxRxnCode,sensor);
+        msg = get_curr_time() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
+        enqueueMsg(msg);
+
     } else if (sensor->val < sensor->minimum){
         for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
             if (sensorMeta.at(i) == sensor) {
@@ -119,7 +127,9 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
-        monitor->initiateRxn(sensor->minimum,sensor);
+        initiateRxn(sensor->minRxnCode,sensor);
+        msg = get_curr_time() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
+        enqueueMsg(msg);
     } else {
         for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
             if (sensorMeta.at(i) == sensor) {
@@ -128,6 +138,19 @@ void SubsystemThread::checkThresholds(meta * sensor){
             }
         }
     }
+}
+
+void SubsystemThread::enqueueMsg(string msg){
+    vector<string> cols;
+    vector<string> rows;
+    cols.push_back("time");
+    cols.push_back("reactionId");
+    cols.push_back("message");
+    rows.push_back(get_curr_time());
+    rows.push_back("console");
+    rows.push_back(msg);
+    dbase->insert_row("system_log",cols,rows);
+    msgQueue->enqueue(msg);
 }
 
 /**
@@ -172,6 +195,36 @@ void SubsystemThread::subsystemCollectionTasks(){
 void SubsystemThread::StartInternalThread()
 {
    pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
+}
+
+int SubsystemThread::initiateRxn(int rxnCode, meta *sensor){
+    //print to log
+    vector<string> cols;
+    vector<string> rows;
+    cols.push_back("time");
+    cols.push_back("reactionId");
+    cols.push_back("message");
+    rows.push_back(get_curr_time());
+    rows.push_back(to_string(rxnCode));
+
+    for (int i = 0; i < responseVector.size(); i++){
+        response rsp = responseVector.at(i);
+        if (rsp.responseIndex == rxnCode){
+            rows.push_back(rsp.msg);
+            enqueueMsg(rsp.msg);
+            if (rsp.canAddress >= 0){
+                cout << "sending out can data" << endl;
+                respCANQueue->enqueue(rsp);
+                emit pushCANItem(rsp);
+            }
+            if (rsp.gpioPin >= 0){
+                respGPIOQueue->enqueue(rsp);
+                pushGPIOtem();
+            }
+        }
+    }
+    dbase->insert_row("system_log",cols,rows);
+    return 0;
 }
 
 string SubsystemThread::get_curr_time(){

@@ -1,4 +1,4 @@
-<system>
+<subsystems>
 	<subsystem>
 		<name>TSV</name>
 		<maxrate>500</maxrate>
@@ -10,8 +10,8 @@
 				<checkrate>5000</checkrate>
 				<minimum>4</minimum>
 				<maximum>143</maximum>
-				<minreaction>2</minreaction>
-				<maxreaction>6</maxreaction>
+				<minreaction>0</minreaction>
+				<maxreaction>2</maxreaction>
 			</sensor>
 			<sensor>
 				<name>TSVMISC</name>
@@ -19,8 +19,8 @@
 				<checkrate>6000</checkrate>
 				<minimum>34</minimum>
 				<maximum>70</maximum>
-				<minreaction>4</minreaction>
-				<maxreaction>6</maxreaction>
+				<minreaction>1</minreaction>
+				<maxreaction>0</maxreaction>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -35,8 +35,8 @@
 				<checkrate>7000</checkrate>
 				<minimum>3</minimum>
 				<maximum>30</maximum>
-				<minreaction>9</minreaction>
-				<maxreaction>4</maxreaction>
+				<minreaction>3</minreaction>
+				<maxreaction>2</maxreaction>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -52,7 +52,7 @@
 				<minimum>10</minimum>
 				<maximum>40</maximum>
 				<minreaction>0</minreaction>
-				<maxreaction>0</maxreaction>
+				<maxreaction>3</maxreaction>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -68,7 +68,7 @@
 				<minimum>10</minimum>
 				<maximum>30</maximum>
 				<minreaction>0</minreaction>
-				<maxreaction>0</maxreaction>
+				<maxreaction>3</maxreaction>
 			</sensor>
 			<sensor>
 				<name>GLVStatus</name>
@@ -77,7 +77,7 @@
 				<minimum>5</minimum>
 				<maximum>20</maximum>
 				<minreaction>0</minreaction>
-				<maxreaction>0</maxreaction>
+				<maxreaction>3</maxreaction>
 			</sensor>
 			<sensor>
 				<name>GLVOther</name>
@@ -86,30 +86,8 @@
 				<minimum>2</minimum>
 				<maximum>23</maximum>
 				<minreaction>0</minreaction>
-				<maxreaction>4</maxreaaction>
+				<maxreaction>2</maxreaaction>
 			</sensor>
 		</sensors>
 	</subsystem>
-	<response>
-		<id>0</id>
-		<description>Ignore Event</description>
-		<gpiopin>None</gpiopin>
-		<canaddress>None</canaddress>
-		<outstate>0</outstate>
-	</response>
-	<response>
-		<id>1</id>
-		<description>Writing to GPIO pin</description>
-		<gpiopin>20</gpiopin>
-		<canaddress>None</canaddress>
-		<outstate>1</outstate>
-	</response>
-	<response>
-		<id>2</id>
-		<description>Writing to CAN</description>
-		<gpiopin>None</gpiopin>
-		<canaddress>123</canaddress>
-		<outstate>243</outstate>
-	</response>
-	
-</system>
+</subsystems>

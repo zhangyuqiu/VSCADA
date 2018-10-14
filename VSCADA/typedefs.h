@@ -28,6 +28,11 @@ typedef struct{
     int canAddress;
     int gpioPin;
     int val;
+    double calConst;
+    int calVal;
+    void calData(){
+        calVal = val*calConst;
+    }
     void updateVal(int newVal)
       {
         val = newVal;
@@ -55,7 +60,9 @@ typedef struct{
 typedef struct{
     int responseIndex;
     int displayTarget;
-    int value;
+    std::string msg;
+    int canValue;
+    int gpioValue;
     int canAddress;
     int gpioPin;
 }response;

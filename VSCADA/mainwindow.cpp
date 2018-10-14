@@ -215,7 +215,7 @@ void MainWindow::addErrorMessage(QString eMessage){
 }
 
 void MainWindow::updateVals(){
-    this->update();
+//    this->update();
 }
 
 void MainWindow::initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling){

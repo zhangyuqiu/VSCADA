@@ -51,12 +51,32 @@ int DataMonitor::checkThreshold(datapoint * pt){
 //    return 0;
 }
 
-int DataMonitor::initiateRxn(uint32_t rxnCode, meta *sensor){
+int DataMonitor::initiateRxn(int rxnCode, meta *sensor){
     //print to log
-//    for (int i = 0; i < responseVector.size(); i++){
-//        if (rxnCode == responseVector.at(i).responseIndex){
+    vector<string> cols;
+    vector<string> rows;
+    cols.push_back("time");
+    cols.push_back("reactionId");
+    cols.push_back("message");
+    rows.push_back(get_curr_time());
+    rows.push_back(to_string(rxnCode));
+    for (int i = 0; i < responseVector.size(); i++){
+        response rsp = responseVector.at(i);
+        if (rsp.responseIndex == rxnCode){
+            rows.push_back(rsp.msg);
+            if (rsp.canAddress >= 0){
 
-//        }
-//    }
+            }
+        }
+    }
+
     return 0;
+}
+
+string DataMonitor::get_curr_time(){
+    time_t t = time(0);
+    struct tm now = *localtime(&t);
+    char buf[20];
+    strftime(buf, sizeof(buf),"%X",&now);
+    return buf;
 }

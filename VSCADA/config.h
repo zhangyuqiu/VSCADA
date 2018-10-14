@@ -35,6 +35,7 @@ public:
     bool read_config_file_data(string configFile);
     vector<string> csv_split(string str);
     vector<string> split(string s, string delim);
+    void findElementsWithAttribute(const QDomElement& elem, const QString& attr, QList<QDomElement> foundElements);
 
     //sensor vectors
     meta * storedSensor;

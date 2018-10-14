@@ -15,21 +15,68 @@ bool Config::read_config_file_data(string configFile){
     vector<int> minrates;
 
     qDebug("Inside the PARSE Slot");
-        QDomDocument doc;
-        QFile f("config.xml");
-        if(!f.open(QIODevice::ReadOnly))
-        {
-            qDebug("Error While Reading the File");
-        }
+    QDomDocument doc;
+    QFile f("config.xml");
+    if(!f.open(QIODevice::ReadOnly))
+    {
+        qDebug("Error While Reading the File");
+    }
 
-        doc.setContent(&f);
-        f.close();
-        qDebug("File was closed Successfully");
+    doc.setContent(&f);
+    f.close();
+    qDebug("File was closed Successfully");
 
+     QDomDocument respDoc;
+     QFile fl("config_responses.xml");
+     if(!fl.open(QIODevice::ReadOnly))
+     {
+         qDebug("Error While Reading the File");
+     }
+
+     respDoc.setContent(&fl);
+     fl.close();
+
+    QDomNodeList responseNodes = respDoc.elementsByTagName("response");
     QDomNodeList subsystemNodes = doc.elementsByTagName("subsystem");
 
+    cout << "Number of responses: " << responseNodes.size() << endl;
     cout << "Number of subsystems: " << subsystemNodes.size() << endl;
-    for(int i =0; i < static_cast<int>(subsystemNodes.size()); i++){
+
+    for (int i = 0; i < static_cast<int>(responseNodes.size()); i++){
+        QDomNodeList responseXteristics = responseNodes.at(i).childNodes();
+        response thisRsp;
+        thisRsp.canAddress = -1;
+        thisRsp.gpioPin = -1;
+        thisRsp.canValue = -1;
+        thisRsp.gpioValue = -1;
+        for (int j = 0; j < responseXteristics.size(); j++){
+            if (responseXteristics.at(j).nodeName().toStdString().compare("id") == 0){
+                thisRsp.responseIndex = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("description") == 0){
+                thisRsp.msg = responseXteristics.at(j).firstChild().nodeValue().toStdString();
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
+                thisRsp.canAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("gpiopin") == 0){
+                thisRsp.gpioPin = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("gpioval") == 0){
+                thisRsp.gpioValue = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("canval") == 0){
+                thisRsp.canValue = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            }
+        }
+        allResponses.push_back(thisRsp);
+    }
+
+    for (int i = 0; i < static_cast<int>(allResponses.size()); i++){
+        cout << "Response ID: " << allResponses.at(i).responseIndex << endl;
+        cout << "description: " << allResponses.at(i).msg << endl;
+        cout << "can address: " << allResponses.at(i).canAddress << endl;
+        cout << "can value: " << allResponses.at(i).canValue << endl;
+        cout << "gpio pin: " << allResponses.at(i).gpioPin << endl;
+        cout << "gpio value: " << allResponses.at(i).gpioValue << endl << endl;
+    }
+
+    for (int i = 0; i < static_cast<int>(subsystemNodes.size()); i++){
         int minrate = 0;
         int maxrate = 0;
         string subSystemId;
@@ -95,12 +142,10 @@ bool Config::read_config_file_data(string configFile){
 
             }
         }
-        QDomNodeList responseNodes = doc.elementsByTagName("response");
-        cout << "Number of responses: " << responseNodes.size() << endl << endl;
         cout << "subsystem ID: " << subSystemId << endl;
         cout << "subsystem min: " << minrate << endl;
         cout << "subsystem max: " << maxrate << endl;
-        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId);
+        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
@@ -170,6 +215,18 @@ bool Config::read_config_file_data(string configFile){
         subsystems.at(i)->start();
     }
     return true;
+}
+
+void Config::findElementsWithAttribute(const QDomElement& elem, const QString& attr, QList<QDomElement> foundElements)
+{
+  if( elem.attributes().contains(attr) )
+    foundElements.append(elem);
+
+  QDomElement child = elem.firstChildElement();
+  while( !child.isNull() ) {
+    findElementsWithAttribute(child, attr, foundElements);
+    child = child.nextSiblingElement();
+  }
 }
 
 vector<string> Config::split(string s, string delim){

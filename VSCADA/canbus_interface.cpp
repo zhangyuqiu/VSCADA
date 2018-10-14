@@ -7,6 +7,10 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
+    for (int i = 0; i < subsystems.size(); i++){
+        subsystemQueue = subsystems.at(i)->respCANQueue;
+        connect(subsystems.at(i), SIGNAL(pushCANItem(response)), this, SLOT(sendFrame(response)));
+    }
 
     std::cout << "CAN Int for " << modulename << " vector size: " << sensorVector.size() << endl;
         datapoint dpt;
@@ -114,15 +118,15 @@ void canbus_interface::recieve_frame() {
     qDebug() << QString::number(getdatapoint_canadd(recframe.frameId()).value) <<endl;
 }
 
-int canbus_interface::sendFrame(int address, int data){
+void canbus_interface::sendFrame(response rsp){
+    cout << "sending out frame" << endl;
     QByteArray byteArr;
     QDataStream streamArr(&byteArr, QIODevice::WriteOnly);
-    streamArr << data;
+    streamArr << rsp.canValue;
     QCanBusFrame * outFrame = new QCanBusFrame;
-    outFrame->setFrameId(static_cast<quint32>(address));
+    outFrame->setFrameId(static_cast<quint32>(rsp.canAddress));
     outFrame->setPayload(byteArr);
     can_bus->writeFrame(*outFrame);
-    return 0;
 }
 
 datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
