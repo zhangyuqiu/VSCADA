@@ -13,7 +13,6 @@
 #include "db_engine.h"
 #include "canbus_interface.h"
 #include "subsystemthread.h"
-#include <rapidxml/rapidxml_utils.hpp>
 #include <QtXml/QtXml>
 
 class DataControl;
@@ -25,7 +24,6 @@ class SubsystemThread;
 #define CONFIG_PRINTOUTS
 
 using namespace std;
-using namespace rapidxml;
 
 class Config
 {
