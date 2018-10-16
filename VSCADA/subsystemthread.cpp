@@ -112,7 +112,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
     if (sensor->val > sensor->maximum){
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("font: 20pt; color: #FF0000");
+                edits.at(i)->setStyleSheet("color: #FF0000");
                 break;
             }
         }
@@ -124,7 +124,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
     } else if (sensor->val < sensor->minimum){
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("font: 20pt; color: #1E90FF");
+                edits.at(i)->setStyleSheet("color: #1E90FF");
                 break;
             }
         }
@@ -135,7 +135,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
     } else {
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("font: 20pt; color: #FFFF00");
+                edits.at(i)->setStyleSheet("color: #FFFF00");
                 break;
             }
         }
