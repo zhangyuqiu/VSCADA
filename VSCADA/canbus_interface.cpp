@@ -19,7 +19,6 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
         dpt.sensorIndex = sensorVector.at(i)->sensorIndex;
         dpt.canAddress = sensorVector.at(i)->canAddress;
         dpt.gpioPin = sensorVector.at(i)->gpioPin;
-//        sensorVector.pop_back();
         dpt.value = 0;
         dpa.push_back(dpt);
     }

@@ -86,7 +86,7 @@
 				<minimum>2</minimum>
 				<maximum>23</maximum>
 				<minreaction>0</minreaction>
-				<maxreaction>2</maxreaaction>
+				<maxreaction>1</maxreaction>
 			</sensor>
 			<sensor>
 				<name>GLVI2C</name>
