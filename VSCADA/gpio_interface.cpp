@@ -119,6 +119,7 @@ int gpio_interface::GPIODirection(int pin, int dir)
     char path[DIRECTION_MAX];
     int fd;
 
+    usleep(1000);
     snprintf(path, DIRECTION_MAX, "/sys/class/gpio/gpio%d/direction", pin);
     fd = open(path, O_WRONLY);
     if (-1 == fd) {
@@ -126,6 +127,7 @@ int gpio_interface::GPIODirection(int pin, int dir)
         return(-1);
     }
 
+    cout << path << endl;
     if (-1 == write(fd, &s_directions_str[IN == dir ? 0 : 3], IN == dir ? 2 : 3)) {
         fprintf(stderr, "Failed to set direction!\n");
         return(-1);
