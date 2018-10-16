@@ -25,6 +25,7 @@ typedef struct{
     int checkRate;
     int maxRxnCode;
     int minRxnCode;
+    int normRxnCode;
     int canAddress;
     int i2cAddress;
     int gpioPin;
@@ -64,6 +65,7 @@ typedef struct{
     std::string msg;
     int canValue;
     int gpioValue;
+    int defVal;
     int canAddress;
     int gpioPin;
 }response;

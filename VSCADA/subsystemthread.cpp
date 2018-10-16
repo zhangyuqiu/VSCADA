@@ -139,6 +139,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
+        initiateRxn(sensor->normRxnCode);
     }
 }
 

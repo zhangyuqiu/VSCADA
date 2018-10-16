@@ -35,6 +35,7 @@
 				<checkrate>7000</checkrate>
 				<minimum>1</minimum>
 				<maximum>4</maximum>
+				<normreaction>5</normreaction>
 				<minreaction>4</minreaction>
 				<maxreaction>5</maxreaction>
 			</sensor>

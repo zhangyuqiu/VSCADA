@@ -104,6 +104,7 @@ bool Config::read_config_file_data(){
                     storedSensor->checkRate = -1;
                     storedSensor->maxRxnCode = -1;
                     storedSensor->minRxnCode = -1;
+                    storedSensor->normRxnCode = -1;
                     storedSensor->canAddress = -1;
                     storedSensor->i2cAddress = -1;
                     storedSensor->gpioPin = -1;
@@ -126,6 +127,8 @@ bool Config::read_config_file_data(){
                             storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maxreaction") == 0){
                             storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("normreaction") == 0){
+                            storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
                             storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
