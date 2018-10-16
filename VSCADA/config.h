@@ -11,6 +11,7 @@
 #include "datacontrol.h"
 #include "iocontrol.h"
 #include "db_engine.h"
+#include "gpio_interface.h"
 #include "canbus_interface.h"
 #include "subsystemthread.h"
 #include <QtXml/QtXml>
@@ -32,15 +33,14 @@ public:
     // member function declarations
     Config();
     ~Config();
-    bool read_config_file_data(string configFile);
-    vector<string> csv_split(string str);
-    vector<string> split(string s, string delim);
-    void findElementsWithAttribute(const QDomElement& elem, const QString& attr, QList<QDomElement> foundElements);
+    bool read_config_file_data();
 
     //sensor vectors
     meta * storedSensor;
     vector<meta *> storedSensors;
-
+    vector<meta *> canSensors;
+    vector<meta *> gpioSensors;
+    vector<meta *> i2cSensors;
     // submodule declarations
     DataControl * dataCtrl;
     DataMonitor * dataMtr;
@@ -48,6 +48,7 @@ public:
     iocontrol * ioControl;
     SubsystemThread * genericThread;
     canbus_interface * canInterface;
+    gpio_interface * gpioInterface;
     std::vector<SubsystemThread *> subsystems;
 };
 

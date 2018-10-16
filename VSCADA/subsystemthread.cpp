@@ -15,15 +15,15 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<respo
     subsystemId = id;
     responseVector = respVector;
     init_data();
-    for(int i = 0; i < static_cast<int>(sensors.size()); i++){
+    for(uint i = 0; i < sensors.size(); i++){
         lineEdit = new QLineEdit;
-        tmr = new QTimer;
-        connect(tmr, SIGNAL(timeout()), tmr, SLOT(stop()));
-        connect(tmr, SIGNAL(timeout()), this, SLOT(checkTimeout()));
-        tmr->start(sensors.at(i)->checkRate);
+        checkTmr = new QTimer;
+        connect(checkTmr, SIGNAL(timeout()), checkTmr, SLOT(stop()));
+        connect(checkTmr, SIGNAL(timeout()), this, SLOT(checkTimeout()));
+        checkTmr->start(sensors.at(i)->checkRate);
         edits.push_back(lineEdit);
         lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
-        editTimers.push_back(tmr);
+        editTimers.push_back(checkTmr);
         updateEdits(sensors.at(i));
     }
 }
@@ -48,7 +48,7 @@ void SubsystemThread::logData(meta * currSensor){
     vector<string> rows;
     string table = subsystemId + "_data";
     cout << "Debug dbase write" << endl;
-    for (int i = 0; i < sensorMeta.size(); i++){
+    for (uint i = 0; i < sensorMeta.size(); i++){
         if (sensorMeta.at(i) == currSensor){
             rows.push_back(get_curr_time());
             rows.push_back(currSensor->sensorName);
@@ -91,7 +91,7 @@ void SubsystemThread::setMonitor(DataMonitor * mtr){
  * @brief SubsystemThread::updateEdits - updates text edit fields
  */
 void SubsystemThread::updateEdits(meta * sensor){
-    for(int i = 0; i < static_cast<int>(edits.size()); i++){
+    for(uint i = 0; i < edits.size(); i++){
         if(sensorMeta.at(i) == sensor){
             int num = sensor->val;
             string val = to_string(num);
@@ -102,7 +102,7 @@ void SubsystemThread::updateEdits(meta * sensor){
 }
 
 void SubsystemThread::checkTimeout(){
-    for(int i = 0; i < static_cast<int>(edits.size()); i++){
+    for(uint i = 0; i < edits.size(); i++){
         if (!editTimers.at(i)->isActive()) edits.at(i)->setStyleSheet("font: 20pt; color: #A9A9A9");
     }
 }
@@ -110,28 +110,28 @@ void SubsystemThread::checkTimeout(){
 void SubsystemThread::checkThresholds(meta * sensor){
     string msg;
     if (sensor->val > sensor->maximum){
-        for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
+        for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
                 edits.at(i)->setStyleSheet("font: 20pt; color: #FF0000");
                 break;
             }
         }
-        initiateRxn(sensor->maxRxnCode,sensor);
+        initiateRxn(sensor->maxRxnCode);
         msg = get_curr_time() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
         enqueueMsg(msg);
 
     } else if (sensor->val < sensor->minimum){
-        for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
+        for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
                 edits.at(i)->setStyleSheet("font: 20pt; color: #1E90FF");
                 break;
             }
         }
-        initiateRxn(sensor->minRxnCode,sensor);
+        initiateRxn(sensor->minRxnCode);
         msg = get_curr_time() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
         enqueueMsg(msg);
     } else {
-        for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
+        for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
                 edits.at(i)->setStyleSheet("font: 20pt; color: #FFFF00");
                 break;
@@ -179,7 +179,7 @@ vector<int> SubsystemThread::get_data(){
  */
 void SubsystemThread::WaitForInternalThreadToExit()
 {
-   (void) pthread_join(_thread, NULL);
+   (void) pthread_join(_thread, nullptr);
 }
 
 /**
@@ -194,10 +194,10 @@ void SubsystemThread::subsystemCollectionTasks(){
  */
 void SubsystemThread::StartInternalThread()
 {
-   pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
+   pthread_create(&_thread, nullptr, InternalThreadEntryFunc, this);
 }
 
-int SubsystemThread::initiateRxn(int rxnCode, meta *sensor){
+int SubsystemThread::initiateRxn(int rxnCode){
     //print to log
     vector<string> cols;
     vector<string> rows;
@@ -207,7 +207,7 @@ int SubsystemThread::initiateRxn(int rxnCode, meta *sensor){
     rows.push_back(get_curr_time());
     rows.push_back(to_string(rxnCode));
 
-    for (int i = 0; i < responseVector.size(); i++){
+    for (uint i = 0; i < responseVector.size(); i++){
         response rsp = responseVector.at(i);
         if (rsp.responseIndex == rxnCode){
             rows.push_back(rsp.msg);
@@ -219,7 +219,7 @@ int SubsystemThread::initiateRxn(int rxnCode, meta *sensor){
             }
             if (rsp.gpioPin >= 0){
                 respGPIOQueue->enqueue(rsp);
-                pushGPIOtem();
+                pushGPIOData(rsp);
             }
         }
     }
@@ -228,7 +228,7 @@ int SubsystemThread::initiateRxn(int rxnCode, meta *sensor){
 }
 
 string SubsystemThread::get_curr_time(){
-    time_t t = time(0);
+    time_t t = time(nullptr);
     struct tm now = *localtime(&t);
     char buf[20];
     strftime(buf, sizeof(buf),"%X",&now);

@@ -26,6 +26,7 @@ typedef struct{
     int maxRxnCode;
     int minRxnCode;
     int canAddress;
+    int i2cAddress;
     int gpioPin;
     int val;
     double calConst;
@@ -40,8 +41,8 @@ typedef struct{
 }meta;
 
 typedef struct{
-    uint32_t sensorIndex;
-    uint32_t value;
+    int sensorIndex;
+    int value;
     bool monitored;
     bool displayed;
     int canAddress;

@@ -19,16 +19,16 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
     //char * zErrMsg;
     //incatenate vector elements into a string
     stringstream col_buf;
-    for (int i = 0; i < (int)column.size(); i++){
+    for (uint i = 0; i < column.size(); i++){
         col_buf << column.at(i);
-        if(i != (int)column.size()-1) col_buf << ", ";
+        if(i != column.size()-1) col_buf << ", ";
     }
 
     //incatenate vector elements into a string
     stringstream row_buf;
-    for (int i = 0; i < (int)row.size(); i++){
+    for (uint i = 0; i < row.size(); i++){
         row_buf << quote(row.at(i));
-        if(i != (int)row.size()-1) row_buf << ", ";
+        if(i != row.size()-1) row_buf << ", ";
     }
     //run SQLite command
     string sql = "INSERT INTO "+table+"(" + col_buf.str() + ")" +
@@ -38,7 +38,7 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
     cout << sql << endl;
     cout << endl;
 #endif
-    rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
+    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     if (rc != SQLITE_OK){
         sqlite3_close(db);
 #ifdef DEBUG
@@ -52,8 +52,6 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
         sqlite3_close(db);
         return 1;
     }
-    sqlite3_close(db);
-    return 0;
 }
 
 string DB_Engine::quote(const string &s){
@@ -71,7 +69,7 @@ int DB_Engine::runScript(string filename){
     cout << sql << endl;
     cout << "----End of Script----" << endl;
 #endif
-    rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
+    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
 
     if (rc != SQLITE_OK){
         //sqlite3_db_release_memory(db);
@@ -89,10 +87,6 @@ int DB_Engine::runScript(string filename){
 #endif
         return 1;
     }
-    //sqlite3_free(zErrMsg);
-    //sqlite3_db_release_memory(db);
-    sqlite3_close(db);
-    return 0;
 }
 
 int DB_Engine::number_of_rows(string table){
@@ -105,7 +99,7 @@ int DB_Engine::number_of_rows(string table){
 #ifdef DEBUG
     cout << sql << endl;
 #endif
-    sqlite3_exec(db, sql.c_str(), sql_get_rownum, &count, NULL);
+    sqlite3_exec(db, sql.c_str(), sql_get_rownum, &count, nullptr);
     //sqlite3_free(zErrMsg);
     //sqlite3_db_release_memory(db);
     sqlite3_close(db);
@@ -121,7 +115,7 @@ int DB_Engine::max_rowid(string table){
 #ifdef DEBUG
     cout << sql << endl;
 #endif
-    sqlite3_exec(db, sql.c_str(), sql_get_rownum, &count, NULL);
+    sqlite3_exec(db, sql.c_str(), sql_get_rownum, &count, nullptr);
     //sqlite3_free(zErrMsg);
     //sqlite3_db_release_memory(db);
     sqlite3_close(db);
@@ -159,9 +153,9 @@ vector<string> DB_Engine::get_conditional_values(string table, vector<string> co
     vector<string> holder;
     string sql;
     stringstream col_buf;
-    for (int i = 0; i < (int)column.size(); i++){
+    for (uint i = 0; i < column.size(); i++){
         col_buf << column.at(i);
-        if(i != (int)column.size()-1) col_buf << ", ";
+        if(i != column.size()-1) col_buf << ", ";
     }
 
     //run SQLite command
@@ -169,7 +163,7 @@ vector<string> DB_Engine::get_conditional_values(string table, vector<string> co
 #ifdef DEBUG
     cout << sql << endl;
 #endif
-    rc = sqlite3_exec(db, sql.c_str(), sql_get_rows, &holder, NULL);
+    rc = sqlite3_exec(db, sql.c_str(), sql_get_rows, &holder, nullptr);
     if (rc != SQLITE_OK){
         //sqlite3_db_release_memory(db);
         sqlite3_close(db);
@@ -183,9 +177,9 @@ vector<string> DB_Engine::get_conditional_values(string table, vector<string> co
     }
     //incatenate vector elements into a string
     stringstream buf;
-    for (int i = 0; i < (int)holder.size(); i++){
+    for (uint i = 0; i < holder.size(); i++){
         buf << holder.at(i);
-        if(i != (int)holder.size()-1) buf << ", ";
+        if(i != holder.size()-1) buf << ", ";
     }
     string myString = "Retrieved Rows : " +buf.str();
 //#ifdef DEBUG
@@ -198,7 +192,7 @@ vector<string> DB_Engine::get_conditional_values(string table, vector<string> co
 }
 
 int DB_Engine::sql_get_rows(void *param, int argc, char **argv, char **azColName){
-    vector<string> *xyz = (vector<string> *)param ;
+    vector<string> *xyz = static_cast<vector<string> *>(param);
     //store returned data
     for(int i = 0; i < argc; i++){
         xyz->push_back(argv[i]);
@@ -211,7 +205,7 @@ int DB_Engine::delete_item(string table, string condition, string condition_val)
     sqlite3_open(db_file.c_str(), &db);
     string sql = "delete from " + table + " where " + condition + " = '" + condition_val + "';";
     cout << sql << endl;
-    sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
+    sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     sqlite3_close(db);
     return 1;
 }
@@ -222,9 +216,9 @@ vector<string> DB_Engine::get_row_values(string table, vector<string> column, in
     vector<string> holder;
     string sql;
     stringstream col_buf;
-    for (int i = 0; i < (int)column.size(); i++){
+    for (uint i = 0; i < column.size(); i++){
         col_buf << column.at(i);
-        if(i != (int)column.size()-1) col_buf << ", ";
+        if(i != column.size()-1) col_buf << ", ";
     }
 
     //run SQLite command
@@ -232,7 +226,7 @@ vector<string> DB_Engine::get_row_values(string table, vector<string> column, in
 #ifdef DEBUG
     cout << sql << endl;
 #endif
-    rc = sqlite3_exec(db, sql.c_str(), sql_get_rows, &holder, NULL);
+    rc = sqlite3_exec(db, sql.c_str(), sql_get_rows, &holder, nullptr);
 //#ifdef DEBUG
     if (rc != SQLITE_OK){
         //cout << zErrMsg << endl;
@@ -244,9 +238,9 @@ vector<string> DB_Engine::get_row_values(string table, vector<string> column, in
 //#endif
     //incatenate vector elements into a string
     stringstream buf;
-    for (int i = 0; i < (int)holder.size(); i++){
+    for (uint i = 0; i < holder.size(); i++){
         buf << holder.at(i);
-        if(i != (int)holder.size()-1) buf << ", ";
+        if(i != holder.size()-1) buf << ", ";
     }
 
     string myString = "Retrieved Rows : " +buf.str();
@@ -265,7 +259,7 @@ vector<vector<string>> DB_Engine::retrieve_all_items(string table, vector<string
     int count = max_rowid("stock");
     for (int i = 1; i <= count; i++){
         tmp = get_row_values(table,cols,i);
-        if ((int)tmp.size() > 0){
+        if (tmp.size() > 0){
             items.push_back(tmp);
         }
     }
@@ -278,9 +272,9 @@ vector<string> DB_Engine::search_part_word(string table, vector<string> cols, st
     vector<string> holder;
     string sql;
     stringstream col_buf;
-    for (int i = 0; i < (int)cols.size(); i++){
+    for (uint i = 0; i < cols.size(); i++){
         col_buf << cols.at(i);
-        if(i != (int)cols.size()-1) col_buf << ", ";
+        if(i != cols.size()-1) col_buf << ", ";
     }
 
     //run SQLite command
@@ -288,7 +282,7 @@ vector<string> DB_Engine::search_part_word(string table, vector<string> cols, st
 //#ifdef DEBUG
     cout << sql << endl;
 //#endif
-    rc = sqlite3_exec(db, sql.c_str(), sql_get_rows, &holder, NULL);
+    rc = sqlite3_exec(db, sql.c_str(), sql_get_rows, &holder, nullptr);
 //#ifdef DEBUG
     if (rc != SQLITE_OK){
         //cout << zErrMsg << endl;
@@ -300,9 +294,9 @@ vector<string> DB_Engine::search_part_word(string table, vector<string> cols, st
 //#endif
     //incatenate vector elements into a string
     stringstream buf;
-    for (int i = 0; i < (int)holder.size(); i++){
+    for (uint i = 0; i < holder.size(); i++){
         buf << holder.at(i);
-        if(i != (int)holder.size()-1) buf << ", ";
+        if(i != holder.size()-1) buf << ", ";
     }
 
     string myString = "Retrieved Rows : " +buf.str();
@@ -325,7 +319,7 @@ int DB_Engine::update_value(string table, string column, string col_id, string i
     cout << sql << endl;
     cout << endl;
 #endif
-    int rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
+    int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     if (rc != SQLITE_OK){
         //sqlite3_db_release_memory(db);
         sqlite3_close(db);
@@ -342,15 +336,13 @@ int DB_Engine::update_value(string table, string column, string col_id, string i
 #endif
         return 1;
     }
-    sqlite3_close(db);
-    return 0;
 }
 
 int DB_Engine::clear_table(string table){
     sqlite3_open(db_file.c_str(), &db);
     string sql = "delete from " + table + ";";
     cout << sql << endl;
-    sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
+    sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     sqlite3_close(db);
     return 1;
 }

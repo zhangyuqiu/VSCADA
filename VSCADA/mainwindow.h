@@ -27,9 +27,7 @@ public:
     ~MainWindow();
     void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
-    void updateData(vector <int> glvVector, vector <int> tsiVector, vector <int> tsvVector, vector <int> coolingVector);
     void exit();
-    void initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling);
 
     vector<meta> GLV_meta;
     vector<meta> TSI_meta;

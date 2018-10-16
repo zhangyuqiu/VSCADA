@@ -16,8 +16,8 @@ class canbus_interface : public QObject
 public:
     canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs);
     ~canbus_interface();
-    datapoint getdatapoint(uint32_t index);
-    datapoint getdatapoint_canadd(uint32_t canaddrss);
+    datapoint getdatapoint(int index);
+    datapoint getdatapoint_canadd(int canaddrss);
     std::string get_curr_time();
 
     std::vector<meta *> sensorVector;
@@ -25,7 +25,6 @@ public:
 
 private:
 
-    QQueue<response> * subsystemQueue;
     QCanBusDevice *can_bus = nullptr;
     QString errmsg;
     bool canconnect();

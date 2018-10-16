@@ -7,7 +7,7 @@ Config::~Config(){
 
 }
 
-bool Config::read_config_file_data(string configFile){
+bool Config::read_config_file_data(){
 
     vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;
@@ -67,7 +67,7 @@ bool Config::read_config_file_data(string configFile){
         allResponses.push_back(thisRsp);
     }
 
-    for (int i = 0; i < static_cast<int>(allResponses.size()); i++){
+    for (uint i = 0; i < allResponses.size(); i++){
         cout << "Response ID: " << allResponses.at(i).responseIndex << endl;
         cout << "description: " << allResponses.at(i).msg << endl;
         cout << "can address: " << allResponses.at(i).canAddress << endl;
@@ -97,34 +97,44 @@ bool Config::read_config_file_data(string configFile){
                 for (int k = 0; k < sensorsList.size(); k++){
                     meta thisSensor;
                     storedSensor = new meta;
+                    storedSensor->val = 0;
+                    storedSensor->sensorIndex = -1;
+                    storedSensor->minimum = -1;
+                    storedSensor->maximum = -1;
+                    storedSensor->checkRate = -1;
+                    storedSensor->maxRxnCode = -1;
+                    storedSensor->minRxnCode = -1;
+                    storedSensor->canAddress = -1;
+                    storedSensor->i2cAddress = -1;
+                    storedSensor->gpioPin = -1;
+                    storedSensor->calConst = -1;
                     storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
                     cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
-//                            thisSensor.sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
                             storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
                         } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
-//                            thisSensor.canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             storedSensor->canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            canSensors.push_back(storedSensor);
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
-//                            thisSensor.minimum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             storedSensor->minimum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
-//                            thisSensor.maximum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             storedSensor->maximum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minreaction") == 0){
-//                            thisSensor.minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maxreaction") == 0){
-//                            thisSensor.maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
-//                            thisSensor.canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
+                            storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            gpioSensors.push_back(storedSensor);
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
+                            storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            i2cSensors.push_back(storedSensor);
                         }
-                        storedSensor->val = 0;
                     }
                     storedSensors.push_back(storedSensor);
                     sensors.push_back(storedSensor);
@@ -132,7 +142,7 @@ bool Config::read_config_file_data(string configFile){
                 }
 
                 cout << "All Sensors: " << sensors.size() << endl;
-                for (int n = 0; n < sensors.size(); n++){
+                for (uint n = 0; n < sensors.size(); n++){
                     cout << "Sensor Name: " << storedSensors.at(n)->sensorName << endl;
                     cout << "Sensor Max: " << storedSensors.at(n)->maximum << endl;
                     cout << "Sensor Min: " << storedSensors.at(n)->minimum << endl;
@@ -188,7 +198,7 @@ bool Config::read_config_file_data(string configFile){
     dbScript << ");" << endl;
 
     //create subsystem tables
-    for (int i = 0; i < subsystems.size(); i++){
+    for (uint i = 0; i < subsystems.size(); i++){
         string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_data(";
         dbScript << scriptTableArg << endl;
         dbScript << "time char not null," << endl;
@@ -206,8 +216,10 @@ bool Config::read_config_file_data(string configFile){
 
 
     dataMtr = new DataMonitor(allSensors,allResponses);
+    gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
+    gpioInterface->startGPIOCheck();
     canInterface = new canbus_interface(storedSensors,"STUFF",subsystems);
-    for (int i = 0; i < subsystems.size(); i++){
+    for (uint i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
         thread->setMonitor(dataMtr);
         thread->set_rate(minrates.at(i));
@@ -215,33 +227,4 @@ bool Config::read_config_file_data(string configFile){
         subsystems.at(i)->start();
     }
     return true;
-}
-
-void Config::findElementsWithAttribute(const QDomElement& elem, const QString& attr, QList<QDomElement> foundElements)
-{
-  if( elem.attributes().contains(attr) )
-    foundElements.append(elem);
-
-  QDomElement child = elem.firstChildElement();
-  while( !child.isNull() ) {
-    findElementsWithAttribute(child, attr, foundElements);
-    child = child.nextSiblingElement();
-  }
-}
-
-vector<string> Config::split(string s, string delim){
-    vector<string> splittedString;
-    int startIndex = 0;
-    int endIndex = 0;
-    while((endIndex = s.find(delim,startIndex)) < s.size()){
-        string val = s.substr(startIndex,endIndex - startIndex);
-        splittedString.push_back(val);
-        startIndex = endIndex + delim.size();
-    }
-    if(startIndex < s.size()){
-        string val = s.substr(startIndex);
-        splittedString.push_back(val);
-    }
-    return splittedString;
-
 }

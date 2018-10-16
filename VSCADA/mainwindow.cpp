@@ -14,10 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     central->setLayout(mainLayout);
-    conf->read_config_file_data("config_test.txt");
-
-//    central->setStyleSheet("background-color: red;");
-//    initMetadata(conf->GLVmeta,conf->TSImeta,conf->TSVmeta,conf->COOLmeta);
+    conf->read_config_file_data();
 
     QRect rec = QApplication::desktop()->screenGeometry();
     int height=rec.height();
@@ -57,25 +54,25 @@ void MainWindow::update(){
 
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
-    for (int i = 0; i < subs.size(); i++){
+    for (uint i = 0; i < subs.size(); i++){
         vector<meta*> subMeta = subs.at(i)->get_metadata();
-        if (subMeta.size() > maxSensorRow) maxSensorRow = subMeta.size();
+        if (static_cast<int>(subMeta.size()) > maxSensorRow) maxSensorRow = static_cast<int>(subMeta.size());
     }
 
-    for (int i = 0; i < subs.size(); i++){
+    for (uint i = 0; i < subs.size(); i++){
         SubsystemThread * currSub = subs.at(i);
         vector<meta *> subMeta = currSub->get_metadata();
         QComboBox * box = new QComboBox;
 
         if(subMeta.size() > 0){
-            for (int j = 0; j < (int)subMeta.size(); j++){
+            for (uint j = 0; j < subMeta.size(); j++){
                 fieldVCount = sectionCount;
                 fieldVCount++;
                 QLabel * label = new QLabel;
                 QPushButton * button = new QPushButton;
                 if (j == 0){
                     QLabel * label1 = new QLabel;
-                    label1->setFixedWidth(unitWidth*1.5);
+                    label1->setFixedWidth(static_cast<int>(unitWidth*1.5));
                     label1->setFixedHeight(unitHeight*2);
                     label1->setText(QString::fromStdString(currSub->subsystemId));
                     QString  subLabelFont = QString::number(stringSize*4);
@@ -90,21 +87,21 @@ void MainWindow::update(){
                     button->setAutoFillBackground(true);
                     QString  butLabelFont = QString::number(stringSize*1.4);
                     button->setStyleSheet("font:"+butLabelFont+"pt;");
-                    button->setFixedWidth(unitWidth*1.5);
-                    button->setFixedHeight(unitHeight*1.4);
+                    button->setFixedWidth(static_cast<int>(unitWidth*1.5));
+                    button->setFixedHeight(static_cast<int>(unitHeight*1.4));
                     mainLayout->addWidget(button,maxSensorRow+3,fieldVCount);
 
                    fieldHCount++;
 
-                   box->setFixedWidth(unitWidth*1.5);
-                   box->setFixedHeight(unitHeight*1.4);
+                   box->setFixedWidth(static_cast<int>(unitWidth*1.5));
+                   box->setFixedHeight(static_cast<int>(unitHeight*1.4));
                    QString  boxFont = QString::number(stringSize*1.2);
                    box->setStyleSheet("font:"+boxFont+"pt;");
                    mainLayout->addWidget(box,maxSensorRow+3,fieldVCount+1);
                 }
                 label->setText(QString::fromStdString(subMeta.at(j)->sensorName));
                 label->setFixedWidth(unitWidth*2);
-                label->setFixedHeight(unitHeight*0.8);
+                label->setFixedHeight(static_cast<int>(unitHeight*0.8));
                 QString  LabelFont = QString::number(stringSize*2);
                 label->setStyleSheet("font:"+LabelFont+"pt;");
                 box->addItem(QString::fromStdString(subMeta.at(j)->sensorName));
@@ -113,8 +110,8 @@ void MainWindow::update(){
                 QLineEdit * edit = currSub->edits.at(j);
                 QString  editFont = QString::number(stringSize*1.8);
                 edit->setStyleSheet("font:"+editFont+"pt;");
-                edit->setFixedWidth(unitWidth*2.5);
-                edit->setFixedHeight(unitHeight*0.8);
+                edit->setFixedWidth(static_cast<int>(unitWidth*2.5));
+                edit->setFixedHeight(static_cast<int>(unitHeight*0.8));
                 mainLayout->addWidget(edit,fieldHCount,fieldVCount);
                 fieldHCount++;
             }
@@ -142,8 +139,8 @@ void MainWindow::update(){
         plotButton->setPalette(palplot);
         plotButton->setAutoFillBackground(true);
         plotButton->setStyleSheet("font:"+butLabelFont+"pt;");
-        plotButton->setFixedWidth(unitWidth*1.2);
-        plotButton->setFixedHeight(unitHeight*1.8);
+        plotButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+        plotButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
         mainLayout->addWidget(plotButton,maxSensorRow+4,11);
 
 
@@ -154,8 +151,8 @@ void MainWindow::update(){
         exitButton->setPalette(palexit);
         exitButton->setAutoFillBackground(true);
         exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
-        exitButton->setFixedWidth(unitWidth*1.2);
-        exitButton->setFixedHeight(unitHeight*1.8);
+        exitButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+        exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
         mainLayout->addWidget(exitButton,maxSensorRow+4,10);
 
         message = new QListWidget();
@@ -190,9 +187,9 @@ void MainWindow::plotGraph(){
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
 
-    for (int i = 0; i < subs.size(); i++){
+    for (uint i = 0; i < subs.size(); i++){
         vector<meta*> subMeta = subs.at(i)->get_metadata();
-        if (subMeta.size() > maxSensorRow) maxSensorRow = subMeta.size();
+        if (static_cast<int>(subMeta.size()) > maxSensorRow) maxSensorRow = static_cast<int>(subMeta.size());
     }
     plot = new QCustomPlot();
     plot->addGraph();
@@ -216,52 +213,6 @@ void MainWindow::addErrorMessage(QString eMessage){
 
 void MainWindow::updateVals(){
 //    this->update();
-}
-
-void MainWindow::initMetadata(vector<meta> glv, vector<meta> tsi, vector<meta> tsv, vector<meta> cooling){
-    GLV_meta = glv;
-    TSI_meta = tsi;
-    TSV_meta = tsv;
-    COOLING_meta = cooling;
-
-    for (int i = 0; i < (int)GLV_meta.size(); i++){
-        QLineEdit * edit = new QLineEdit;
-        edit->setStyleSheet("font:17pt;");
-        GLVEdits.push_back(edit);
-    }
-    for (int i = 0; i < (int)TSI_meta.size(); i++){
-        QLineEdit * edit = new QLineEdit;
-        edit->setStyleSheet("font:17pt;");
-        TSIEdits.push_back(edit);
-    }
-    for (int i = 0; i < (int)TSV_meta.size(); i++){
-        QLineEdit * edit = new QLineEdit;
-        edit->setStyleSheet("font:17pt;");
-        TSVEdits.push_back(edit);
-    }
-    for (int i = 0; i < (int)COOLING_meta.size(); i++){
-        QLineEdit * edit = new QLineEdit;
-        edit->setStyleSheet("font:17pt;");
-        COOLINGEdits.push_back(edit);
-    }
-}
-
-void MainWindow::updateData(vector <int> glvVector,vector <int> tsiVector,vector <int> tsvVector,vector <int> coolingVector ){
-    for (int i = 0; i < (int)GLV_meta.size(); i++){
-        GLVEdits.at(i)->setText(QString::fromStdString(to_string(glvVector.at(i))));
-    }
-    for (int i = 0; i < (int)TSI_meta.size(); i++){
-        TSIEdits.at(i)->setText(QString::fromStdString(to_string(tsiVector.at(i))));
-    }
-    for (int i = 0; i < (int)TSV_meta.size(); i++){
-        TSVEdits.at(i)->setText(QString::fromStdString(to_string(tsvVector.at(i))));
-    }
-    for (int i = 0; i < (int)COOLING_meta.size(); i++){
-        COOLINGEdits.at(i)->setText(QString::fromStdString(to_string(coolingVector.at(i))));
-    }
-
-    update();
-
 }
 
 

@@ -21,47 +21,49 @@ class SubsystemThread : public QObject
 {
     Q_OBJECT
 public:
-    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector);   //class object destructor
-    virtual ~SubsystemThread();                                     //class object destructor
+    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector);    //class object destructor
+    virtual ~SubsystemThread();                                                         //class object destructor
 
-    void stop();                                                //stops data collection
-    void start();                                               //starts data collection
-    void init_data();                                           //retrieves GLV Data
-    void set_rate(int newRate);                                            //sets rate at which data is checked
-    void logData(meta * currSensor);
-    void setMonitor(DataMonitor * mtr);
-    void checkThresholds(meta * sensor);
-    void enqueueMsg(string msg);
-    int initiateRxn(int rxnCode, meta *sensor);
-    string get_curr_time();
-    void setDB(DB_Engine * db);
-    vector<meta *> get_metadata();
-    vector<int> get_data();                                     //initializes GLV data vector
-    void WaitForInternalThreadToExit();                         //stops code until this thread is destroyed
+    void stop();                                    //stops data collection
+    void start();                                   //starts data collection
+    void init_data();                               //retrieves GLV Data
+    vector<int> get_data();                         //initializes GLV data vector
+    string get_curr_time();                         //get curent time
+    void setDB(DB_Engine * db);                     //sets database object
+    void set_rate(int newRate);                     //sets rate at which data is checked
+    void enqueueMsg(string msg);                    //enqueue message for display
+    vector<meta *> get_metadata();                  //retrieves a configured list of sensors
+    void logData(meta * currSensor);                //records sensor data in database
+    void setMonitor(DataMonitor * mtr);             //sets monitor object
+    void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
+    int initiateRxn(int rxnCode);     //execute configured reaction
 
-    QTimer * timer;                                             //timer to implement sampling frequency
-    DataMonitor * monitor;                                      //pointer to a datamonitor object
-//    canbus_interface * canInterface;                            //canInterface to provide read access to CAN
+    QTimer * timer;                                 //timer to implement sampling frequency
+    DataMonitor * monitor;                          //pointer to a datamonitor object
     DB_Engine * dbase;
 
-    int testVal = 0;                                            //dummy variable for testing
+    int testVal = 0;                                //dummy variable for testing
 
-    vector<response> responseVector;
-    QQueue<response> * respCANQueue;
-    QQueue<response> * respGPIOQueue;
-    QQueue<string> * msgQueue;
-    QLineEdit * lineEdit;
-    QTimer * tmr;
-    string subsystemId;
-    int checkRate = 0;                                          //sampling rate of cooling system
-    bool running = true;                                        //to control running of collection thread
-    vector<int> rawData;                                       //cooling sensor data
-    vector<meta *> sensorMeta;                           //cooling sensor metadata
-    vector<QLineEdit *> edits;
-    vector<QTimer *> editTimers;
+    QTimer * checkTmr;                              //timer placeholder for checking update frequencies
+    QLineEdit * lineEdit;                           //lineEdif placeholder for sensor-specific line edits
+
+    int checkRate = 0;                              //rate for checking for sensor updates
+    string subsystemId;                             //identifies subsystem by name
+
+    vector<meta *> sensorMeta;                      //cooling sensor metadata
+    vector<QLineEdit *> edits;                      //lineEdits for displaying data
+    vector<QTimer *> editTimers;                    //stores checkTimers
+    vector<response> responseVector;                //stores configured responses
+
+    QQueue<string> * msgQueue;                      //queue to store messages for display
+    QQueue<response> * respCANQueue;                //queue for CAN responses
+    QQueue<response> * respGPIOQueue;               //queue for gpio responses
+
+    bool running = true;                            //to control running of collection thread
+    vector<int> rawData;                            //cooling sensor data
 
 protected:
-    virtual void subsystemCollectionTasks();                      //runs collection tasks
+    virtual void subsystemCollectionTasks();        //runs collection tasks
 
 private:
     /** Links the member function to ordinary space */
@@ -70,13 +72,14 @@ private:
     pthread_t _thread;
 
 public slots:
-    void StartInternalThread();                                 //starts thread
-    void updateEdits(meta *sensor);
-    void checkTimeout();
+    void StartInternalThread();                                 //starts subsystem thread
+    void updateEdits(meta *sensor);                             //updates LineEdit displays
+    void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds
+    void checkTimeout();                                        //check whether we haven't received some data
 
 signals:
-    void pushCANItem(response rsp);
-    void pushGPIOtem();
+    void pushCANItem(response rsp);                             //execute response to CAN
+    void pushGPIOData(response rsp);                            //execute response to GPIO
 };
 
 #endif // SUBSYSTEMTHREAD_H

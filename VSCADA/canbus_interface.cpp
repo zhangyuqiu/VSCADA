@@ -7,15 +7,12 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
-    for (int i = 0; i < subsystems.size(); i++){
-        subsystemQueue = subsystems.at(i)->respCANQueue;
+    for (uint i = 0; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(pushCANItem(response)), this, SLOT(sendFrame(response)));
     }
 
-    std::cout << "CAN Int for " << modulename << " vector size: " << sensorVector.size() << endl;
-        datapoint dpt;
-    int a = sensorVector.size();
-    for(int i = 0; i < a; i++){
+    datapoint dpt;
+    for(uint i = 0; i < sensorVector.size(); i++){
         dpt.displayed = 0;
         dpt.monitored = 0;
         dpt.sensorIndex = sensorVector.at(i)->sensorIndex;
@@ -88,12 +85,12 @@ void canbus_interface::recieve_frame() {
         }
     }
 
-    for(int i = 0; i < sensorVector.size(); i++){
+    for(uint i = 0; i < sensorVector.size(); i++){
         if(sensorVector.at(i)->canAddress == recframe.frameId()){
             meta * currSensor = sensorVector.at(i);
             if (currSensor->val != data) {
                 currSensor->val = data;
-                for (int j = 0; j < subsystems.size(); j++){
+                for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
                         subsystems.at(j)->updateEdits(currSensor);
                         subsystems.at(j)->logData(currSensor);
@@ -102,7 +99,7 @@ void canbus_interface::recieve_frame() {
                     }
                 }
             } else {
-                for (int j = 0; j < subsystems.size(); j++){
+                for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
                         subsystems.at(j)->updateEdits(currSensor);
                         subsystems.at(j)->checkThresholds(currSensor);
@@ -129,7 +126,7 @@ void canbus_interface::sendFrame(response rsp){
     can_bus->writeFrame(*outFrame);
 }
 
-datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
+datapoint canbus_interface::getdatapoint(int index) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
     for (datapoint d:dpa) {
         if (d.sensorIndex == index) {
             return d;
@@ -140,7 +137,7 @@ datapoint canbus_interface::getdatapoint(uint32_t index) { // return a datapoint
     return edp;
 }
 
-datapoint canbus_interface::getdatapoint_canadd(uint32_t canadd) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
+datapoint canbus_interface::getdatapoint_canadd(int canadd) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
     for (datapoint d:dpa) {
         if (d.canAddress == canadd) {
             return d;
@@ -152,7 +149,7 @@ datapoint canbus_interface::getdatapoint_canadd(uint32_t canadd) { // return a d
 }
 
 std::string canbus_interface::get_curr_time(){
-    time_t t = time(0);
+    time_t t = time(nullptr);
     struct tm now = *localtime(&t);
     char buf[20];
     strftime(buf, sizeof(buf),"%X",&now);
