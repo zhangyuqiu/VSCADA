@@ -116,8 +116,9 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
-        initiateRxn(sensor->maxRxnCode);
         msg = get_curr_time() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
+        emit pushErrMsg(msg);
+        initiateRxn(sensor->maxRxnCode);
         enqueueMsg(msg);
 
     } else if (sensor->val < sensor->minimum){
@@ -127,8 +128,9 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
-        initiateRxn(sensor->minRxnCode);
         msg = get_curr_time() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
+        emit pushErrMsg(msg);
+        initiateRxn(sensor->minRxnCode);
         enqueueMsg(msg);
     } else {
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -212,6 +214,7 @@ int SubsystemThread::initiateRxn(int rxnCode){
         if (rsp.responseIndex == rxnCode){
             rows.push_back(rsp.msg);
             enqueueMsg(rsp.msg);
+            emit pushMessage(rsp.msg);
             if (rsp.canAddress >= 0){
                 cout << "sending out can data" << endl;
                 respCANQueue->enqueue(rsp);
@@ -219,7 +222,7 @@ int SubsystemThread::initiateRxn(int rxnCode){
             }
             if (rsp.gpioPin >= 0){
                 respGPIOQueue->enqueue(rsp);
-                pushGPIOData(rsp);
+                emit pushGPIOData(rsp);
             }
         }
     }

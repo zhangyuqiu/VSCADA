@@ -20,8 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
     int height=rec.height();
     int width=rec.width();
 
-    unitWidth=width/16;//100
-    unitHeight=height/16;//56
+    unitWidth=width/20;//100
+    unitHeight=height/20;//56
 
     stringSize = unitWidth/10;//10
 
@@ -33,6 +33,13 @@ MainWindow::MainWindow(QWidget *parent) :
     scrollArea->setWidget(central);
 
     this->setCentralWidget(scrollArea);
+
+    vector<SubsystemThread *> subs;
+    subs = conf->subsystems;
+    for (uint i = 0; i < subs.size(); i++){
+        connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveMsg(string)));
+        connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
+    }
 
     update();
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
@@ -155,17 +162,19 @@ void MainWindow::update(){
         exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
         mainLayout->addWidget(exitButton,maxSensorRow+4,10);
 
+        QFont font = QFont ("Courier");
         message = new QListWidget();
         QString  errorMessage;
         errorMessage = "Error3";
         addErrorMessage(errorMessage);
-        QString  messageFont = QString::number(stringSize*2);
+        QString  messageFont = QString::number(stringSize*1.5);
         message->setStyleSheet("font:"+messageFont+"pt;");
         message->addItem("Error1");
         message->addItem("Error2");
         message->addItem(fontSize);
         message->setFixedHeight(unitHeight*6);
         message->setFixedWidth(unitWidth*7);
+        message->setFont(font);
         mainLayout->addWidget(message,maxSensorRow+5,8,maxSensorRow+11,10);
 
         QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
@@ -207,8 +216,14 @@ void MainWindow::plotGraph(){
     mainLayout->addWidget(plot,maxSensorRow+5,0,maxSensorRow+11,6);
 }
 
+void MainWindow::receiveMsg(string msg){
+    addErrorMessage(QString::fromStdString(msg));
+}
+
+
 void MainWindow::addErrorMessage(QString eMessage){
     message->addItem(eMessage);
+    message->scrollToBottom();
 }
 
 void MainWindow::updateVals(){

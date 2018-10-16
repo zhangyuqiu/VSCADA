@@ -68,6 +68,7 @@ private slots:
     void plotGraph();
     void update();
     void updateVals();
+    void receiveMsg(string msg);
 
 private:
     Ui::MainWindow *ui;

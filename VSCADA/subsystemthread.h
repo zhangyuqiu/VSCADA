@@ -80,6 +80,8 @@ public slots:
 signals:
     void pushCANItem(response rsp);                             //execute response to CAN
     void pushGPIOData(response rsp);                            //execute response to GPIO
+    void pushMessage(string msg);
+    void pushErrMsg(string msg);
 };
 
 #endif // SUBSYSTEMTHREAD_H
