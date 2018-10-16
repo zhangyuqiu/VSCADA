@@ -23,4 +23,16 @@
 		<canaddress>345</canaddress>
 		<canval>33</canval>
 	</response>
+	<response>
+		<id>4</id>
+		<description>Turn on LED</description>
+		<gpiopin>21</gpiopin>
+		<gpioval>1</gpioval>
+	</response>
+	<response>
+		<id>5</id>
+		<description>Turn off LED</desctription>
+		<gpiopin>21</gpiopin>
+		<gpioval>0</gpioval>
+	</response>
 </responses>

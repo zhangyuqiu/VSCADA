@@ -31,12 +31,12 @@
 		<sensors>
 			<sensor>
 				<name>COOLINGOne</name>
-				<canaddress>546</canaddress>
+				<gpiopin>23</gpiopin>
 				<checkrate>7000</checkrate>
-				<minimum>3</minimum>
-				<maximum>30</maximum>
-				<minreaction>3</minreaction>
-				<maxreaction>2</maxreaction>
+				<minimum>1</minimum>
+				<maximum>4</maximum>
+				<minreaction>4</minreaction>
+				<maxreaction>5</maxreaction>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -87,6 +87,15 @@
 				<maximum>23</maximum>
 				<minreaction>0</minreaction>
 				<maxreaction>2</maxreaaction>
+			</sensor>
+			<sensor>
+				<name>GLVI2C</name>
+				<i2caddress>5</i2caddress>
+				<checkrate>5000</checkrate>
+				<minimum>20</minimum>
+				<maximum>50</maximum>
+				<minreaction>4</minreaction>
+				<maxreaction>5</maxreaction>
 			</sensor>
 		</sensors>
 	</subsystem>
