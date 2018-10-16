@@ -7,6 +7,7 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
+
     for (int i = 0; i < subsystems.size(); i++){
         subsystemQueue = subsystems.at(i)->respCANQueue;
         connect(subsystems.at(i), SIGNAL(pushCANItem(response)), this, SLOT(sendFrame(response)));
@@ -37,7 +38,6 @@ bool canbus_interface::canconnect() {
     if (!can_bus) {
         qDebug() << "Error creating device" << endl;
         qDebug() << errmsg << endl;
-//        ui->textOut->append(errmsg);
         return false;
     }
     else {
@@ -50,7 +50,6 @@ bool canbus_interface::canconnect() {
             errmsg = can_bus->errorString();
             qDebug() << "Error connectiong device." << endl;
             qDebug() << errmsg << endl;
-//            ui->textOut->append(errmsg);
             return false;
         }
     }
