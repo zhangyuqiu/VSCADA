@@ -103,7 +103,7 @@ void SubsystemThread::updateEdits(meta * sensor){
 
 void SubsystemThread::checkTimeout(){
     for(uint i = 0; i < edits.size(); i++){
-        if (!editTimers.at(i)->isActive()) edits.at(i)->setStyleSheet("font: 20pt; color: #A9A9A9");
+        if (!editTimers.at(i)->isActive()) edits.at(i)->setStyleSheet("color: #A9A9A9");
     }
 }
 
