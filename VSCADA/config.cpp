@@ -217,7 +217,6 @@ bool Config::read_config_file_data(){
 
     dataMtr = new DataMonitor(allSensors,allResponses);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    gpioInterface->startGPIOCheck();
     canInterface = new canbus_interface(storedSensors,"STUFF",subsystems);
     for (uint i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
@@ -226,5 +225,7 @@ bool Config::read_config_file_data(){
         thread->setDB(dbase);
         subsystems.at(i)->start();
     }
+    gpioInterface->startGPIOCheck();
+    cout << "Returning from config" << endl;
     return true;
 }

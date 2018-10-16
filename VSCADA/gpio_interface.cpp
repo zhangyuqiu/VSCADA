@@ -41,7 +41,6 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
     }
 
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
-    timer->start(500);
 }
 
 gpio_interface::~gpio_interface(){
@@ -219,7 +218,8 @@ void gpio_interface::writeGPIOData(response rsp){
 }
 
 int gpio_interface::startGPIOCheck(){
-    StartInternalThread();
+    timer->start(500);
+//    StartInternalThread();
     return 0;
 }
 
@@ -272,7 +272,7 @@ int gpio_interface::i2cWrite(int address, int data){
 
     //----- OPEN THE I2C BUS -----//
     const char * filename = "/dev/i2c-1";
-    if ((file_i2c = open(filename, O_RDONLY)) < 0)
+    if ((file_i2c = open(filename, O_WRONLY)) < 0)
     {
         printf("Failed to open the i2c bus");
         return -1;
