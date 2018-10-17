@@ -35,10 +35,18 @@ SubsystemThread::~SubsystemThread(){
 
 }
 
+/**
+ * @brief SubsystemThread::setDB - sets database object for class
+ * @param db
+ */
 void SubsystemThread::setDB(DB_Engine * db){
     dbase = db;
 }
 
+/**
+ * @brief SubsystemThread::logData - records specified sensor data in the respective database
+ * @param currSensor
+ */
 void SubsystemThread::logData(meta * currSensor){
     vector<string> cols;
     cols.push_back("time");
@@ -46,7 +54,8 @@ void SubsystemThread::logData(meta * currSensor){
     cols.push_back("sensorName");
     cols.push_back("value");
     vector<string> rows;
-    string table = subsystemId + "_data";
+    string rawTable = subsystemId + "_rawdata";
+    string calTable = subsystemId + "_caldata";
     cout << "Debug dbase write" << endl;
     for (uint i = 0; i < sensorMeta.size(); i++){
         if (sensorMeta.at(i) == currSensor){
@@ -54,14 +63,28 @@ void SubsystemThread::logData(meta * currSensor){
             rows.push_back(currSensor->sensorName);
             rows.push_back(currSensor->sensorName);
             rows.push_back(to_string(currSensor->val));
-            dbase->insert_row(table,cols,rows);
+            dbase->insert_row(rawTable,cols,rows);
             return;
         }
-        cout << "Debug dbase write " << i << endl;
+    }
+    rows.clear();
+    for (uint i = 0; i < sensorMeta.size(); i++){
+        if (sensorMeta.at(i) == currSensor){
+            rows.push_back(get_curr_time());
+            rows.push_back(to_string(currSensor->sensorIndex));
+            rows.push_back(currSensor->sensorName);
+            rows.push_back(to_string(currSensor->calVal));
+            dbase->insert_row(rawTable,cols,rows);
+            return;
+        }
     }
     cout << "Sensor Not Found. System Error" << endl;
 }
 
+/**
+ * @brief SubsystemThread::get_metadata -
+ * @return
+ */
 vector<meta *> SubsystemThread::get_metadata(){
     return sensorMeta;
 }
@@ -83,6 +106,10 @@ void SubsystemThread::init_data(){
     }
 }
 
+/**
+ * @brief SubsystemThread::setMonitor - sets monitor object for class
+ * @param mtr
+ */
 void SubsystemThread::setMonitor(DataMonitor * mtr){
     monitor = mtr;
 }
@@ -101,12 +128,19 @@ void SubsystemThread::updateEdits(meta * sensor){
     }
 }
 
+/**
+ * @brief SubsystemThread::checkTimeout - checks whether any lineEdit hasn't received updates
+ */
 void SubsystemThread::checkTimeout(){
     for(uint i = 0; i < edits.size(); i++){
         if (!editTimers.at(i)->isActive()) edits.at(i)->setStyleSheet("color: #A9A9A9");
     }
 }
 
+/**
+ * @brief SubsystemThread::checkThresholds - check whether specified sensor data exceeds configured thresholds
+ * @param sensor
+ */
 void SubsystemThread::checkThresholds(meta * sensor){
     string msg;
     if (sensor->val > sensor->maximum){
@@ -143,6 +177,10 @@ void SubsystemThread::checkThresholds(meta * sensor){
     }
 }
 
+/**
+ * @brief SubsystemThread::enqueueMsg - logs message in the database
+ * @param msg
+ */
 void SubsystemThread::enqueueMsg(string msg){
     vector<string> cols;
     vector<string> rows;
@@ -200,6 +238,11 @@ void SubsystemThread::StartInternalThread()
    pthread_create(&_thread, nullptr, InternalThreadEntryFunc, this);
 }
 
+/**
+ * @brief SubsystemThread::initiateRxn - execute specified reaction as configured
+ * @param rxnCode
+ * @return
+ */
 int SubsystemThread::initiateRxn(int rxnCode){
     //print to log
     vector<string> cols;
@@ -231,10 +274,14 @@ int SubsystemThread::initiateRxn(int rxnCode){
     return 0;
 }
 
+/**
+ * @brief SubsystemThread::get_curr_time - retrieves current operation system time
+ * @return
+ */
 string SubsystemThread::get_curr_time(){
     time_t t = time(nullptr);
     struct tm now = *localtime(&t);
     char buf[20];
-    strftime(buf, sizeof(buf),"%X",&now);
+    strftime(buf, sizeof(buf),"%D_%T",&now);
     return buf;
 }

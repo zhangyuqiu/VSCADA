@@ -36,13 +36,11 @@ public:
     void logData(meta * currSensor);                //records sensor data in database
     void setMonitor(DataMonitor * mtr);             //sets monitor object
     void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
-    int initiateRxn(int rxnCode);     //execute configured reaction
+    int initiateRxn(int rxnCode);                   //execute configured reaction
 
     QTimer * timer;                                 //timer to implement sampling frequency
     DataMonitor * monitor;                          //pointer to a datamonitor object
-    DB_Engine * dbase;
-
-    int testVal = 0;                                //dummy variable for testing
+    DB_Engine * dbase;                              //pointer to database object
 
     QTimer * checkTmr;                              //timer placeholder for checking update frequencies
     QLineEdit * lineEdit;                           //lineEdif placeholder for sensor-specific line edits

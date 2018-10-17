@@ -21,25 +21,49 @@ runId char not null,
 startTime char not null,
 endTime char not null
 );
-create table if not exists TSV_data(
+create table if not exists TSV_rawdata(
 time char not null,
 sensorindex char not null,
 sensorName char not null,
 value char not null
 );
-create table if not exists COOLING_data(
+create table if not exists COOLING_rawdata(
 time char not null,
 sensorindex char not null,
 sensorName char not null,
 value char not null
 );
-create table if not exists TSI_data(
+create table if not exists TSI_rawdata(
 time char not null,
 sensorindex char not null,
 sensorName char not null,
 value char not null
 );
-create table if not exists GLV_data(
+create table if not exists GLV_rawdata(
+time char not null,
+sensorindex char not null,
+sensorName char not null,
+value char not null
+);
+create table if not exists TSV_caldata(
+time char not null,
+sensorindex char not null,
+sensorName char not null,
+value char not null
+);
+create table if not exists COOLING_caldata(
+time char not null,
+sensorindex char not null,
+sensorName char not null,
+value char not null
+);
+create table if not exists TSI_caldata(
+time char not null,
+sensorindex char not null,
+sensorName char not null,
+value char not null
+);
+create table if not exists GLV_caldata(
 time char not null,
 sensorindex char not null,
 sensorName char not null,

@@ -116,6 +116,8 @@ bool Config::read_config_file_data(){
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
                             storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
+                            storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
                             storedSensor->canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             canSensors.push_back(storedSensor);
@@ -202,7 +204,17 @@ bool Config::read_config_file_data(){
 
     //create subsystem tables
     for (uint i = 0; i < subsystems.size(); i++){
-        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_data(";
+        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_rawdata(";
+        dbScript << scriptTableArg << endl;
+        dbScript << "time char not null," << endl;
+        dbScript << "sensorindex char not null," << endl;
+        dbScript << "sensorName char not null," << endl;
+        dbScript << "value char not null" << endl;
+        dbScript << ");" << endl;
+    }
+
+    for (uint i = 0; i < subsystems.size(); i++){
+        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_caldata(";
         dbScript << scriptTableArg << endl;
         dbScript << "time char not null," << endl;
         dbScript << "sensorindex char not null," << endl;
