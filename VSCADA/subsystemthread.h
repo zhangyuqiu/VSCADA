@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <QTimer>
 #include <QQueue>
+#include <iomanip>
 #include "typedefs.h"
 #include "datamonitor.h"
 #include "db_engine.h"
@@ -31,12 +32,12 @@ public:
     string get_curr_time();                         //get curent time
     void setDB(DB_Engine * db);                     //sets database object
     void set_rate(int newRate);                     //sets rate at which data is checked
-    void enqueueMsg(string msg);                    //enqueue message for display
+    void logMsg(string msg);                        //enqueue message for display
     vector<meta *> get_metadata();                  //retrieves a configured list of sensors
-    void logData(meta * currSensor);                //records sensor data in database
     void setMonitor(DataMonitor * mtr);             //sets monitor object
     void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
     int initiateRxn(int rxnCode);                   //execute configured reaction
+    void calibrateData(meta * currSensor);
 
     QTimer * timer;                                 //timer to implement sampling frequency
     DataMonitor * monitor;                          //pointer to a datamonitor object
@@ -53,10 +54,6 @@ public:
     vector<QTimer *> editTimers;                    //stores checkTimers
     vector<response> responseVector;                //stores configured responses
 
-    QQueue<string> * msgQueue;                      //queue to store messages for display
-    QQueue<response> * respCANQueue;                //queue for CAN responses
-    QQueue<response> * respGPIOQueue;               //queue for gpio responses
-
     bool running = true;                            //to control running of collection thread
     vector<int> rawData;                            //cooling sensor data
 
@@ -70,6 +67,8 @@ private:
     pthread_t _thread;
 
 public slots:
+    void receiveData(meta * currSensor);
+    void logData(meta * currSensor);                            //records sensor data in database
     void StartInternalThread();                                 //starts subsystem thread
     void updateEdits(meta *sensor);                             //updates LineEdit displays
     void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds

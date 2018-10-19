@@ -98,6 +98,7 @@ bool Config::read_config_file_data(){
                     meta thisSensor;
                     storedSensor = new meta;
                     storedSensor->val = 0;
+                    storedSensor->calVal = 0;
                     storedSensor->sensorIndex = -1;
                     storedSensor->minimum = -1;
                     storedSensor->maximum = -1;
@@ -133,6 +134,8 @@ bool Config::read_config_file_data(){
                             storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
                             storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("multiplier") == 0){
+                            storedSensor->calConst = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
                             storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             gpioSensors.push_back(storedSensor);
@@ -144,15 +147,6 @@ bool Config::read_config_file_data(){
                     storedSensors.push_back(storedSensor);
                     sensors.push_back(storedSensor);
                     allSensors.push_back(thisSensor);
-                }
-
-                cout << "All Sensors: " << sensors.size() << endl;
-                for (uint n = 0; n < sensors.size(); n++){
-                    cout << "Sensor Name: " << storedSensors.at(n)->sensorName << endl;
-                    cout << "Sensor Max: " << storedSensors.at(n)->maximum << endl;
-                    cout << "Sensor Min: " << storedSensors.at(n)->minimum << endl;
-                    cout << "Sensor MaxRxn: " << storedSensors.at(n)->maxRxnCode << endl;
-                    cout << "Sensor MinRxn: " << storedSensors.at(n)->minRxnCode << endl;
                 }
 
             }
@@ -189,6 +183,7 @@ bool Config::read_config_file_data(){
     dbScript << "maxThreshold char not null," << endl;
     dbScript << "maxReactionId char not null," << endl;
     dbScript << "minReactionId char not null" << endl;
+    dbScript << "calConstant char not null" << endl;
     dbScript << ");" << endl;
 
     dbScript << "create table if not exists reactions(" << endl;
@@ -229,6 +224,30 @@ bool Config::read_config_file_data(){
     dbase->runScript("script.sql");
     //************************FINISH**************************//
 
+
+    cout << "All Sensors: " << storedSensors.size() << endl;
+    vector<string> cols;
+    cols.push_back("sensorIndex");
+    cols.push_back("sensorName");
+    cols.push_back("subsystem");
+    cols.push_back("minThreshold");
+    cols.push_back("maxThreshold");
+    cols.push_back("maxReactionId");
+    cols.push_back("minReactionId");
+    cols.push_back("calConstant");
+    vector<string> rows;
+    for (uint n = 0; n < storedSensors.size(); n++){
+        rows.clear();
+        rows.push_back(to_string(storedSensors.at(n)->sensorIndex));
+        rows.push_back(storedSensors.at(n)->sensorName);
+        rows.push_back(storedSensors.at(n)->subsystem);
+        rows.push_back(to_string(storedSensors.at(n)->minimum));
+        rows.push_back(to_string(storedSensors.at(n)->maximum));
+        rows.push_back(to_string(storedSensors.at(n)->maxRxnCode));
+        rows.push_back(to_string(storedSensors.at(n)->minRxnCode));
+        rows.push_back(to_string(storedSensors.at(n)->calConst));
+        dbase->insert_row("sensors",cols,rows);
+    }
 
     dataMtr = new DataMonitor(allSensors,allResponses);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);

@@ -11,6 +11,7 @@ minThreshold char not null,
 maxThreshold char not null,
 maxReactionId char not null,
 minReactionId char not null
+calConstant char not null
 );
 create table if not exists reactions(
 reactionId char not null,

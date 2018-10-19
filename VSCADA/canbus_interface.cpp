@@ -88,11 +88,10 @@ void canbus_interface::recieve_frame() {
             meta * currSensor = sensorVector.at(i);
             if (currSensor->val != data) {
                 currSensor->val = data;
+                currSensor->calData();
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-                        subsystems.at(j)->updateEdits(currSensor);
-                        subsystems.at(j)->logData(currSensor);
-                        subsystems.at(j)->checkThresholds(currSensor);
+                        subsystems.at(j)->receiveData(currSensor);
                         break;
                     }
                 }

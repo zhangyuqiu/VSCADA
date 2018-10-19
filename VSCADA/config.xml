@@ -13,6 +13,7 @@
 				<maximum>143</maximum>
 				<minreaction>0</minreaction>
 				<maxreaction>2</maxreaction>
+				<multiplier>5.6</multiplier>
 			</sensor>
 			<sensor>
 				<id>1</id>
@@ -23,6 +24,7 @@
 				<maximum>70</maximum>
 				<minreaction>1</minreaction>
 				<maxreaction>0</maxreaction>
+				<multiplier>8.6</multiplier>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -41,6 +43,7 @@
 				<normreaction>5</normreaction>
 				<minreaction>4</minreaction>
 				<maxreaction>5</maxreaction>
+				<multiplier>2.3</multiplier>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -58,6 +61,7 @@
 				<maximum>40</maximum>
 				<minreaction>0</minreaction>
 				<maxreaction>3</maxreaction>
+				<multiplier>4.3</multiplier>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -75,26 +79,29 @@
 				<maximum>30</maximum>
 				<minreaction>0</minreaction>
 				<maxreaction>3</maxreaction>
+				<multiplier>3.3</multiplier>
 			</sensor>
 			<sensor>
 				<id>5</id>
-				<name>GLVStatus</name>
-				<canaddress>1365</canaddress>
+				<name>F1 Fault</name>
+				<gpiopin>20</gpiopin>
 				<checkrate>4500</checkrate>
-				<minimum>5</minimum>
-				<maximum>20</maximum>
+				<minimum>0</minimum>
+				<maximum>1</maximum>
 				<minreaction>0</minreaction>
-				<maxreaction>3</maxreaction>
+				<maxreaction>0</maxreaction>
+				<multiplier>1</multiplier>
 			</sensor>
 			<sensor>
 				<id>6</id>
-				<name>GLVOther</name>
-				<canaddress>1638</canaddress>
+				<name>F2 Fault</name>
+				<gpiopin>21</gpiopin>
 				<checkrate>5500</checkrate>
-				<minimum>2</minimum>
-				<maximum>23</maximum>
+				<minimum>0</minimum>
+				<maximum>1</maximum>
 				<minreaction>0</minreaction>
-				<maxreaction>1</maxreaction>
+				<maxreaction>0</maxreaction>
+				<multiplier>1</multiplier>
 			</sensor>
 			<sensor>
 				<id>7</id>
@@ -105,6 +112,7 @@
 				<maximum>50</maximum>
 				<minreaction>4</minreaction>
 				<maxreaction>5</maxreaction>
+				<multiplier>9.4</multiplier>
 			</sensor>
 		</sensors>
 	</subsystem>

@@ -6,9 +6,6 @@
  * @param sensors - vector of subsystem sensors configured
  */
 SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector){
-    msgQueue = new QQueue<string>;
-    respCANQueue = new QQueue<response>;
-    respGPIOQueue = new QQueue<response>;
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
@@ -64,17 +61,13 @@ void SubsystemThread::logData(meta * currSensor){
             rows.push_back(currSensor->sensorName);
             rows.push_back(to_string(currSensor->val));
             dbase->insert_row(rawTable,cols,rows);
-            return;
-        }
-    }
-    rows.clear();
-    for (uint i = 0; i < sensorMeta.size(); i++){
-        if (sensorMeta.at(i) == currSensor){
+
+            rows.clear();
             rows.push_back(get_curr_time());
             rows.push_back(to_string(currSensor->sensorIndex));
             rows.push_back(currSensor->sensorName);
             rows.push_back(to_string(currSensor->calVal));
-            dbase->insert_row(rawTable,cols,rows);
+            dbase->insert_row(calTable,cols,rows);
             return;
         }
     }
@@ -120,8 +113,12 @@ void SubsystemThread::setMonitor(DataMonitor * mtr){
 void SubsystemThread::updateEdits(meta * sensor){
     for(uint i = 0; i < edits.size(); i++){
         if(sensorMeta.at(i) == sensor){
-            int num = sensor->val;
-            string val = to_string(num);
+            double num = sensor->calVal;
+            ostringstream streamObj;
+            streamObj << fixed;
+            streamObj << setprecision(2);
+            streamObj << num;
+            string val = streamObj.str();
             editTimers.at(i)->start(sensor->checkRate);
             edits.at(i)->setText(QString::fromStdString(val));
         }
@@ -153,7 +150,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         msg = get_curr_time() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         initiateRxn(sensor->maxRxnCode);
-        enqueueMsg(msg);
+        logMsg(msg);
 
     } else if (sensor->val < sensor->minimum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -165,7 +162,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         msg = get_curr_time() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         initiateRxn(sensor->minRxnCode);
-        enqueueMsg(msg);
+        logMsg(msg);
     } else {
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
@@ -177,11 +174,22 @@ void SubsystemThread::checkThresholds(meta * sensor){
     }
 }
 
+void SubsystemThread::calibrateData(meta * currSensor){
+    currSensor->calData();
+}
+
+void SubsystemThread::receiveData(meta * currSensor){
+    calibrateData(currSensor);
+    checkThresholds(currSensor);
+    updateEdits(currSensor);
+    logData(currSensor);
+}
+
 /**
  * @brief SubsystemThread::enqueueMsg - logs message in the database
  * @param msg
  */
-void SubsystemThread::enqueueMsg(string msg){
+void SubsystemThread::logMsg(string msg){
     vector<string> cols;
     vector<string> rows;
     cols.push_back("time");
@@ -191,7 +199,6 @@ void SubsystemThread::enqueueMsg(string msg){
     rows.push_back("console");
     rows.push_back(msg);
     dbase->insert_row("system_log",cols,rows);
-    msgQueue->enqueue(msg);
 }
 
 /**
@@ -257,15 +264,13 @@ int SubsystemThread::initiateRxn(int rxnCode){
         response rsp = responseVector.at(i);
         if (rsp.responseIndex == rxnCode){
             rows.push_back(rsp.msg);
-            enqueueMsg(rsp.msg);
+            logMsg(rsp.msg);
             emit pushMessage(rsp.msg);
             if (rsp.canAddress >= 0){
                 cout << "sending out can data" << endl;
-                respCANQueue->enqueue(rsp);
                 emit pushCANItem(rsp);
             }
             if (rsp.gpioPin >= 0){
-                respGPIOQueue->enqueue(rsp);
                 emit pushGPIOData(rsp);
             }
         }
