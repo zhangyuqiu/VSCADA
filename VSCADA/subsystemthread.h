@@ -54,6 +54,7 @@ public:
     vector<response> responseVector;                //stores configured responses
 
     QQueue<string> * msgQueue;                      //queue to store messages for display
+    bool error;
     QQueue<response> * respCANQueue;                //queue for CAN responses
     QQueue<response> * respGPIOQueue;               //queue for gpio responses
 

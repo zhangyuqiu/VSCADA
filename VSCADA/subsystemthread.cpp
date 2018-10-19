@@ -10,6 +10,7 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<respo
     respCANQueue = new QQueue<response>;
     respGPIOQueue = new QQueue<response>;
     timer = new QTimer;
+    error=false;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
     subsystemId = id;
@@ -142,6 +143,7 @@ void SubsystemThread::checkTimeout(){
  * @param sensor
  */
 void SubsystemThread::checkThresholds(meta * sensor){
+    error = false;
     string msg;
     if (sensor->val > sensor->maximum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -154,6 +156,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         emit pushErrMsg(msg);
         initiateRxn(sensor->maxRxnCode);
         enqueueMsg(msg);
+        error=true;
 
     } else if (sensor->val < sensor->minimum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -166,6 +169,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         emit pushErrMsg(msg);
         initiateRxn(sensor->minRxnCode);
         enqueueMsg(msg);
+        error=true;
     } else {
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {

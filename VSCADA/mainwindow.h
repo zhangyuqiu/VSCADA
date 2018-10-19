@@ -39,6 +39,10 @@ public:
     vector<QLineEdit *> TSVEdits;
     vector<QLineEdit *> COOLINGEdits;
 
+    vector<QComboBox *> systemBox;
+    vector<QPushButton *> systemButton;
+    QVector< QVector< QString> > systemName;
+
 
     QGridLayout * mainLayout;
     QWidget * central;
@@ -50,6 +54,7 @@ public:
     QListWidget * message;
     QCustomPlot * plot;
 
+    int currentSystem;
 
 
     QTimer * timer;
@@ -61,6 +66,8 @@ public:
     int xinit;
     int yinit;
 
+     QVector<double> gx,gy;
+
     datapoint data;
 
     Config * conf;
@@ -69,6 +76,8 @@ private slots:
     void update();
     void updateVals();
     void receiveMsg(string msg);
+    void receiveErrMsg(string msg);
+    void getCurrentSystem(int i);
 
 private:
     Ui::MainWindow *ui;
