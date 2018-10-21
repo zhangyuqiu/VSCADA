@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
     for (uint i = 0; i < subs.size(); i++){
-        connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveMsg(string)));
+        connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
         connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
     }
 
@@ -89,7 +89,11 @@ void MainWindow::update(){
                     button->setStyleSheet("font:10pt;");
                     button->setText(QString::fromStdString(currSub->subsystemId)+" Data");
                     QPalette palb = button->palette();
+                    if(currSub->error){
+                    palb.setColor(QPalette::Button, QColor(255,0,0));
+                    }else{
                     palb.setColor(QPalette::Button, QColor(0,255,0));
+                    }
                     button->setPalette(palb);
                     button->setAutoFillBackground(true);
                     QString  butLabelFont = QString::number(stringSize*1.4);
@@ -112,6 +116,8 @@ void MainWindow::update(){
                 QString  LabelFont = QString::number(stringSize*2);
                 label->setStyleSheet("font:"+LabelFont+"pt;");
                 box->addItem(QString::fromStdString(subMeta.at(j)->sensorName));
+                QString name=QString::fromStdString(subMeta.at(j)->sensorName);
+                //systemName[i][j-1]=name;
                 mainLayout->addWidget(label,fieldHCount,fieldVCount);
                 fieldVCount++;
                 QLineEdit * edit = currSub->edits.at(j);
@@ -129,12 +135,33 @@ void MainWindow::update(){
             linea0->setMidLineWidth(1);
             linea0->setFrameShape(QFrame::VLine);
             linea0->setFrameShadow(QFrame::Raised);
-            mainLayout->addWidget(linea0,fieldHCount,sectionCount,maxSensorRow+1,1);
-        }
+            mainLayout->addWidget(linea0,fieldHCount,sectionCount,maxSensorRow+2,1);
+
+
+                   QFrame *linea1 = new QFrame(this);
+                   linea1->setLineWidth(2);
+                   linea1->setMidLineWidth(1);
+                   linea1->setFrameShape(QFrame::VLine);
+                   linea1->setFrameShadow(QFrame::Raised);
+                   mainLayout->addWidget(linea1,maxSensorRow+1,sectionCount,maxSensorRow+1,1);
+
+               }
     }
+                       QFrame *linea0 = new QFrame(this);
+                       linea0->setLineWidth(2);
+                       linea0->setMidLineWidth(1);
+                       linea0->setFrameShape(QFrame::HLine);
+                       linea0->setFrameShadow(QFrame::Raised);
+                       mainLayout->addWidget(linea0,maxSensorRow+2,0,1,13);
 
-    QString  butLabelFont = QString::number(stringSize*1.5);
+                       QFrame *linea1 = new QFrame(this);
+                       linea1->setLineWidth(2);
+                       linea1->setMidLineWidth(1);
+                       linea1->setFrameShape(QFrame::HLine);
+                       linea1->setFrameShadow(QFrame::Raised);
+                    mainLayout->addWidget(linea1,maxSensorRow+4,0,1,13);
 
+               QString  butLabelFont = QString::number(stringSize*1.5);
 
 
 
@@ -148,7 +175,7 @@ void MainWindow::update(){
         plotButton->setStyleSheet("font:"+butLabelFont+"pt;");
         plotButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
         plotButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-        mainLayout->addWidget(plotButton,maxSensorRow+4,11);
+        mainLayout->addWidget(plotButton,maxSensorRow+5,11);
 
 
         exitButton =new QPushButton();
@@ -160,7 +187,7 @@ void MainWindow::update(){
         exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
         exitButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
         exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-        mainLayout->addWidget(exitButton,maxSensorRow+4,10);
+        mainLayout->addWidget(exitButton,maxSensorRow+5,10);
 
         QFont font = QFont ("Courier");
         message = new QListWidget();
@@ -175,10 +202,29 @@ void MainWindow::update(){
         message->setFixedHeight(unitHeight*6);
         message->setFixedWidth(unitWidth*7);
         message->setFont(font);
-        mainLayout->addWidget(message,maxSensorRow+5,8,maxSensorRow+11,10);
+        mainLayout->addWidget(message,maxSensorRow+6,8,maxSensorRow+11,10);
 
         QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
         QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
+
+        for (int i=0; i<systemButton.size();i++){
+                    if(i==0){
+                    connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(0);});
+                    }
+                    else if(i==1){
+                     connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(1);});
+                    }
+                    else if(i==2){
+                        connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(2);});
+                       }else if(i==3){
+                        connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(3);});
+                       }else if(i==4){
+                        connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(4);});
+                       }else if(i==5){
+                        connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(5);});
+                       }
+                }
+
 }
 
 
@@ -213,11 +259,16 @@ void MainWindow::plotGraph(){
     plot->graph(0)->addData(1,3);
     plot->graph(0)->addData(2,5);
     plot->graph(0)->addData(6,8);
-    mainLayout->addWidget(plot,maxSensorRow+5,0,maxSensorRow+11,6);
+    mainLayout->addWidget(plot,maxSensorRow+6,0,maxSensorRow+11,6);
 }
 
 void MainWindow::receiveMsg(string msg){
     addErrorMessage(QString::fromStdString(msg));
+}
+
+void MainWindow::receiveErrMsg(string msg){
+    addErrorMessage(QString::fromStdString(msg));
+
 }
 
 
@@ -230,5 +281,8 @@ void MainWindow::updateVals(){
 //    this->update();
 }
 
+void MainWindow::getCurrentSystem(int i){
+    currentSystem=i;
+}
 
 

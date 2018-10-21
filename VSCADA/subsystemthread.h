@@ -54,6 +54,11 @@ public:
     vector<QTimer *> editTimers;                    //stores checkTimers
     vector<response> responseVector;                //stores configured responses
 
+    QQueue<string> * msgQueue;                      //queue to store messages for display
+    bool error;
+    QQueue<response> * respCANQueue;                //queue for CAN responses
+    QQueue<response> * respGPIOQueue;               //queue for gpio responses
+
     bool running = true;                            //to control running of collection thread
     vector<int> rawData;                            //cooling sensor data
 

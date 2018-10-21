@@ -162,7 +162,7 @@ bool Config::read_config_file_data(){
     }
 
     //********************************************************//
-    //              PREPARE DATABASE INIT SCRIPT
+    //              PREPARE DATABASE INIT SCRIPT              //
     //********************************************************//
 
     ofstream dbScript;

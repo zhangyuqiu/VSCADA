@@ -1,4 +1,4 @@
-#include "subsystemthread.h"
+﻿#include "subsystemthread.h"
 
 /**
  * @brief SubsystemThread::SubsystemThread - class constructor
@@ -6,7 +6,9 @@
  * @param sensors - vector of subsystem sensors configured
  */
 SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector){
+    msgQueue = new QQueue<string>;
     timer = new QTimer;
+    error=false;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
     subsystemId = id;
@@ -139,6 +141,8 @@ void SubsystemThread::checkTimeout(){
  * @param sensor
  */
 void SubsystemThread::checkThresholds(meta * sensor){
+    cout << "Just checking" << endl;
+    error = false;
     string msg;
     if (sensor->val > sensor->maximum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -151,6 +155,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         emit pushErrMsg(msg);
         initiateRxn(sensor->maxRxnCode);
         logMsg(msg);
+        error=true;
 
     } else if (sensor->val < sensor->minimum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -163,6 +168,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         emit pushErrMsg(msg);
         initiateRxn(sensor->minRxnCode);
         logMsg(msg);
+        error=true;
     } else {
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
@@ -172,6 +178,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         }
         initiateRxn(sensor->normRxnCode);
     }
+    cout << "done checking" << endl;
 }
 
 void SubsystemThread::calibrateData(meta * currSensor){
@@ -199,6 +206,7 @@ void SubsystemThread::logMsg(string msg){
     rows.push_back("console");
     rows.push_back(msg);
     dbase->insert_row("system_log",cols,rows);
+    msgQueue->enqueue(msg);
 }
 
 /**
