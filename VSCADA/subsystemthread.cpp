@@ -190,6 +190,7 @@ void SubsystemThread::receiveData(meta * currSensor){
     checkThresholds(currSensor);
     updateEdits(currSensor);
     logData(currSensor);
+    emit valueChanged();
 }
 
 /**

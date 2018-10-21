@@ -84,6 +84,7 @@ signals:
     void pushGPIOData(response rsp);                            //execute response to GPIO
     void pushMessage(string msg);
     void pushErrMsg(string msg);
+    void valueChanged();
 };
 
 #endif // SUBSYSTEMTHREAD_H
