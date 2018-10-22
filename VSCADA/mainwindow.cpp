@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (uint i = 0; i < subs.size(); i++){
         connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
         connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
-        connect(subs.at(i), SIGNAL(valueChanged()), this, SLOT(updateGraph()));
+//        connect(subs.at(i), SIGNAL(valueChanged()), this, SLOT(updateGraph()));
 
     }
 
@@ -125,7 +125,7 @@ void MainWindow::update(){
                     button->setFixedWidth(static_cast<int>(unitWidth*1.5));
                     button->setFixedHeight(static_cast<int>(unitHeight*1.4));
                     systemButton.push_back(button);
-                    mainLayout->addWidget(button,maxSensorRow+3,fieldVCount);
+                    mainLayout->addWidget(button,maxSensorRow+3,fieldVCount,Qt::AlignCenter);
 
                    fieldHCount++;
 
@@ -133,7 +133,7 @@ void MainWindow::update(){
                    box->setFixedHeight(static_cast<int>(unitHeight*1.4));
                    QString  boxFont = QString::number(stringSize*1.2);
                    box->setStyleSheet("font:"+boxFont+"pt;");
-                   mainLayout->addWidget(box,maxSensorRow+3,fieldVCount+1);
+                   mainLayout->addWidget(box,maxSensorRow+3,fieldVCount+1,Qt::AlignCenter);
                 }
                 label->setText(QString::fromStdString(subMeta.at(j)->sensorName));
                 label->setFixedWidth(unitWidth*2);
@@ -170,7 +170,7 @@ void MainWindow::update(){
                    linea1->setMidLineWidth(1);
                    linea1->setFrameShape(QFrame::VLine);
                    linea1->setFrameShadow(QFrame::Raised);
-                   mainLayout->addWidget(linea1,maxSensorRow+1,sectionCount,maxSensorRow+1,1);
+                   mainLayout->addWidget(linea1,maxSensorRow+1,sectionCount,maxSensorRow,1);
 
                    systemBox.push_back(box);
 
@@ -204,8 +204,7 @@ void MainWindow::update(){
         plotButton->setStyleSheet("font:"+butLabelFont+"pt;");
         plotButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
         plotButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-
-        mainLayout->addWidget(plotButton,maxSensorRow+5,11);
+        mainLayout->addWidget(plotButton,maxSensorRow+5,11,Qt::AlignCenter);
 
 
         exitButton =new QPushButton();
@@ -217,7 +216,21 @@ void MainWindow::update(){
         exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
         exitButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
         exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-        mainLayout->addWidget(exitButton,maxSensorRow+5,10);
+        mainLayout->addWidget(exitButton,maxSensorRow+5,10,Qt::AlignCenter);
+
+        QFrame *linea2 = new QFrame(this);
+        linea2->setLineWidth(2);
+        linea2->setMidLineWidth(1);
+        linea2->setFrameShape(QFrame::HLine);
+        linea2->setFrameShadow(QFrame::Raised);
+        mainLayout->addWidget(linea2,maxSensorRow+6,0,1,13);
+
+        QFrame *linea3 = new QFrame(this);
+        linea3->setLineWidth(2);
+        linea3->setMidLineWidth(1);
+        linea3->setFrameShape(QFrame::HLine);
+        linea3->setFrameShadow(QFrame::Raised);
+     mainLayout->addWidget(linea3,maxSensorRow+6,0,1,13);
 
         QFont font = QFont ("Courier");
         message = new QListWidget();
@@ -230,7 +243,7 @@ void MainWindow::update(){
         message->setFixedHeight(unitHeight*6);
         message->setFixedWidth(unitWidth*7);
         message->setFont(font);
-        mainLayout->addWidget(message,maxSensorRow+6,8,maxSensorRow+11,10);
+        mainLayout->addWidget(message,maxSensorRow+7,8,maxSensorRow+11,10);
 
         QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
         QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
@@ -358,13 +371,13 @@ void MainWindow::updateVals(){
 
 void MainWindow::getCurrentSystem(int i){
     currentSystem=i;
-
 }
 
 
 void MainWindow::updateGraph(){
     vector<SubsystemThread *> subs;
-     subs = conf->subsystems;
+    subs = conf->subsystems;
+    cout << "Current System: " << currentSystem << endl;
     SubsystemThread * currSub = subs.at(currentSystem);
     vector<meta *> subMeta = currSub->get_metadata();
     meta * sensor =subMeta.at(currentSubSystem);

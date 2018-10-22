@@ -81,7 +81,10 @@ bool Config::read_config_file_data(){
         int maxrate = 0;
         string subSystemId;
         vector<meta *> sensors;
-        cout << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
+        cout << endl << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
+        cout << "subsystem ID: " << subSystemId << endl;
+        cout << "subsystem min: " << minrate << endl;
+        cout << "subsystem max: " << maxrate << endl;
 
         //get subsystem characteristics: subsystemId, minrate and maxrate
         QDomNodeList subsystemXteristics = subsystemNodes.at(i).childNodes();
@@ -112,11 +115,12 @@ bool Config::read_config_file_data(){
                     storedSensor->calConst = -1;
                     storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
-                    cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
+//                    cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
                             storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+                            cout << "Sensor Name: " << storedSensor->sensorName << endl;
                         } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
                             storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
@@ -151,9 +155,6 @@ bool Config::read_config_file_data(){
 
             }
         }
-        cout << "subsystem ID: " << subSystemId << endl;
-        cout << "subsystem min: " << minrate << endl;
-        cout << "subsystem max: " << maxrate << endl;
         SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);

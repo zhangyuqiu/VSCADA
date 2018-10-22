@@ -6,6 +6,7 @@
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QObject>
+#include <QRegion>
 #include <QtWidgets>
 #include <qcustomplot.h>
 #include <string>

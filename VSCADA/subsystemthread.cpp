@@ -56,7 +56,10 @@ void SubsystemThread::logData(meta * currSensor){
     string rawTable = subsystemId + "_rawdata";
     string calTable = subsystemId + "_caldata";
     cout << "Debug dbase write" << endl;
+    cout << "Subsystem ID: " << subsystemId << endl;
+    cout << "Size of sensor vector: " << sensorMeta.size() << endl;
     for (uint i = 0; i < sensorMeta.size(); i++){
+        cout << "Checking sensor: " << sensorMeta.at(i)->sensorName << endl;
         if (sensorMeta.at(i) == currSensor){
             rows.push_back(get_curr_time());
             rows.push_back(currSensor->sensorName);
@@ -70,10 +73,11 @@ void SubsystemThread::logData(meta * currSensor){
             rows.push_back(currSensor->sensorName);
             rows.push_back(to_string(currSensor->calVal));
             dbase->insert_row(calTable,cols,rows);
+            cout << "Returning" << endl;
             return;
         }
     }
-    cout << "Sensor Not Found. System Error" << endl;
+    cout << "Sensor Not Found. System Error" << currSensor->sensorName << endl;
 }
 
 /**
@@ -151,11 +155,11 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
+        error=true;
         msg = get_curr_time() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         initiateRxn(sensor->maxRxnCode);
         logMsg(msg);
-        error=true;
 
     } else if (sensor->val < sensor->minimum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -164,11 +168,11 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
+        error=true;
         msg = get_curr_time() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         initiateRxn(sensor->minRxnCode);
         logMsg(msg);
-        error=true;
     } else {
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
@@ -186,11 +190,16 @@ void SubsystemThread::calibrateData(meta * currSensor){
 }
 
 void SubsystemThread::receiveData(meta * currSensor){
-    calibrateData(currSensor);
-    checkThresholds(currSensor);
-    updateEdits(currSensor);
-    logData(currSensor);
-    emit valueChanged();
+    for (int i = 0; i < sensorMeta.size(); i++){
+        if (sensorMeta.at(i) == currSensor){
+            cout << "somewhere here" << endl;
+            calibrateData(currSensor);
+            checkThresholds(currSensor);
+            updateEdits(currSensor);
+            logData(currSensor);
+            emit valueChanged();
+        }
+    }
 }
 
 /**
