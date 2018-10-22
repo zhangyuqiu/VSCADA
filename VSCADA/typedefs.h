@@ -31,9 +31,9 @@ typedef struct{
     int gpioPin;
     int val;
     double calConst;
-    int calVal;
+    double calVal;
     void calData(){
-        calVal = val*calConst;
+        calVal = (double)val*calConst;
     }
     void updateVal(int newVal)
       {
@@ -68,6 +68,7 @@ typedef struct{
     int defVal;
     int canAddress;
     int gpioPin;
+    int gpioPair;
 }response;
 
 typedef struct{

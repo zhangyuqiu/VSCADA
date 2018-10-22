@@ -6,6 +6,7 @@
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QObject>
+#include <QRegion>
 #include <QtWidgets>
 #include <qcustomplot.h>
 #include <string>
@@ -27,6 +28,7 @@ public:
     ~MainWindow();
     void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
+    void addPoint(int x, int y);
     void exit();
 
     vector<meta> GLV_meta;
@@ -39,6 +41,10 @@ public:
     vector<QLineEdit *> TSVEdits;
     vector<QLineEdit *> COOLINGEdits;
 
+    vector<QComboBox *> systemBox;
+    vector<QPushButton *> systemButton;
+    QString ** systemName;
+
 
     QGridLayout * mainLayout;
     QWidget * central;
@@ -50,6 +56,8 @@ public:
     QListWidget * message;
     QCustomPlot * plot;
 
+    int currentSystem;
+    int currentSubSystem;
 
 
     QTimer * timer;
@@ -60,6 +68,9 @@ public:
     QString fontSize;
     int xinit;
     int yinit;
+    int maxSensorRow;
+
+     QVector<double> gx,gy;
 
     datapoint data;
 
@@ -68,7 +79,10 @@ private slots:
     void plotGraph();
     void update();
     void updateVals();
+    void updateGraph();
     void receiveMsg(string msg);
+    void receiveErrMsg(string msg);
+    void getCurrentSystem(int i);
 
 private:
     Ui::MainWindow *ui;

@@ -1,4 +1,4 @@
-#include "subsystemthread.h"
+﻿#include "subsystemthread.h"
 
 /**
  * @brief SubsystemThread::SubsystemThread - class constructor
@@ -7,9 +7,8 @@
  */
 SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector){
     msgQueue = new QQueue<string>;
-    respCANQueue = new QQueue<response>;
-    respGPIOQueue = new QQueue<response>;
     timer = new QTimer;
+    error=false;
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
     subsystemId = id;
@@ -35,10 +34,18 @@ SubsystemThread::~SubsystemThread(){
 
 }
 
+/**
+ * @brief SubsystemThread::setDB - sets database object for class
+ * @param db
+ */
 void SubsystemThread::setDB(DB_Engine * db){
     dbase = db;
 }
 
+/**
+ * @brief SubsystemThread::logData - records specified sensor data in the respective database
+ * @param currSensor
+ */
 void SubsystemThread::logData(meta * currSensor){
     vector<string> cols;
     cols.push_back("time");
@@ -46,22 +53,37 @@ void SubsystemThread::logData(meta * currSensor){
     cols.push_back("sensorName");
     cols.push_back("value");
     vector<string> rows;
-    string table = subsystemId + "_data";
+    string rawTable = subsystemId + "_rawdata";
+    string calTable = subsystemId + "_caldata";
     cout << "Debug dbase write" << endl;
+    cout << "Subsystem ID: " << subsystemId << endl;
+    cout << "Size of sensor vector: " << sensorMeta.size() << endl;
     for (uint i = 0; i < sensorMeta.size(); i++){
+        cout << "Checking sensor: " << sensorMeta.at(i)->sensorName << endl;
         if (sensorMeta.at(i) == currSensor){
             rows.push_back(get_curr_time());
             rows.push_back(currSensor->sensorName);
             rows.push_back(currSensor->sensorName);
             rows.push_back(to_string(currSensor->val));
-            dbase->insert_row(table,cols,rows);
+            dbase->insert_row(rawTable,cols,rows);
+
+            rows.clear();
+            rows.push_back(get_curr_time());
+            rows.push_back(to_string(currSensor->sensorIndex));
+            rows.push_back(currSensor->sensorName);
+            rows.push_back(to_string(currSensor->calVal));
+            dbase->insert_row(calTable,cols,rows);
+            cout << "Returning" << endl;
             return;
         }
-        cout << "Debug dbase write " << i << endl;
     }
-    cout << "Sensor Not Found. System Error" << endl;
+    cout << "Sensor Not Found. System Error" << currSensor->sensorName << endl;
 }
 
+/**
+ * @brief SubsystemThread::get_metadata -
+ * @return
+ */
 vector<meta *> SubsystemThread::get_metadata(){
     return sensorMeta;
 }
@@ -83,6 +105,10 @@ void SubsystemThread::init_data(){
     }
 }
 
+/**
+ * @brief SubsystemThread::setMonitor - sets monitor object for class
+ * @param mtr
+ */
 void SubsystemThread::setMonitor(DataMonitor * mtr){
     monitor = mtr;
 }
@@ -93,21 +119,34 @@ void SubsystemThread::setMonitor(DataMonitor * mtr){
 void SubsystemThread::updateEdits(meta * sensor){
     for(uint i = 0; i < edits.size(); i++){
         if(sensorMeta.at(i) == sensor){
-            int num = sensor->val;
-            string val = to_string(num);
+            double num = sensor->calVal;
+            ostringstream streamObj;
+            streamObj << fixed;
+            streamObj << setprecision(2);
+            streamObj << num;
+            string val = streamObj.str();
             editTimers.at(i)->start(sensor->checkRate);
             edits.at(i)->setText(QString::fromStdString(val));
         }
     }
 }
 
+/**
+ * @brief SubsystemThread::checkTimeout - checks whether any lineEdit hasn't received updates
+ */
 void SubsystemThread::checkTimeout(){
     for(uint i = 0; i < edits.size(); i++){
         if (!editTimers.at(i)->isActive()) edits.at(i)->setStyleSheet("color: #A9A9A9");
     }
 }
 
+/**
+ * @brief SubsystemThread::checkThresholds - check whether specified sensor data exceeds configured thresholds
+ * @param sensor
+ */
 void SubsystemThread::checkThresholds(meta * sensor){
+    cout << "Just checking" << endl;
+    error = false;
     string msg;
     if (sensor->val > sensor->maximum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -116,10 +155,11 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
+        error=true;
         msg = get_curr_time() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         initiateRxn(sensor->maxRxnCode);
-        enqueueMsg(msg);
+        logMsg(msg);
 
     } else if (sensor->val < sensor->minimum){
         for(uint i = 0; i < sensorMeta.size(); i++){
@@ -128,10 +168,11 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 break;
             }
         }
+        error=true;
         msg = get_curr_time() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         initiateRxn(sensor->minRxnCode);
-        enqueueMsg(msg);
+        logMsg(msg);
     } else {
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
@@ -141,9 +182,31 @@ void SubsystemThread::checkThresholds(meta * sensor){
         }
         initiateRxn(sensor->normRxnCode);
     }
+    cout << "done checking" << endl;
 }
 
-void SubsystemThread::enqueueMsg(string msg){
+void SubsystemThread::calibrateData(meta * currSensor){
+    currSensor->calData();
+}
+
+void SubsystemThread::receiveData(meta * currSensor){
+    for (int i = 0; i < sensorMeta.size(); i++){
+        if (sensorMeta.at(i) == currSensor){
+            cout << "somewhere here" << endl;
+            calibrateData(currSensor);
+            checkThresholds(currSensor);
+            updateEdits(currSensor);
+            logData(currSensor);
+            emit valueChanged();
+        }
+    }
+}
+
+/**
+ * @brief SubsystemThread::enqueueMsg - logs message in the database
+ * @param msg
+ */
+void SubsystemThread::logMsg(string msg){
     vector<string> cols;
     vector<string> rows;
     cols.push_back("time");
@@ -200,6 +263,11 @@ void SubsystemThread::StartInternalThread()
    pthread_create(&_thread, nullptr, InternalThreadEntryFunc, this);
 }
 
+/**
+ * @brief SubsystemThread::initiateRxn - execute specified reaction as configured
+ * @param rxnCode
+ * @return
+ */
 int SubsystemThread::initiateRxn(int rxnCode){
     //print to log
     vector<string> cols;
@@ -214,15 +282,13 @@ int SubsystemThread::initiateRxn(int rxnCode){
         response rsp = responseVector.at(i);
         if (rsp.responseIndex == rxnCode){
             rows.push_back(rsp.msg);
-            enqueueMsg(rsp.msg);
+            logMsg(rsp.msg);
             emit pushMessage(rsp.msg);
             if (rsp.canAddress >= 0){
                 cout << "sending out can data" << endl;
-                respCANQueue->enqueue(rsp);
                 emit pushCANItem(rsp);
             }
             if (rsp.gpioPin >= 0){
-                respGPIOQueue->enqueue(rsp);
                 emit pushGPIOData(rsp);
             }
         }
@@ -231,10 +297,14 @@ int SubsystemThread::initiateRxn(int rxnCode){
     return 0;
 }
 
+/**
+ * @brief SubsystemThread::get_curr_time - retrieves current operation system time
+ * @return
+ */
 string SubsystemThread::get_curr_time(){
     time_t t = time(nullptr);
     struct tm now = *localtime(&t);
     char buf[20];
-    strftime(buf, sizeof(buf),"%X",&now);
+    strftime(buf, sizeof(buf),"%D_%T",&now);
     return buf;
 }

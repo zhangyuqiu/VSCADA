@@ -81,7 +81,10 @@ bool Config::read_config_file_data(){
         int maxrate = 0;
         string subSystemId;
         vector<meta *> sensors;
-        cout << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
+        cout << endl << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
+        cout << "subsystem ID: " << subSystemId << endl;
+        cout << "subsystem min: " << minrate << endl;
+        cout << "subsystem max: " << maxrate << endl;
 
         //get subsystem characteristics: subsystemId, minrate and maxrate
         QDomNodeList subsystemXteristics = subsystemNodes.at(i).childNodes();
@@ -98,6 +101,7 @@ bool Config::read_config_file_data(){
                     meta thisSensor;
                     storedSensor = new meta;
                     storedSensor->val = 0;
+                    storedSensor->calVal = 0;
                     storedSensor->sensorIndex = -1;
                     storedSensor->minimum = -1;
                     storedSensor->maximum = -1;
@@ -111,11 +115,14 @@ bool Config::read_config_file_data(){
                     storedSensor->calConst = -1;
                     storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
-                    cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
+//                    cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
                             storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+                            cout << "Sensor Name: " << storedSensor->sensorName << endl;
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
+                            storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
                             storedSensor->canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             canSensors.push_back(storedSensor);
@@ -131,6 +138,8 @@ bool Config::read_config_file_data(){
                             storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
                             storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("multiplier") == 0){
+                            storedSensor->calConst = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
                             storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             gpioSensors.push_back(storedSensor);
@@ -144,20 +153,8 @@ bool Config::read_config_file_data(){
                     allSensors.push_back(thisSensor);
                 }
 
-                cout << "All Sensors: " << sensors.size() << endl;
-                for (uint n = 0; n < sensors.size(); n++){
-                    cout << "Sensor Name: " << storedSensors.at(n)->sensorName << endl;
-                    cout << "Sensor Max: " << storedSensors.at(n)->maximum << endl;
-                    cout << "Sensor Min: " << storedSensors.at(n)->minimum << endl;
-                    cout << "Sensor MaxRxn: " << storedSensors.at(n)->maxRxnCode << endl;
-                    cout << "Sensor MinRxn: " << storedSensors.at(n)->minRxnCode << endl;
-                }
-
             }
         }
-        cout << "subsystem ID: " << subSystemId << endl;
-        cout << "subsystem min: " << minrate << endl;
-        cout << "subsystem max: " << maxrate << endl;
         SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
@@ -166,7 +163,7 @@ bool Config::read_config_file_data(){
     }
 
     //********************************************************//
-    //              PREPARE DATABASE INIT SCRIPT
+    //              PREPARE DATABASE INIT SCRIPT              //
     //********************************************************//
 
     ofstream dbScript;
@@ -187,6 +184,7 @@ bool Config::read_config_file_data(){
     dbScript << "maxThreshold char not null," << endl;
     dbScript << "maxReactionId char not null," << endl;
     dbScript << "minReactionId char not null" << endl;
+    dbScript << "calConstant char not null" << endl;
     dbScript << ");" << endl;
 
     dbScript << "create table if not exists reactions(" << endl;
@@ -202,7 +200,17 @@ bool Config::read_config_file_data(){
 
     //create subsystem tables
     for (uint i = 0; i < subsystems.size(); i++){
-        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_data(";
+        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_rawdata(";
+        dbScript << scriptTableArg << endl;
+        dbScript << "time char not null," << endl;
+        dbScript << "sensorindex char not null," << endl;
+        dbScript << "sensorName char not null," << endl;
+        dbScript << "value char not null" << endl;
+        dbScript << ");" << endl;
+    }
+
+    for (uint i = 0; i < subsystems.size(); i++){
+        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_caldata(";
         dbScript << scriptTableArg << endl;
         dbScript << "time char not null," << endl;
         dbScript << "sensorindex char not null," << endl;
@@ -217,6 +225,30 @@ bool Config::read_config_file_data(){
     dbase->runScript("script.sql");
     //************************FINISH**************************//
 
+
+    cout << "All Sensors: " << storedSensors.size() << endl;
+    vector<string> cols;
+    cols.push_back("sensorIndex");
+    cols.push_back("sensorName");
+    cols.push_back("subsystem");
+    cols.push_back("minThreshold");
+    cols.push_back("maxThreshold");
+    cols.push_back("maxReactionId");
+    cols.push_back("minReactionId");
+    cols.push_back("calConstant");
+    vector<string> rows;
+    for (uint n = 0; n < storedSensors.size(); n++){
+        rows.clear();
+        rows.push_back(to_string(storedSensors.at(n)->sensorIndex));
+        rows.push_back(storedSensors.at(n)->sensorName);
+        rows.push_back(storedSensors.at(n)->subsystem);
+        rows.push_back(to_string(storedSensors.at(n)->minimum));
+        rows.push_back(to_string(storedSensors.at(n)->maximum));
+        rows.push_back(to_string(storedSensors.at(n)->maxRxnCode));
+        rows.push_back(to_string(storedSensors.at(n)->minRxnCode));
+        rows.push_back(to_string(storedSensors.at(n)->calConst));
+        dbase->insert_row("sensors",cols,rows);
+    }
 
     dataMtr = new DataMonitor(allSensors,allResponses);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);

@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <QTimer>
 #include <QQueue>
+#include <iomanip>
 #include "typedefs.h"
 #include "datamonitor.h"
 #include "db_engine.h"
@@ -31,18 +32,16 @@ public:
     string get_curr_time();                         //get curent time
     void setDB(DB_Engine * db);                     //sets database object
     void set_rate(int newRate);                     //sets rate at which data is checked
-    void enqueueMsg(string msg);                    //enqueue message for display
+    void logMsg(string msg);                        //enqueue message for display
     vector<meta *> get_metadata();                  //retrieves a configured list of sensors
-    void logData(meta * currSensor);                //records sensor data in database
     void setMonitor(DataMonitor * mtr);             //sets monitor object
     void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
-    int initiateRxn(int rxnCode);     //execute configured reaction
+    int initiateRxn(int rxnCode);                   //execute configured reaction
+    void calibrateData(meta * currSensor);
 
     QTimer * timer;                                 //timer to implement sampling frequency
     DataMonitor * monitor;                          //pointer to a datamonitor object
-    DB_Engine * dbase;
-
-    int testVal = 0;                                //dummy variable for testing
+    DB_Engine * dbase;                              //pointer to database object
 
     QTimer * checkTmr;                              //timer placeholder for checking update frequencies
     QLineEdit * lineEdit;                           //lineEdif placeholder for sensor-specific line edits
@@ -56,6 +55,7 @@ public:
     vector<response> responseVector;                //stores configured responses
 
     QQueue<string> * msgQueue;                      //queue to store messages for display
+    bool error;
     QQueue<response> * respCANQueue;                //queue for CAN responses
     QQueue<response> * respGPIOQueue;               //queue for gpio responses
 
@@ -72,6 +72,8 @@ private:
     pthread_t _thread;
 
 public slots:
+    void receiveData(meta * currSensor);
+    void logData(meta * currSensor);                            //records sensor data in database
     void StartInternalThread();                                 //starts subsystem thread
     void updateEdits(meta *sensor);                             //updates LineEdit displays
     void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds
@@ -82,6 +84,7 @@ signals:
     void pushGPIOData(response rsp);                            //execute response to GPIO
     void pushMessage(string msg);
     void pushErrMsg(string msg);
+    void valueChanged();
 };
 
 #endif // SUBSYSTEMTHREAD_H
