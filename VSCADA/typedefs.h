@@ -68,6 +68,7 @@ typedef struct{
     int defVal;
     int canAddress;
     int gpioPin;
+    int gpioPair;
 }response;
 
 typedef struct{
