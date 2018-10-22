@@ -27,6 +27,7 @@ public:
     ~MainWindow();
     void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
+    void addPoint(int x, int y);
     void exit();
 
     vector<meta> GLV_meta;
@@ -41,7 +42,7 @@ public:
 
     vector<QComboBox *> systemBox;
     vector<QPushButton *> systemButton;
-    QVector< QVector< QString> > systemName;
+    QString ** systemName;
 
 
     QGridLayout * mainLayout;
@@ -55,6 +56,7 @@ public:
     QCustomPlot * plot;
 
     int currentSystem;
+    int currentSubSystem;
 
 
     QTimer * timer;
@@ -65,6 +67,7 @@ public:
     QString fontSize;
     int xinit;
     int yinit;
+    int maxSensorRow;
 
      QVector<double> gx,gy;
 
@@ -75,6 +78,7 @@ private slots:
     void plotGraph();
     void update();
     void updateVals();
+    void updateGraph();
     void receiveMsg(string msg);
     void receiveErrMsg(string msg);
     void getCurrentSystem(int i);

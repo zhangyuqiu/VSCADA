@@ -11,6 +11,12 @@ MainWindow::MainWindow(QWidget *parent) :
     mainLayout = new QGridLayout();
     conf = new Config();
     timer = new QTimer();
+    currentSubSystem=0;
+    currentSystem=0;
+
+    xinit=0;
+    yinit=0;
+    maxSensorRow = 0;
 
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     central->setLayout(mainLayout);
@@ -39,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
     for (uint i = 0; i < subs.size(); i++){
         connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
         connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
+        connect(subs.at(i), SIGNAL(valueChanged()), this, SLOT(updateGraph()));
+
     }
 
     update();
@@ -54,10 +62,11 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::update(){
-    int maxSensorRow = 0;
+
     int sectionCount = 0;
     int fieldVCount = 0;
     int fieldHCount = 0;
+
 
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
@@ -65,6 +74,19 @@ void MainWindow::update(){
         vector<meta*> subMeta = subs.at(i)->get_metadata();
         if (static_cast<int>(subMeta.size()) > maxSensorRow) maxSensorRow = static_cast<int>(subMeta.size());
     }
+
+     systemName = new QString *[subs.size()];
+
+     for(int i=0;i<subs.size();i++){
+         systemName[i]= new QString [maxSensorRow];
+     }
+
+      for(int i=0;i<subs.size();i++){
+     for(int j=0;j<maxSensorRow;j++){
+
+           systemName[i][j]="0";
+         }
+     }
 
     for (uint i = 0; i < subs.size(); i++){
         SubsystemThread * currSub = subs.at(i);
@@ -89,17 +111,20 @@ void MainWindow::update(){
                     button->setStyleSheet("font:10pt;");
                     button->setText(QString::fromStdString(currSub->subsystemId)+" Data");
                     QPalette palb = button->palette();
+
                     if(currSub->error){
                     palb.setColor(QPalette::Button, QColor(255,0,0));
                     }else{
                     palb.setColor(QPalette::Button, QColor(0,255,0));
                     }
+
                     button->setPalette(palb);
                     button->setAutoFillBackground(true);
                     QString  butLabelFont = QString::number(stringSize*1.4);
                     button->setStyleSheet("font:"+butLabelFont+"pt;");
                     button->setFixedWidth(static_cast<int>(unitWidth*1.5));
                     button->setFixedHeight(static_cast<int>(unitHeight*1.4));
+                    systemButton.push_back(button);
                     mainLayout->addWidget(button,maxSensorRow+3,fieldVCount);
 
                    fieldHCount++;
@@ -117,7 +142,9 @@ void MainWindow::update(){
                 label->setStyleSheet("font:"+LabelFont+"pt;");
                 box->addItem(QString::fromStdString(subMeta.at(j)->sensorName));
                 QString name=QString::fromStdString(subMeta.at(j)->sensorName);
-                //systemName[i][j-1]=name;
+
+                systemName[i][j]=name;
+
                 mainLayout->addWidget(label,fieldHCount,fieldVCount);
                 fieldVCount++;
                 QLineEdit * edit = currSub->edits.at(j);
@@ -144,6 +171,8 @@ void MainWindow::update(){
                    linea1->setFrameShape(QFrame::VLine);
                    linea1->setFrameShadow(QFrame::Raised);
                    mainLayout->addWidget(linea1,maxSensorRow+1,sectionCount,maxSensorRow+1,1);
+
+                   systemBox.push_back(box);
 
                }
     }
@@ -175,6 +204,7 @@ void MainWindow::update(){
         plotButton->setStyleSheet("font:"+butLabelFont+"pt;");
         plotButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
         plotButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+
         mainLayout->addWidget(plotButton,maxSensorRow+5,11);
 
 
@@ -192,13 +222,11 @@ void MainWindow::update(){
         QFont font = QFont ("Courier");
         message = new QListWidget();
         QString  errorMessage;
-        errorMessage = "Error3";
+        errorMessage = "Begin";
         addErrorMessage(errorMessage);
         QString  messageFont = QString::number(stringSize*1.5);
         message->setStyleSheet("font:"+messageFont+"pt;");
-        message->addItem("Error1");
-        message->addItem("Error2");
-        message->addItem(fontSize);
+        message->addItem("FontSize:"+fontSize);
         message->setFixedHeight(unitHeight*6);
         message->setFixedWidth(unitWidth*7);
         message->setFont(font);
@@ -206,6 +234,7 @@ void MainWindow::update(){
 
         QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
         QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
+        //QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(updateVals()));
 
         for (int i=0; i<systemButton.size();i++){
                     if(i==0){
@@ -231,43 +260,88 @@ void MainWindow::update(){
 void MainWindow::drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay ){
     edit= new QLineEdit();
     edit->setText(dataDisplay);
-    edit->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Preferred);
+    //edit->setSizePolicy(QSizePolicy::Ignored,QSizePolicy:referred);
     edit->setMinimumWidth(unitWidth);
     edit->setStyleSheet("font:24pt;");
     mainLayout->addWidget(edit,x,y);
 }
 
 void MainWindow::plotGraph(){
-    int maxSensorRow = 0;
+    int max =20;
+    int mini=0;
+    xinit=0;
+    gx.clear();
+    gy.clear();
     vector<SubsystemThread *> subs;
-    subs = conf->subsystems;
+     subs = conf->subsystems;
+    SubsystemThread * currSub = subs.at(currentSystem);
 
-    for (uint i = 0; i < subs.size(); i++){
-        vector<meta*> subMeta = subs.at(i)->get_metadata();
-        if (static_cast<int>(subMeta.size()) > maxSensorRow) maxSensorRow = static_cast<int>(subMeta.size());
+
+
+
+    vector<meta *> subMeta = currSub->get_metadata();
+    meta * sensor =subMeta.at(currentSubSystem);
+    max = (sensor->maximum)*1.5;
+    mini = (sensor->minimum)*0.5;
+
+    QString choice= systemBox.at(currentSystem)->currentText();
+
+
+    for(int i=0;i<maxSensorRow;i++){
+       int x = choice.compare(systemName[currentSystem][i]);
+        if(x==0){
+        currentSubSystem=i;
+        }
     }
+
     plot = new QCustomPlot();
     plot->addGraph();
     plot->setFixedHeight(unitHeight*8);
     plot->setFixedWidth(unitWidth*9);
     plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
     plot->graph(0)->setLineStyle(QCPGraph::lsLine);
-    plot->yAxis->setRange(0, -20, Qt::AlignRight);
-    plot->xAxis->setRange(0, -20, Qt::AlignRight);
-    plot->graph(0)->addData(4,4);
-    plot->graph(0)->addData(7,4);
-    plot->graph(0)->addData(1,3);
-    plot->graph(0)->addData(2,5);
-    plot->graph(0)->addData(6,8);
+    plot->yAxis->setRange(mini, -(max-mini), Qt::AlignRight);
+//    plot->xAxis->setRange(0, -20, Qt::AlignRight);
+//    plot->graph(0)->addData(4,4);
+//    plot->graph(0)->addData(7,4);
+//    plot->graph(0)->addData(1,3);
+//    plot->graph(0)->addData(2,5);
+//    plot->graph(0)->addData(6,8);
+//       addPoint(4,4);
+//        addPoint(7,4);
+//        addPoint(1,3);
+//        addPoint(2,5);
+//        addPoint(6,8);
     mainLayout->addWidget(plot,maxSensorRow+6,0,maxSensorRow+11,6);
 }
 
 void MainWindow::receiveMsg(string msg){
     addErrorMessage(QString::fromStdString(msg));
+
+
+}
+
+void MainWindow::addPoint(int x, int y){
+    plot->xAxis->setRange(0, -x, Qt::AlignRight);
+    gx.append(x);
+    gy.append(y);
+    plot->graph(0)->setData(gx,gy);
+    plot->replot();
+    plot->update();
 }
 
 void MainWindow::receiveErrMsg(string msg){
     addErrorMessage(QString::fromStdString(msg));
+    vector<SubsystemThread *> subs;
+     subs = conf->subsystems;
+    for (uint i = 0; i < subs.size(); i++){
+            bool error = subs.at(i)->error;
+            if(error){
+                QPalette palb = systemButton.at(i)->palette();
+                palb.setColor(QPalette::Button, QColor(255,0,0));
+                systemButton.at(i)->setPalette(palb);
+            }
+     }
 
 }
 
@@ -278,11 +352,34 @@ void MainWindow::addErrorMessage(QString eMessage){
 }
 
 void MainWindow::updateVals(){
-//    this->update();
+// addPoint(xinit,yinit);
+//yinit++;
 }
 
 void MainWindow::getCurrentSystem(int i){
     currentSystem=i;
+
 }
 
 
+void MainWindow::updateGraph(){
+    vector<SubsystemThread *> subs;
+     subs = conf->subsystems;
+    SubsystemThread * currSub = subs.at(currentSystem);
+    vector<meta *> subMeta = currSub->get_metadata();
+    meta * sensor =subMeta.at(currentSubSystem);
+    int data=sensor->calVal;
+    addPoint(xinit,data);
+    xinit++;
+    for (uint i = 0; i < subs.size(); i++){
+            bool error = subs.at(i)->error;
+            QPalette palb = systemButton.at(i)->palette();
+            if(error){
+                palb.setColor(QPalette::Button, QColor(255,0,0));
+            }else{
+                palb.setColor(QPalette::Button, QColor(0,255,0));
+            }
+            systemButton.at(i)->setPalette(palb);
+     }
+
+}
