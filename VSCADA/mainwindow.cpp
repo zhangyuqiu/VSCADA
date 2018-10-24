@@ -14,6 +14,9 @@ MainWindow::MainWindow(QWidget *parent) :
     currentSubSystem=0;
     currentSystem=0;
 
+    plot = new QCustomPlot();
+    plot->addGraph();
+
     xinit=0;
     yinit=0;
     maxSensorRow = 0;
@@ -40,6 +43,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setCentralWidget(scrollArea);
 
+    update();
+
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
     for (uint i = 0; i < subs.size(); i++){
@@ -49,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     }
 
-    update();
+
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
     timer->start(500);
 
@@ -320,8 +325,7 @@ void MainWindow::plotGraph(){
         }
     }
 
-    plot = new QCustomPlot();
-    plot->addGraph();
+
     plot->setFixedHeight(unitHeight*8);
     plot->setFixedWidth(unitWidth*9);
     plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
@@ -348,7 +352,7 @@ void MainWindow::receiveMsg(string msg){
 }
 
 void MainWindow::addPoint(int x, int y){
-    plot->xAxis->setRange(0, -x, Qt::AlignRight);
+    plot->xAxis->setRange(0, -(x+1), Qt::AlignRight);
     gx.append(x);
     gy.append(y);
     plot->graph(0)->setData(gx,gy);
@@ -396,17 +400,17 @@ void MainWindow::updateGraph(){
 //    cout << "TEST THIS: " << subMeta.size() << endl;
     meta * sensor =subMeta.at(currentSubSystem);
     int data=sensor->calVal;
-//    addPoint(xinit,data);
+    addPoint(xinit,data);
     xinit++;
-//    for (uint i = 0; i < subs.size(); i++){
-//            bool error = subs.at(i)->error;
-//            QPalette palb = systemButton.at(i)->palette();
-//            if(error){
-//                palb.setColor(QPalette::Button, QColor(255,0,0));
-//            }else{
-//                palb.setColor(QPalette::Button, QColor(0,255,0));
-//            }
-//            systemButton.at(i)->setPalette(palb);
-//     }
+    for (uint i = 0; i < subs.size(); i++){
+            bool error = subs.at(i)->error;
+            QPalette palb = systemButton.at(i)->palette();
+            if(error){
+                palb.setColor(QPalette::Button, QColor(255,0,0));
+            }else{
+                palb.setColor(QPalette::Button, QColor(0,255,0));
+            }
+            systemButton.at(i)->setPalette(palb);
+     }
 
 }
