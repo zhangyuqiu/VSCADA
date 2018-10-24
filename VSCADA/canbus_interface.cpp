@@ -87,6 +87,8 @@ void canbus_interface::recieve_frame() {
     for (uint i = 0; i < states.size(); i++){
         if(states.at(i).canAddress == recframe.frameId() && states.at(i).value == data){
             ctrl->change_system_state(states.at(i));
+        } else if (states.at(i).canAddress == recframe.frameId()){
+            emit ctrl->deactivateState(states.at(i));
         }
     }
 

@@ -85,6 +85,8 @@ private slots:
     void receiveMsg(string msg);
     void receiveErrMsg(string msg);
     void getCurrentSystem(int i);
+    void deactivateStateMW(system_state prevstate);
+    void activateStateMW(system_state nextstate);
 
 private:
     Ui::MainWindow *ui;

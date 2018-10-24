@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(subs.at(i), SIGNAL(valueChanged()), this, SLOT(updateGraph()));
 
     }
+    connect(conf->dataCtrl, SIGNAL(deactivateState(system_state)), this, SLOT(deactivateStateMW(system_state)));
 
 
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
@@ -196,12 +197,25 @@ void MainWindow::update(){
         mainLayout->addWidget(linea1,maxSensorRow+4,0,1,13);
 
         QString  butLabelFont = QString::number(stringSize*1.5);
+        QString  labelFont = QString::number(stringSize*3);
 
         QHBoxLayout * stateButtonLayout = new QHBoxLayout;
+        QLabel * label = new QLabel;
+        label->setText("STATES: ");
+        label->setStyleSheet("font:"+labelFont+"pt;");
+        mainLayout->addWidget(label,maxSensorRow+5,1);
         for(uint s = 0; s < conf->sysStates.size(); s++){
+            if (s != 0){
+                QFrame * stateFrame = new QFrame(this);
+                stateFrame->setLineWidth(2);
+                stateFrame->setMidLineWidth(1);
+                stateFrame->setFrameShape(QFrame::VLine);
+                stateFrame->setFrameShadow(QFrame::Raised);
+                stateButtonLayout->addWidget(stateFrame);
+            }
             stateButton = new QPushButton(QString::fromStdString(conf->sysStates.at(s).name));
             QPalette palplot = stateButton->palette();
-//            palplot.setColor(QPalette::Button, QColor(211,211,211));
+            palplot.setColor(QPalette::Button, QColor(70,70,70));
             stateButton->setPalette(palplot);
             stateButton->setAutoFillBackground(true);
             stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
@@ -211,7 +225,7 @@ void MainWindow::update(){
             stateButtonLayout->addWidget(stateButton);
         }
 
-        mainLayout->addLayout(stateButtonLayout,maxSensorRow+5,0,1,10,Qt::AlignCenter);
+        mainLayout->addLayout(stateButtonLayout,maxSensorRow+5,2,1,8,Qt::AlignCenter);
 
         plotButton =new QPushButton();
         plotButton->setText("Plot");
@@ -287,6 +301,23 @@ void MainWindow::update(){
 
 }
 
+void MainWindow::activateStateMW(system_state prevState){
+    for(uint i = 0; i < stateButtons.size(); i++){
+        if (stateButtons.at(i)->text().toStdString().compare(prevState.name) == 0){
+            QPalette palplot = stateButtons.at(i)->palette();
+            palplot.setColor(QPalette::Button, QColor(50,205,50));
+        }
+    }
+}
+
+void MainWindow::deactivateStateMW(system_state prevState){
+    for(uint i = 0; i < stateButtons.size(); i++){
+        if (stateButtons.at(i)->text().toStdString().compare(prevState.name) == 0){
+            QPalette palplot = stateButtons.at(i)->palette();
+            palplot.setColor(QPalette::Button, QColor(70,70,70));
+        }
+    }
+}
 
 void MainWindow::drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay ){
     edit= new QLineEdit();

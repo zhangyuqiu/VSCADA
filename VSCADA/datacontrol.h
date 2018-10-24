@@ -21,10 +21,10 @@ class SubsystemThread;
 
 using namespace std;
 
-class DataControl
+class DataControl : public QObject
 {
+    Q_OBJECT
 public:
-
     // Member function declarations
     DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state> stts);
     ~DataControl();
@@ -39,7 +39,6 @@ public:
     int change_system_state(system_state newState);
     void init_meta_vector(vector<meta> vctr);
     int change_sampling_rate(controlSpec spec, int rate);
-    void check_system_state(int canAddress, int value);
     string get_curr_time();
 
     // active submodule pointers
@@ -49,6 +48,10 @@ public:
 
     // overall system mode
     string currState;
-
+public slots:
+    void deactivateLog(system_state prevstate);
+signals:
+    void deactivateState(system_state prevstate);
+    void activateState(system_state newState);
 };
 #endif // DATACONTROL_H

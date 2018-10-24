@@ -145,7 +145,6 @@ bool Config::read_config_file_data(){
                     storedSensor->calConst = -1;
                     storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
-//                    cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
@@ -266,7 +265,7 @@ bool Config::read_config_file_data(){
     dbScript << "minThreshold char not null," << endl;
     dbScript << "maxThreshold char not null," << endl;
     dbScript << "maxReactionId char not null," << endl;
-    dbScript << "minReactionId char not null" << endl;
+    dbScript << "minReactionId char not null," << endl;
     dbScript << "calConstant char not null" << endl;
     dbScript << ");" << endl;
 
@@ -279,6 +278,12 @@ bool Config::read_config_file_data(){
     dbScript << "runId char not null," << endl;
     dbScript << "startTime char not null," << endl;
     dbScript << "endTime char not null" << endl;
+    dbScript << ");" << endl;
+
+    dbScript << "create table if not exists system_states(" << endl;
+    dbScript << "time char not null," << endl;
+    dbScript << "state char not null," << endl;
+    dbScript << "message char not null" << endl;
     dbScript << ");" << endl;
 
     //create subsystem tables
@@ -306,8 +311,7 @@ bool Config::read_config_file_data(){
     //run script
     dbase = new DB_Engine();
     dbase->runScript("script.sql");
-    //************************FINISH**************************//
-
+    //*************************FINISH**************************//
 
     cout << "All Sensors: " << storedSensors.size() << endl;
     vector<string> cols;
@@ -332,7 +336,6 @@ bool Config::read_config_file_data(){
         rows.push_back(to_string(storedSensors.at(n)->calConst));
         dbase->insert_row("sensors",cols,rows);
     }
-
     dataMtr = new DataMonitor(allSensors,allResponses);
     dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
