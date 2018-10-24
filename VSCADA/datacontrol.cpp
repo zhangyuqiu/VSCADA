@@ -1,10 +1,10 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, iocontrol * io, vector<SubsystemThread *> threads){
+DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state> stts){
     // assign global objects
     monitor = mtr;
     dbase = db;
-    ioControl = io;
+    states = stts;
 }
 
 DataControl::~DataControl(){
@@ -48,9 +48,15 @@ int DataControl::change_sampling_rate(controlSpec spec, int rate){
     return 0;
 }
 
-int DataControl::change_system_state(int newState){
+void DataControl::check_system_state(int canAddress, int value){
+
+}
+
+int DataControl::change_system_state(system_state newState){
     //change state of system
+    currState = newState.name;
     //update systems on database
+
     //display change on back screen
     //display change on front screen
     return 0;
@@ -58,4 +64,16 @@ int DataControl::change_system_state(int newState){
 
 int DataControl::collectData(){
     return 0;
+}
+
+/**
+ * @brief SubsystemThread::get_curr_time - retrieves current operation system time
+ * @return
+ */
+string DataControl::get_curr_time(){
+    time_t t = time(nullptr);
+    struct tm now = *localtime(&t);
+    char buf[20];
+    strftime(buf, sizeof(buf),"%D_%T",&now);
+    return buf;
 }

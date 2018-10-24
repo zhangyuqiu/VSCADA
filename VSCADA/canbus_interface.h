@@ -9,19 +9,22 @@
 #include <vector>
 #include "typedefs.h"
 #include "subsystemthread.h"
+#include "datacontrol.h"
 
 class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs);
+    canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state> stts, DataControl * control);
     ~canbus_interface();
     datapoint getdatapoint(int index);
     datapoint getdatapoint_canadd(int canaddrss);
     std::string get_curr_time();
 
+    DataControl * ctrl;
     std::vector<meta *> sensorVector;
     std::vector<SubsystemThread * > subsystems;
+    std::vector<system_state> states;
 
 private:
 

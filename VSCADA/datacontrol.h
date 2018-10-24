@@ -26,7 +26,7 @@ class DataControl
 public:
 
     // Member function declarations
-    DataControl(DataMonitor * mtr, DB_Engine * db, iocontrol * io, vector<SubsystemThread *> threads);
+    DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state> stts);
     ~DataControl();
 
     int collectData();
@@ -36,17 +36,19 @@ public:
     int write_to_GPIO(controlSpec spec);
     int write_to_DYNO(controlSpec spec);
     int write_to_databaase(datapoint dp);
-    int change_system_state(int newState);
+    int change_system_state(system_state newState);
     void init_meta_vector(vector<meta> vctr);
     int change_sampling_rate(controlSpec spec, int rate);
+    void check_system_state(int canAddress, int value);
+    string get_curr_time();
 
     // active submodule pointers
     DataMonitor * monitor;
-    iocontrol * ioControl;
     DB_Engine * dbase;
+    vector<system_state> states;
 
     // overall system mode
-    int mode;
+    string currState;
 
 };
 #endif // DATACONTROL_H

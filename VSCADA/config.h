@@ -41,6 +41,7 @@ public:
     vector<meta *> canSensors;
     vector<meta *> gpioSensors;
     vector<meta *> i2cSensors;
+    vector<system_state> sysStates;
     // submodule declarations
     DataControl * dataCtrl;
     DataMonitor * dataMtr;

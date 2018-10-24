@@ -1,0 +1,30 @@
+<pinlogic>	
+	<logic>
+		<sensorid1>2</sensorid1>
+		<sensorid2>1</sensorid2>
+		<state>
+			<name>Both High</name>
+			<val1>1</val1>
+			<val2>1</val2>
+			<reactionid>3</reactionid>
+		</state>
+		<state>
+			<name>Val1 High</name>
+			<val1>1</val1>
+			<val2>0</val2>
+			<reactionid>4</reactionid>
+		</state>
+		<state>
+			<name>Val2 High</name>
+			<val1>0</val1>
+			<val2>1</val2>
+			<reactionid>5</reactionid>
+		</state>
+		<state>
+			<name>None High</name>
+			<val1>0</val1>
+			<val2>0</val2>
+			<reactionid>1</reactionid>
+		</state>
+	</logic>
+</pinlogic>
