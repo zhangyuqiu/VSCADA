@@ -1,7 +1,9 @@
 #include "canbus_interface.h"
 
-canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs) {
+canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state> stts, DataControl *control) {
     this->modulename = modulename;
+    ctrl = control;
+    states = stts;
     sensorVector = sensorVec;
     subsystems = subs;
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
@@ -82,13 +84,19 @@ void canbus_interface::recieve_frame() {
             return;
         }
     }
+    for (uint i = 0; i < states.size(); i++){
+        if(states.at(i).canAddress == recframe.frameId() && states.at(i).value == data){
+            ctrl->change_system_state(states.at(i));
+        } else if (states.at(i).canAddress == recframe.frameId()){
+            emit ctrl->deactivateState(states.at(i));
+        }
+    }
 
     for(uint i = 0; i < sensorVector.size(); i++){
         if(sensorVector.at(i)->canAddress == recframe.frameId()){
             meta * currSensor = sensorVector.at(i);
             if (currSensor->val != data) {
                 currSensor->val = data;
-                currSensor->calData();
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
                         subsystems.at(j)->receiveData(currSensor);
@@ -98,8 +106,8 @@ void canbus_interface::recieve_frame() {
             } else {
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-                        subsystems.at(j)->updateEdits(currSensor);
                         subsystems.at(j)->checkThresholds(currSensor);
+                        subsystems.at(j)->updateEdits(currSensor);
                         break;
                     }
                 }

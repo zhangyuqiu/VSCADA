@@ -19,8 +19,8 @@
 typedef struct{
     int sensorIndex;
     std::string sensorName;
-    int minimum;
-    int maximum;
+    double minimum;
+    double maximum;
     std::string subsystem;
     int checkRate;
     int maxRxnCode;
@@ -72,15 +72,18 @@ typedef struct{
 }response;
 
 typedef struct{
-    int mode;
-    int GLV_max;
-    int GLV_min;
-    int TSI_max;
-    int TSI_min;
-    int TSV_max;
-    int TSV_min;
-    int COOL_max;
-    int COOL_min;
-}system_states;
+    std::string logicName;
+    meta * sensor1;
+    meta * sensor2;
+    double val1;
+    double val2;
+    response rsp;
+}logic;
+
+typedef struct{
+    std::string name;
+    int canAddress;
+    int value;
+}system_state;
 
 #endif // TYPEDEFS_H

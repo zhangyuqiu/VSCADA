@@ -5,7 +5,7 @@
  * @param mtr - data monitor module
  * @param sensors - vector of subsystem sensors configured
  */
-SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector){
+SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic> lVector){
     msgQueue = new QQueue<string>;
     timer = new QTimer;
     error=false;
@@ -13,6 +13,7 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<respo
     sensorMeta = sensors;
     subsystemId = id;
     responseVector = respVector;
+    logicVector = lVector;
     init_data();
     for(uint i = 0; i < sensors.size(); i++){
         lineEdit = new QLineEdit;
@@ -148,7 +149,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
     cout << "Just checking" << endl;
     error = false;
     string msg;
-    if (sensor->val > sensor->maximum){
+    if (sensor->calVal > sensor->maximum){
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
                 edits.at(i)->setStyleSheet("color: #FF0000");
@@ -161,7 +162,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
         initiateRxn(sensor->maxRxnCode);
         logMsg(msg);
 
-    } else if (sensor->val < sensor->minimum){
+    } else if (sensor->calVal < sensor->minimum){
         for(uint i = 0; i < sensorMeta.size(); i++){
             if (sensorMeta.at(i) == sensor) {
                 edits.at(i)->setStyleSheet("color: #1E90FF");
@@ -196,8 +197,24 @@ void SubsystemThread::receiveData(meta * currSensor){
             calibrateData(currSensor);
             checkThresholds(currSensor);
             updateEdits(currSensor);
+            checkLogic(currSensor);
             logData(currSensor);
             emit valueChanged();
+        }
+    }
+}
+
+void SubsystemThread::checkLogic(meta * currSensor){
+    for(uint i = 0; i < logicVector.size(); i++){
+        logic currLogic = logicVector.at(i);
+        if (currSensor == currLogic.sensor1){
+            if ((currSensor->calVal - currLogic.val1) < 0.01 && (currLogic.sensor2->calVal - currLogic.val2) < 0.01){
+                initiateRxn(currLogic.rsp.responseIndex);
+            }
+        } else if (currSensor == currLogic.sensor2){
+            if ((currSensor->calVal - currLogic.val2) < 0.01 && (currLogic.sensor1->calVal - currLogic.val1) < 0.01){
+                initiateRxn(currLogic.rsp.responseIndex);
+            }
         }
     }
 }

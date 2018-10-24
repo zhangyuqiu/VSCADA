@@ -1,4 +1,24 @@
 <subsystems>
+	<systemstate>
+		<name>Idle</name>
+		<canaddress>300</canaddress>
+		<value>30</value>
+	</systemstate>
+	<systemstate>
+		<name>Brake</name>
+		<canaddress>200</canaddress>
+		<value>20</value>
+	</systemstate>
+	<systemstate>
+		<name>Drive</name>
+		<canaddress>103</canaddress>
+		<value>1</value>
+	</systemstate>
+	<systemstate>
+		<name>Throttle</name>
+		<canaddress>102</canaddress>
+		<value>64</value>
+	</systemstate>
 	<subsystem>
 		<name>TSV</name>
 		<maxrate>500</maxrate>

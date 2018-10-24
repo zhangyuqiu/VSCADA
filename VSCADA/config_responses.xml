@@ -31,44 +31,14 @@
 	</response>
 	<response>
 		<id>5</id>
-		<description>Turn off LED</desctription>
+		<description>Turn off LED</description>
 		<gpiopin>21</gpiopin>
 		<gpioval>0</gpioval>
 	</response>
 	<response>
 		<id>6</id>
 		<description>GLV fault signals</description>
-		<logic>
-			<gpiopin1>20</gpiopin1>
-			<gpiopin2>21</gpiopin2>
-			<state>
-				<name>Both High</name>
-				<val1>1</val1>
-				<val2>1</val2>
-				<gpiopin>16</gpiopin>
-				<gpioval>1</gpioval>
-			</state>
-			<state>
-				<name>Val1 High</name>
-				<val1>1</val1>
-				<val2>0</val2>
-				<gpiopin>16</gpiopin>
-				<gpioval>0</gpioval>
-			</state>
-			<state>
-				<name>Val2 High</name>
-				<val1>0</val1>
-				<val2>1</val2>
-				<gpiopin>16</gpiopin>
-				<gpioval>1</gpioval>
-			</state>
-			<state>
-				<name>None High</name>
-				<val1>0</val1>
-				<val2>0</val2>
-				<gpiopin>16</gpiopin>
-				<gpioval>0</gpioval>
-			</state>
-		</login>
+		<gpiopin>21</gpiopin>
+		<gpioval>1</gpioval>
 	</response>
 </responses>

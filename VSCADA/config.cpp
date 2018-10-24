@@ -13,6 +13,7 @@ bool Config::read_config_file_data(){
     vector<meta> allSensors;
     vector<response> allResponses;
     vector<int> minrates;
+    vector<logic> logicVector;
 
     qDebug("Inside the PARSE Slot");
     QDomDocument doc;
@@ -36,13 +37,42 @@ bool Config::read_config_file_data(){
      respDoc.setContent(&fl);
      fl.close();
 
+     QDomDocument logicDoc;
+     QFile fl2("config_logic.xml");
+     if(!fl2.open(QIODevice::ReadOnly))
+     {
+         qDebug("Error While Reading the File");
+     }
+
+     logicDoc.setContent(&fl2);
+     fl2.close();
+
     QDomNodeList responseNodes = respDoc.elementsByTagName("response");
     QDomNodeList subsystemNodes = doc.elementsByTagName("subsystem");
+    QDomNodeList systemStates = doc.elementsByTagName("systemstate");
+    QDomNodeList systemLogic = logicDoc.elementsByTagName("logic");
 
     cout << "Number of responses: " << responseNodes.size() << endl;
     cout << "Number of subsystems: " << subsystemNodes.size() << endl;
+    cout << "Number of logic configurations: " << systemLogic.size() << endl;
+    cout << "Number of system states: " << systemStates.size() << endl;
 
-    for (int i = 0; i < static_cast<int>(responseNodes.size()); i++){
+    for (int i = 0; i < systemStates.size(); i++){
+        system_state thisState;
+        QDomNodeList stateXteristics = systemStates.at(i).childNodes();
+        for (int j = 0; j < stateXteristics.size(); j++){
+            if (stateXteristics.at(j).nodeName().toStdString().compare("name") == 0){
+                thisState.name = stateXteristics.at(j).firstChild().nodeValue().toStdString();
+            } else if (stateXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
+                thisState.canAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (stateXteristics.at(j).nodeName().toStdString().compare("name") == 0){
+                thisState.value = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+            }
+        }
+        sysStates.push_back(thisState);
+    }
+
+    for (int i = 0; i < responseNodes.size(); i++){
         QDomNodeList responseXteristics = responseNodes.at(i).childNodes();
         response thisRsp;
         thisRsp.canAddress = -1;
@@ -115,7 +145,6 @@ bool Config::read_config_file_data(){
                     storedSensor->calConst = -1;
                     storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
-//                    cout << "Sensor Name: " << sensor.firstChild().firstChild().nodeValue().toStdString() << endl;
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
@@ -127,9 +156,9 @@ bool Config::read_config_file_data(){
                             storedSensor->canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             canSensors.push_back(storedSensor);
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
-                            storedSensor->minimum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->minimum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
-                            storedSensor->maximum = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            storedSensor->maximum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minreaction") == 0){
                             storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maxreaction") == 0){
@@ -155,11 +184,64 @@ bool Config::read_config_file_data(){
 
             }
         }
-        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses);
+        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
 
+    }
+
+    for (int i = 0; i < static_cast<int>(systemLogic.size()); i++){
+        QDomNodeList logicConfigs = systemLogic.at(i).childNodes();
+        for (int j = 0; j < logicConfigs.size(); j++){
+            logic thisLogic;
+            if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid1") == 0){
+                int id = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
+                for (uint k = 0; k < storedSensors.size(); k++){
+                    if (storedSensors.at(k)->sensorIndex == id){
+                        thisLogic.sensor1 = storedSensors.at(k);
+                    }
+                }
+            } else if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid2") == 0){
+                int id = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
+                for (uint k = 0; k < storedSensors.size(); k++){
+                    if (storedSensors.at(k)->sensorIndex == id){
+                        thisLogic.sensor2 = storedSensors.at(k);
+                    }
+                }
+            } else if (logicConfigs.at(j).nodeName().toStdString().compare("state") == 0){
+                QDomNodeList stateNodes = logicConfigs.at(j).childNodes();
+                for (int k = 0; k < stateNodes.size(); k++){
+                    if (stateNodes.at(k).nodeName().toStdString().compare("val1") == 0){
+                        thisLogic.val1 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
+                    } else if (stateNodes.at(k).nodeName().toStdString().compare("val2") == 0){
+                        thisLogic.val2 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
+                    } else if (stateNodes.at(k).nodeName().toStdString().compare("name") == 0){
+                        thisLogic.logicName = stateNodes.at(k).firstChild().nodeValue().toStdString();
+                    } else if (stateNodes.at(k).nodeName().toStdString().compare("reactionid") == 0){
+                        int rxnVal = stoi(stateNodes.at(k).firstChild().nodeValue().toStdString());
+                        for (uint m = 0; m < allResponses.size(); m++){
+                            if (allResponses.at(m).responseIndex == rxnVal){
+                                thisLogic.rsp = allResponses.at(m);
+                                break;
+                            }
+                            if (m == allResponses.size()-1){
+                                cout << "Error: Could not find response" << endl;
+                            }
+                        }
+                    }
+                }
+                logicVector.push_back(thisLogic);
+            }
+        }
+    }
+
+    cout << "Logic Configured: " << endl;
+    for (uint i = 0; i < logicVector.size(); i++){
+        cout << "Logic Name: " << logicVector.at(i).logicName << endl;
+        cout << "Logic Sensor1: " << logicVector.at(i).sensor1->sensorName << " value: " << logicVector.at(i).val1 << endl;
+        cout << "Logic Sensor2: " << logicVector.at(i).sensor2->sensorName << " value: " << logicVector.at(i).val2 << endl;
+        cout << "Logic response: " << logicVector.at(i).rsp.msg << endl << endl;
     }
 
     //********************************************************//
@@ -183,7 +265,7 @@ bool Config::read_config_file_data(){
     dbScript << "minThreshold char not null," << endl;
     dbScript << "maxThreshold char not null," << endl;
     dbScript << "maxReactionId char not null," << endl;
-    dbScript << "minReactionId char not null" << endl;
+    dbScript << "minReactionId char not null," << endl;
     dbScript << "calConstant char not null" << endl;
     dbScript << ");" << endl;
 
@@ -196,6 +278,12 @@ bool Config::read_config_file_data(){
     dbScript << "runId char not null," << endl;
     dbScript << "startTime char not null," << endl;
     dbScript << "endTime char not null" << endl;
+    dbScript << ");" << endl;
+
+    dbScript << "create table if not exists system_states(" << endl;
+    dbScript << "time char not null," << endl;
+    dbScript << "state char not null," << endl;
+    dbScript << "message char not null" << endl;
     dbScript << ");" << endl;
 
     //create subsystem tables
@@ -223,8 +311,7 @@ bool Config::read_config_file_data(){
     //run script
     dbase = new DB_Engine();
     dbase->runScript("script.sql");
-    //************************FINISH**************************//
-
+    //*************************FINISH**************************//
 
     cout << "All Sensors: " << storedSensors.size() << endl;
     vector<string> cols;
@@ -249,10 +336,10 @@ bool Config::read_config_file_data(){
         rows.push_back(to_string(storedSensors.at(n)->calConst));
         dbase->insert_row("sensors",cols,rows);
     }
-
     dataMtr = new DataMonitor(allSensors,allResponses);
+    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems);
+    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,dataCtrl);
     for (uint i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
         thread->setMonitor(dataMtr);
