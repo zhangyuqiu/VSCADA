@@ -389,7 +389,8 @@ void MainWindow::plotGraph(){
         }
     }
 
-
+    plot = new QCustomPlot();
+    plot->addGraph();
     plot->setFixedHeight(unitHeight*8);
     plot->setFixedWidth(unitWidth*9);
     plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
