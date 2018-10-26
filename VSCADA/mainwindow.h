@@ -57,6 +57,7 @@ public:
 
     QListWidget * message;
     QCustomPlot * plot;
+    QLabel * ctrlLabel;
 
     int currentSystem;
     int currentSubSystem;

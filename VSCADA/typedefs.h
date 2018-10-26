@@ -52,11 +52,11 @@ typedef struct{
 }datapoint;
 
 typedef struct{
-    std::string sensorName;
-    std::string USB_path;
-    int CAN_address;
-    int GPIO_pin;
-    int samplingRate;
+    std::string name;
+    int canaddress;
+    int gpiopin;
+    int maximum;
+    int minimum;
 }controlSpec;
 
 typedef struct{

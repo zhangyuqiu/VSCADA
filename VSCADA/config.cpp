@@ -65,7 +65,7 @@ bool Config::read_config_file_data(){
                 thisState.name = stateXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (stateXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
                 thisState.canAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
-            } else if (stateXteristics.at(j).nodeName().toStdString().compare("name") == 0){
+            } else if (stateXteristics.at(j).nodeName().toStdString().compare("value") == 0){
                 thisState.value = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
             }
         }
@@ -111,6 +111,7 @@ bool Config::read_config_file_data(){
         int maxrate = 0;
         string subSystemId;
         vector<meta *> sensors;
+        vector<controlSpec> controlSpecs;
         cout << endl << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
         cout << "subsystem ID: " << subSystemId << endl;
         cout << "subsystem min: " << minrate << endl;
@@ -125,6 +126,33 @@ bool Config::read_config_file_data(){
                 minrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("maxrate") == 0){
                 maxrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("control") == 0){
+                QDomNodeList controlList = subsystemXteristics.at(j).childNodes();
+                controlSpec control;
+                control.maximum = -1;
+                control.minimum = -1;
+                control.canaddress = -1;
+                control.gpiopin = -1;
+                for (int k = 0; k < controlList.size(); k++){
+                    if (controlList.at(k).nodeName().toStdString().compare("name") == 0){
+                        control.name = controlList.at(k).firstChild().nodeValue().toStdString();
+                    } else if (controlList.at(k).nodeName().toStdString().compare("maximum") == 0){
+                        control.maximum = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
+                    } else if (controlList.at(k).nodeName().toStdString().compare("minimum") == 0){
+                        control.minimum = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
+                    } else if (controlList.at(k).nodeName().toStdString().compare("canaddress") == 0){
+                        control.canaddress = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
+                    } else if (controlList.at(k).nodeName().toStdString().compare("gpiopin") == 0){
+                        control.gpiopin = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
+                    }
+                }
+                cout << "Spec Name: " << control.name << endl;
+                cout << "Spec Max: " << control.maximum << endl;
+                cout << "Spec Min: " << control.minimum << endl;
+                cout << "Spec CAN: " << control.canaddress << endl;
+                cout << "Spec GPIO: " << control.gpiopin << endl;
+                controls.push_back(control);
+                controlSpecs.push_back(control);
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("sensors") == 0){
                 QDomNodeList sensorsList = subsystemXteristics.at(j).childNodes();
                 for (int k = 0; k < sensorsList.size(); k++){
@@ -184,11 +212,11 @@ bool Config::read_config_file_data(){
 
             }
         }
-        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector);
+        cout << "Check control spec size: " << controlSpecs.size() << endl;
+        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,controlSpecs);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
-
     }
 
     for (int i = 0; i < static_cast<int>(systemLogic.size()); i++){

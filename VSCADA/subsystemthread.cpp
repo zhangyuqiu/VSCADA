@@ -5,7 +5,7 @@
  * @param mtr - data monitor module
  * @param sensors - vector of subsystem sensors configured
  */
-SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic> lVector){
+SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic> lVector, vector<controlSpec> ctrlSpecs){
     msgQueue = new QQueue<string>;
     timer = new QTimer;
     error=false;
@@ -14,6 +14,7 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<respo
     subsystemId = id;
     responseVector = respVector;
     logicVector = lVector;
+    controlSpecs = ctrlSpecs;
     init_data();
     for(uint i = 0; i < sensors.size(); i++){
         lineEdit = new QLineEdit;
@@ -23,8 +24,16 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<respo
         checkTmr->start(sensors.at(i)->checkRate);
         edits.push_back(lineEdit);
         lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
+        lineEdit->setAlignment(Qt::AlignCenter);
         editTimers.push_back(checkTmr);
         updateEdits(sensors.at(i));
+    }
+
+    for(uint i = 0; i < ctrlSpecs.size(); i++){
+        lineEdit = new QLineEdit;
+        lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
+        lineEdit->setAlignment(Qt::AlignCenter);
+        controlEdits.push_back(lineEdit);
     }
 }
 
@@ -89,6 +98,10 @@ vector<meta *> SubsystemThread::get_metadata(){
     return sensorMeta;
 }
 
+vector<controlSpec> SubsystemThread::get_controlspecs(){
+    return controlSpecs;
+}
+
 /**
  * @brief SubsystemThread::set_rate - changes the current rate at which data is checked
  * @param newRate
@@ -137,7 +150,7 @@ void SubsystemThread::updateEdits(meta * sensor){
  */
 void SubsystemThread::checkTimeout(){
     for(uint i = 0; i < edits.size(); i++){
-        if (!editTimers.at(i)->isActive()) edits.at(i)->setStyleSheet("color: #A9A9A9");
+        if (!editTimers.at(i)->isActive()) edits.at(i)->setText("--");
     }
 }
 

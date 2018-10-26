@@ -15,7 +15,7 @@
 		<value>1</value>
 	</systemstate>
 	<systemstate>
-		<name>Throttle</name>
+		<name>Speed Locking</name>
 		<canaddress>102</canaddress>
 		<value>64</value>
 	</systemstate>
@@ -84,6 +84,12 @@
 				<multiplier>4.3</multiplier>
 			</sensor>
 		</sensors>
+		<control>
+			<name>ThrottleConfig</name>
+			<canaddress>114</canaddress>
+			<minimum>2</minimum>
+			<maximum>10</maximum>
+		</control>
 	</subsystem>
 	<subsystem>
 		<name>GLV</name>
