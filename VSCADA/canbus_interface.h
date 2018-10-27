@@ -15,7 +15,7 @@ class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state> stts, DataControl * control);
+    canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state *> stts, DataControl * control, vector<statemachine *> FSMs);
     ~canbus_interface();
     datapoint getdatapoint(int index);
     datapoint getdatapoint_canadd(int canaddrss);
@@ -24,7 +24,8 @@ public:
     DataControl * ctrl;
     std::vector<meta *> sensorVector;
     std::vector<SubsystemThread * > subsystems;
-    std::vector<system_state> states;
+    std::vector<system_state *> states;
+    std::vector<statemachine *> stateMachines;
 
 private:
 

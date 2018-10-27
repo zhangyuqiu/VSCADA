@@ -1,21 +1,56 @@
-<subsystems>
-	<systemstate>
-		<name>Idle</name>
+<system>
+	<mode>
+		<name>CAR</name>
+		<type>0</type>
+	</mode>
+	<statemachine>
+		<name>OverallFSM</name>
 		<canaddress>300</canaddress>
-		<value>30</value>
-	</systemstate>
+		<state>
+			<name>Idle</name>
+			<value>1</value>
+		</state>
+		<state>
+			<name>Energized</name>
+			<value>2</value>
+		</state>
+		<state>
+			<name>Drive</name>
+			<value>3</value>
+		</state>
+		<state>
+			<name>Fault</name>
+			<value>4</value>
+		</state>
+	</statemachine>
+	<systemcontrols>
+		<control>
+			<name>Throttle</name>
+			<type>Slider</type>
+			<minrange>0</minrange>
+			<maxrange>100</maxrange>
+			<canaddress>234</canaddress>
+		</control>
+		<control>
+			<name>Brake</name>
+			<type>Button</type>
+			<canaddress>235</canaddress>
+			<pressvalue>1</pressvalue>
+			<releasevalue>0</releasevalue>
+		</control>
+	</systemcontrols>
 	<systemstate>
 		<name>Brake</name>
 		<canaddress>200</canaddress>
 		<value>20</value>
 	</systemstate>
 	<systemstate>
-		<name>Drive</name>
+		<name>Throttle</name>
 		<canaddress>103</canaddress>
 		<value>1</value>
 	</systemstate>
 	<systemstate>
-		<name>Speed Locking</name>
+		<name>Speed Lock</name>
 		<canaddress>102</canaddress>
 		<value>64</value>
 	</systemstate>
@@ -29,6 +64,8 @@
 				<name>TSVSensor</name>
 				<canaddress>256</canaddress>
 				<checkrate>5000</checkrate>
+				<unit>V</unit>
+				<main>1</main>
 				<minimum>4</minimum>
 				<maximum>143</maximum>
 				<minreaction>0</minreaction>
@@ -40,6 +77,8 @@
 				<name>TSVMISC</name>
 				<canaddress>273</canaddress>
 				<checkrate>6000</checkrate>
+				<unit>mA</unit>
+				<main>1</main>
 				<minimum>34</minimum>
 				<maximum>70</maximum>
 				<minreaction>1</minreaction>
@@ -58,6 +97,8 @@
 				<name>COOLINGOne</name>
 				<gpiopin>23</gpiopin>
 				<checkrate>7000</checkrate>
+				<main>1</main>
+				<unit>Celcius</unit>
 				<minimum>1</minimum>
 				<maximum>4</maximum>
 				<normreaction>5</normreaction>
@@ -77,6 +118,8 @@
 				<name>TSITemp</name>
 				<canaddress>819</canaddress>
 				<checkrate>4000</checkrate>
+				<main>1</main>
+				<unit>Celcius</unit>
 				<minimum>10</minimum>
 				<maximum>40</maximum>
 				<minreaction>0</minreaction>
@@ -84,12 +127,6 @@
 				<multiplier>4.3</multiplier>
 			</sensor>
 		</sensors>
-		<control>
-			<name>ThrottleConfig</name>
-			<canaddress>114</canaddress>
-			<minimum>2</minimum>
-			<maximum>10</maximum>
-		</control>
 	</subsystem>
 	<subsystem>
 		<name>GLV</name>
@@ -101,6 +138,8 @@
 				<name>GLVTemp</name>
 				<canaddress>1092</canaddress>
 				<checkrate>3000</checkrate>
+				<main>1</main>
+				<unit>Celcius</unit>
 				<minimum>10</minimum>
 				<maximum>30</maximum>
 				<minreaction>0</minreaction>
@@ -112,6 +151,7 @@
 				<name>F1 Fault</name>
 				<gpiopin>20</gpiopin>
 				<checkrate>4500</checkrate>
+				<main>1</main>
 				<minimum>0</minimum>
 				<maximum>1</maximum>
 				<minreaction>0</minreaction>
@@ -123,6 +163,7 @@
 				<name>F2 Fault</name>
 				<gpiopin>21</gpiopin>
 				<checkrate>5500</checkrate>
+				<main>1</main>
 				<minimum>0</minimum>
 				<maximum>1</maximum>
 				<minreaction>0</minreaction>
@@ -134,6 +175,8 @@
 				<name>GLVI2C</name>
 				<i2caddress>5</i2caddress>
 				<checkrate>5000</checkrate>
+				<main>0</main>
+				<unit>V</unit>
 				<minimum>20</minimum>
 				<maximum>50</maximum>
 				<minreaction>4</minreaction>
@@ -142,4 +185,4 @@
 			</sensor>
 		</sensors>
 	</subsystem>
-</subsystems>
+</system>

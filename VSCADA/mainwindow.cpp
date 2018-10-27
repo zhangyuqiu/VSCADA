@@ -24,7 +24,6 @@ MainWindow::MainWindow(QWidget *parent) :
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     central->setLayout(mainLayout);
     conf->read_config_file_data();
-
     QRect rec = QApplication::desktop()->screenGeometry();
     int height=rec.height();
     int width=rec.width();
@@ -53,7 +52,8 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(subs.at(i), SIGNAL(valueChanged()), this, SLOT(updateGraph()));
 
     }
-    connect(conf->dataCtrl, SIGNAL(deactivateState(system_state)), this, SLOT(deactivateStateMW(system_state)));
+    connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
+    connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
 
 
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
@@ -104,7 +104,7 @@ void MainWindow::update(){
 
     for (uint i = 0; i < subs.size(); i++){
         SubsystemThread * currSub = subs.at(i);
-        vector<meta *> subMeta = currSub->get_metadata();
+        vector<meta *> subMeta = currSub->get_mainMeta();
         QComboBox * box = new QComboBox;
 
         if(subMeta.size() > 0){
@@ -170,31 +170,6 @@ void MainWindow::update(){
                 fieldHCount++;
             }
 
-            //***************************************************************//
-//            fieldVCount++;
-//            ctrls = subs.at(i)->get_controlspecs();
-//            if (ctrls.size() > 0)
-//            cout << "Current System Name: " << subs.at(i)->subsystemId << endl;
-//            for (uint j = 0; j < ctrls.size(); j++){
-//                fieldVCount++;
-//                ctrlLabel = new QLabel;
-//                ctrlLabel->setText(QString::fromStdString(ctrls.at(j).name));
-//                ctrlLabel->setFixedWidth(unitWidth*2);
-//                ctrlLabel->setFixedHeight(static_cast<int>(unitHeight*0.8));
-//                QString  LabelFont = QString::number(stringSize*2);
-//                ctrlLabel->setStyleSheet("font:"+LabelFont+"pt;");
-//                mainLayout->addWidget(ctrlLabel,fieldHCount,fieldVCount);
-//                fieldVCount++;
-//                QLineEdit * edit = currSub->controlEdits.at(j);
-//                QString  editFont = QString::number(stringSize*1.8);
-//                edit->setStyleSheet("font:"+editFont+"pt;");
-//                edit->setFixedWidth(static_cast<int>(unitWidth*2.5));
-//                edit->setFixedHeight(static_cast<int>(unitHeight*0.8));
-//                mainLayout->addWidget(edit,fieldVCount,fieldHCount);
-//                fieldHCount++;
-//            }
-            //***************************************************************//
-
             sectionCount += 3;
             fieldHCount = 0;
             QFrame *linea0 = new QFrame(this);
@@ -240,8 +215,32 @@ void MainWindow::update(){
     label->setText("STATES: ");
     label->setStyleSheet("font:"+labelFont+"pt;");
     mainLayout->addWidget(label,maxSensorRow+5,1);
+
+    QFrame * stateFrame = new QFrame(this);
+    stateFrame->setLineWidth(2);
+    stateFrame->setMidLineWidth(1);
+    stateFrame->setFrameShape(QFrame::VLine);
+    stateFrame->setFrameShadow(QFrame::Raised);
+    stateButtonLayout->addWidget(stateFrame);
+    for(uint t = 0; t < conf->dataCtrl->FSMs.size(); t++){
+        statemachine * currFSM = conf->dataCtrl->FSMs.at(t);
+        for (uint u = 0; u < currFSM->states.size(); u++){
+            system_state * currState = currFSM->states.at(u);
+            stateButton = new QPushButton(QString::fromStdString(currState->name));
+            QPalette palplot = stateButton->palette();
+            palplot.setColor(QPalette::Button, QColor(70,70,70));
+            stateButton->setPalette(palplot);
+            stateButton->setAutoFillBackground(true);
+            stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
+            stateButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+            stateButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+            stateButtons.push_back(stateButton);
+            stateButtonLayout->addWidget(stateButton);
+        }
+    }
+
     for(uint s = 0; s < conf->sysStates.size(); s++){
-        if (s != 0){
+        if (s == 0){
             QFrame * stateFrame = new QFrame(this);
             stateFrame->setLineWidth(2);
             stateFrame->setMidLineWidth(1);
@@ -249,7 +248,15 @@ void MainWindow::update(){
             stateFrame->setFrameShadow(QFrame::Raised);
             stateButtonLayout->addWidget(stateFrame);
         }
-        stateButton = new QPushButton(QString::fromStdString(conf->sysStates.at(s).name));
+
+        QFrame * stateFrame = new QFrame(this);
+        stateFrame->setLineWidth(2);
+        stateFrame->setMidLineWidth(1);
+        stateFrame->setFrameShape(QFrame::VLine);
+        stateFrame->setFrameShadow(QFrame::Raised);
+        stateButtonLayout->addWidget(stateFrame);
+
+        stateButton = new QPushButton(QString::fromStdString(conf->sysStates.at(s)->name));
         QPalette palplot = stateButton->palette();
         palplot.setColor(QPalette::Button, QColor(70,70,70));
         stateButton->setPalette(palplot);
@@ -318,9 +325,9 @@ void MainWindow::update(){
 
     for (int i=0; i<systemButton.size();i++){
         if(i==0){
-        connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(0);});
+            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(0);});
         } else if(i==1){
-         connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(1);});
+            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(1);});
         } else if(i==2){
             connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(2);});
         } else if(i==3){
@@ -334,20 +341,27 @@ void MainWindow::update(){
 
 }
 
-void MainWindow::activateStateMW(system_state prevState){
+void MainWindow::activateStateMW(system_state * nextState){
+//    cout << "State Name: " << nextState->name << endl;
     for(uint i = 0; i < stateButtons.size(); i++){
-        if (stateButtons.at(i)->text().toStdString().compare(prevState.name) == 0){
+//        cout << "Comparing: " << nextState->name << " and " << stateButtons.at(i)->text().toStdString() << endl;
+        if (stateButtons.at(i)->text().toStdString().compare(nextState->name) == 0){
+//            cout << "We're in!" << endl;
             QPalette palplot = stateButtons.at(i)->palette();
             palplot.setColor(QPalette::Button, QColor(50,205,50));
+            stateButtons.at(i)->setPalette(palplot);
         }
     }
 }
 
-void MainWindow::deactivateStateMW(system_state prevState){
+void MainWindow::deactivateStateMW(system_state * prevState){
+//    cout << "Inside deactivation " << endl;
     for(uint i = 0; i < stateButtons.size(); i++){
-        if (stateButtons.at(i)->text().toStdString().compare(prevState.name) == 0){
+        if (stateButtons.at(i)->text().toStdString().compare(prevState->name) == 0){
+            cout << "We're in " << prevState->name << endl;
             QPalette palplot = stateButtons.at(i)->palette();
             palplot.setColor(QPalette::Button, QColor(70,70,70));
+            stateButtons.at(i)->setPalette(palplot);
         }
     }
 }

@@ -1,10 +1,18 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state> stts){
+DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM, int mode, vector<controlSpec> ctrlSpecs){
     // assign global objects
+    systemMode = mode;
+    if(mode == 1){
+        modeName = "DYNO";
+    } else if (mode == 0){
+        modeName = "CAR";
+    }
+    controlSpecs = ctrlSpecs;
     monitor = mtr;
     dbase = db;
     states = stts;
+    FSMs = FSM;
     connect(this, SIGNAL(deactivateState(system_state)), this,SLOT(deactivateLog(system_state)));
 }
 
@@ -49,18 +57,19 @@ int DataControl::change_sampling_rate(controlSpec spec, int rate){
     return 0;
 }
 
-int DataControl::change_system_state(system_state newState){
+int DataControl::change_system_state(system_state * newState){
+    newState->active = true;
     vector<string> cols;
     cols.push_back("time");
     cols.push_back("state");
     cols.push_back("message");
     vector<string> rows;
     rows.push_back(get_curr_time());
-    rows.push_back(newState.name);
+    rows.push_back(newState->name);
     rows.push_back("Entered State");
 
     //change state of system
-    currState = newState.name;
+    currState = newState->name;
 
     //update systems on database
     dbase->insert_row("system_states",cols,rows);
@@ -70,19 +79,24 @@ int DataControl::change_system_state(system_state newState){
     return 0;
 }
 
-void DataControl::deactivateLog(system_state prevstate){
+void DataControl::deactivateLog(system_state *prevstate){
+    prevstate->active = false;
     vector<string> cols;
     cols.push_back("time");
     cols.push_back("state");
     cols.push_back("message");
     vector<string> rows;
     rows.push_back(get_curr_time());
-    rows.push_back(prevstate.name);
+    rows.push_back(prevstate->name);
     rows.push_back("Entered State");
     dbase->insert_row("system_states",cols,rows);
 }
 int DataControl::collectData(){
     return 0;
+}
+
+vector<controlSpec> DataControl::get_control_specs(){
+    return controlSpecs;
 }
 
 /**

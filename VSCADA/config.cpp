@@ -14,6 +14,7 @@ bool Config::read_config_file_data(){
     vector<response> allResponses;
     vector<int> minrates;
     vector<logic> logicVector;
+//    vector<statemachine> FSMs;
 
     qDebug("Inside the PARSE Slot");
     QDomDocument doc;
@@ -47,26 +48,109 @@ bool Config::read_config_file_data(){
      logicDoc.setContent(&fl2);
      fl2.close();
 
+    QDomNodeList mode = logicDoc.elementsByTagName("mode");
+    QDomNodeList systemControls = doc.elementsByTagName("systemcontrols");
     QDomNodeList responseNodes = respDoc.elementsByTagName("response");
     QDomNodeList subsystemNodes = doc.elementsByTagName("subsystem");
     QDomNodeList systemStates = doc.elementsByTagName("systemstate");
+    QDomNodeList stateMachines = doc.elementsByTagName("statemachine");
     QDomNodeList systemLogic = logicDoc.elementsByTagName("logic");
 
     cout << "Number of responses: " << responseNodes.size() << endl;
+    cout << "Number of system controls: " << systemControls.size() << endl;
     cout << "Number of subsystems: " << subsystemNodes.size() << endl;
     cout << "Number of logic configurations: " << systemLogic.size() << endl;
     cout << "Number of system states: " << systemStates.size() << endl;
+    cout << "Number of state machines: " << stateMachines.size() << endl;
+
+    for (int i = 0; i < mode.size(); i++){
+        if(mode.at(i).firstChild().nodeValue().toStdString().compare("0") == 0){
+            systemMode = DYNO;
+        } else if(mode.at(i).firstChild().nodeValue().toStdString().compare("1") == 0){
+            systemMode = CAR;
+        }
+    }
+
+    for (int i = 0; i < systemControls.size(); i++){
+        QDomNodeList ctrlSpecs = systemControls.at(i).childNodes();
+        for (int j = 0; j < ctrlSpecs.size(); j++){
+            controlSpec currSpec;
+            currSpec.button = false;
+            currSpec.slider = false;
+            currSpec.minslider = -1;
+            currSpec.maxslider = -1;
+            currSpec.pressVal = -1;
+            currSpec.releaseVal = -1;
+
+            QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
+            for (int k = 0; k < ctrlSpecs.size(); k++){
+                if (controlXteristics.at(j).nodeName().toStdString().compare("name") == 0){
+                    currSpec.name = controlXteristics.at(j).firstChild().nodeValue().toStdString();
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
+                    currSpec.canAddress = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("gpiopin") == 0){
+                    currSpec.gpiopin = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                }else if (controlXteristics.at(j).nodeName().toStdString().compare("minrange") == 0){
+                    currSpec.minslider = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("maxrange") == 0){
+                    currSpec.maxslider = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("type") == 0){
+                    if(controlXteristics.at(j).firstChild().nodeValue().toStdString().compare("Button") == 0){
+                        currSpec.button = true;
+                    } else if(controlXteristics.at(j).firstChild().nodeValue().toStdString().compare("Slider") == 0){
+                        currSpec.slider = true;
+                    }
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("pressvalue") == 0){
+                    currSpec.pressVal = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("releasevalue") == 0){
+                    currSpec.releaseVal = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                }
+            }
+            controlSpecs.push_back(currSpec);
+        }
+    }
+
+    for (int i = 0; i < stateMachines.size(); i++){
+        thisFSM = new statemachine;
+        QDomNodeList machineXteristics = stateMachines.at(i).childNodes();
+        for (int j = 0; j < machineXteristics.size(); j++){
+            if (machineXteristics.at(j).nodeName().toStdString().compare("name") == 0){
+                thisFSM->name = machineXteristics.at(j).firstChild().nodeValue().toStdString();
+            } else if (machineXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
+                thisFSM->canAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
+                QDomNodeList stateXteristics = machineXteristics.at(j).childNodes();
+                thisState = new system_state;
+                thisState->canAddress = thisFSM->canAddress;
+                for (int k = 0; k < stateXteristics.size(); k++){
+                    if (stateXteristics.at(k).nodeName().toStdString().compare("name") == 0){
+                        thisState->name = stateXteristics.at(k).firstChild().nodeValue().toStdString();
+                    } else if (stateXteristics.at(k).nodeName().toStdString().compare("value") == 0){
+                        thisState->value = stoi(stateXteristics.at(k).firstChild().nodeValue().toStdString());
+                    }
+                }
+                thisFSM->states.push_back(thisState);
+            }
+        }
+        FSMs.push_back(thisFSM);
+    }
+
+    for (int i = 0; i < FSMs.size(); i++){
+        cout << "state machine states: " << FSMs.at(i)->states.size() << endl;
+        cout << "state machine name: " << FSMs.at(i)->name << endl;
+        cout << "state machine address: " << FSMs.at(i)->canAddress << endl;
+    }
 
     for (int i = 0; i < systemStates.size(); i++){
-        system_state thisState;
+        thisState = new system_state;
         QDomNodeList stateXteristics = systemStates.at(i).childNodes();
         for (int j = 0; j < stateXteristics.size(); j++){
             if (stateXteristics.at(j).nodeName().toStdString().compare("name") == 0){
-                thisState.name = stateXteristics.at(j).firstChild().nodeValue().toStdString();
+                thisState->name = stateXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (stateXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
-                thisState.canAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+                thisState->canAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
             } else if (stateXteristics.at(j).nodeName().toStdString().compare("value") == 0){
-                thisState.value = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+                thisState->value = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
             }
         }
         sysStates.push_back(thisState);
@@ -111,7 +195,7 @@ bool Config::read_config_file_data(){
         int maxrate = 0;
         string subSystemId;
         vector<meta *> sensors;
-        vector<controlSpec> controlSpecs;
+        vector<meta *> mainMeta;
         cout << endl << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
         cout << "subsystem ID: " << subSystemId << endl;
         cout << "subsystem min: " << minrate << endl;
@@ -126,33 +210,6 @@ bool Config::read_config_file_data(){
                 minrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("maxrate") == 0){
                 maxrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("control") == 0){
-                QDomNodeList controlList = subsystemXteristics.at(j).childNodes();
-                controlSpec control;
-                control.maximum = -1;
-                control.minimum = -1;
-                control.canaddress = -1;
-                control.gpiopin = -1;
-                for (int k = 0; k < controlList.size(); k++){
-                    if (controlList.at(k).nodeName().toStdString().compare("name") == 0){
-                        control.name = controlList.at(k).firstChild().nodeValue().toStdString();
-                    } else if (controlList.at(k).nodeName().toStdString().compare("maximum") == 0){
-                        control.maximum = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
-                    } else if (controlList.at(k).nodeName().toStdString().compare("minimum") == 0){
-                        control.minimum = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
-                    } else if (controlList.at(k).nodeName().toStdString().compare("canaddress") == 0){
-                        control.canaddress = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
-                    } else if (controlList.at(k).nodeName().toStdString().compare("gpiopin") == 0){
-                        control.gpiopin = stoi(controlList.at(k).firstChild().nodeValue().toStdString());
-                    }
-                }
-                cout << "Spec Name: " << control.name << endl;
-                cout << "Spec Max: " << control.maximum << endl;
-                cout << "Spec Min: " << control.minimum << endl;
-                cout << "Spec CAN: " << control.canaddress << endl;
-                cout << "Spec GPIO: " << control.gpiopin << endl;
-                controls.push_back(control);
-                controlSpecs.push_back(control);
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("sensors") == 0){
                 QDomNodeList sensorsList = subsystemXteristics.at(j).childNodes();
                 for (int k = 0; k < sensorsList.size(); k++){
@@ -160,6 +217,7 @@ bool Config::read_config_file_data(){
                     storedSensor = new meta;
                     storedSensor->val = 0;
                     storedSensor->calVal = 0;
+                    storedSensor->main = 0;
                     storedSensor->sensorIndex = -1;
                     storedSensor->minimum = -1;
                     storedSensor->maximum = -1;
@@ -177,7 +235,8 @@ bool Config::read_config_file_data(){
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
                             storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
-                            cout << "Sensor Name: " << storedSensor->sensorName << endl;
+                        } else if(attributeList.at(m).nodeName().toStdString().compare("unit") == 0){
+                            storedSensor->unit = attributeList.at(m).firstChild().nodeValue().toStdString();
                         } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
                             storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
@@ -185,6 +244,8 @@ bool Config::read_config_file_data(){
                             canSensors.push_back(storedSensor);
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
                             storedSensor->minimum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("main") == 0){
+                            storedSensor->main = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
                             storedSensor->maximum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minreaction") == 0){
@@ -208,12 +269,14 @@ bool Config::read_config_file_data(){
                     storedSensors.push_back(storedSensor);
                     sensors.push_back(storedSensor);
                     allSensors.push_back(thisSensor);
+                    if (storedSensor->main == 1){
+                        mainMeta.push_back(storedSensor);
+                    }
                 }
 
             }
         }
-        cout << "Check control spec size: " << controlSpecs.size() << endl;
-        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,controlSpecs);
+        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,mainMeta);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
@@ -365,9 +428,9 @@ bool Config::read_config_file_data(){
         dbase->insert_row("sensors",cols,rows);
     }
     dataMtr = new DataMonitor(allSensors,allResponses);
-    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates);
+    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates,FSMs,systemMode,controlSpecs);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,dataCtrl);
+    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,dataCtrl,FSMs);
     for (uint i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
         thread->setMonitor(dataMtr);

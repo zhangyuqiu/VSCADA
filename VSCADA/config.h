@@ -16,6 +16,7 @@
 #include "subsystemthread.h"
 #include <QtXml/QtXml>
 
+
 class DataControl;
 class DataMonitor;
 class iocontrol;
@@ -41,8 +42,11 @@ public:
     vector<meta *> canSensors;
     vector<meta *> gpioSensors;
     vector<meta *> i2cSensors;
-    vector<system_state> sysStates;
+    system_state * thisState;
+    vector<system_state *> sysStates;
     vector<controlSpec> controls;
+    statemachine * thisFSM;
+    vector<statemachine *> FSMs;
     // submodule declarations
     DataControl * dataCtrl;
     DataMonitor * dataMtr;
@@ -51,7 +55,9 @@ public:
     SubsystemThread * genericThread;
     canbus_interface * canInterface;
     gpio_interface * gpioInterface;
-    std::vector<SubsystemThread *> subsystems;
+    vector<SubsystemThread *> subsystems;
+    vector<controlSpec > controlSpecs;
+    int systemMode;
 };
 
 #endif // CONFIG_H

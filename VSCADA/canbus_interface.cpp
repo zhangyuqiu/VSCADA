@@ -1,9 +1,10 @@
 #include "canbus_interface.h"
 
-canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state> stts, DataControl *control) {
+canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state *> stts, DataControl *control, vector<statemachine *> FSMs) {
     this->modulename = modulename;
     ctrl = control;
     states = stts;
+    stateMachines = FSMs;
     sensorVector = sensorVec;
     subsystems = subs;
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
@@ -15,6 +16,27 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
     }
 
     datapoint dpt;
+    for(uint i = 0; i < states.size(); i++){
+        dpt.displayed = 0;
+        dpt.monitored = 0;
+        dpt.sensorIndex = -1;
+        dpt.canAddress = states.at(i)->canAddress;
+        dpt.gpioPin = -1;
+        dpt.value = 0;
+        dpa.push_back(dpt);
+    }
+    for(uint i = 0; i < stateMachines.size(); i++){
+        for (uint j = 0; j < stateMachines.at(i)->states.size(); j++){
+            dpt.displayed = 0;
+            dpt.monitored = 0;
+            dpt.sensorIndex = -1;
+            dpt.canAddress = stateMachines.at(i)->states.at(j)->canAddress;
+            dpt.gpioPin = -1;
+            dpt.value = 0;
+            dpa.push_back(dpt);
+        }
+    }
+
     for(uint i = 0; i < sensorVector.size(); i++){
         dpt.displayed = 0;
         dpt.monitored = 0;
@@ -80,14 +102,32 @@ void canbus_interface::recieve_frame() {
         }
 
         if (it+1 == dpa.end()) {
-//            qDebug() << "SensorIndex does not match configuration file" << endl;;
+            qDebug() << "SensorIndex does not match configuration file" << endl;;
             return;
         }
     }
+    for (uint i = 0; i < ctrl->FSMs.size(); i++){
+        statemachine * currFSM = ctrl->FSMs.at(i);
+        if (currFSM->canAddress == recframe.frameId()){
+            cout << endl << "FSM found" << endl << endl;
+            for (int j = 0; j < currFSM->states.size(); j++){
+                system_state * currState = currFSM->states.at(j);
+                if(currState->value == data){
+                    cout << "ACTIVATING " << currState->name << endl;
+                    ctrl->change_system_state(currState);
+                } else if (currState->active){
+                    cout << "DEACTIVATING " << currState->name << endl;
+                    emit ctrl->deactivateState(currState);
+                }
+            }
+        }
+    }
+
     for (uint i = 0; i < states.size(); i++){
-        if(states.at(i).canAddress == recframe.frameId() && states.at(i).value == data){
+        if(states.at(i)->canAddress == recframe.frameId() && states.at(i)->value == data){
+            cout << endl << "State found" << endl << endl;
             ctrl->change_system_state(states.at(i));
-        } else if (states.at(i).canAddress == recframe.frameId()){
+        } else if (states.at(i)->canAddress == recframe.frameId()){
             emit ctrl->deactivateState(states.at(i));
         }
     }

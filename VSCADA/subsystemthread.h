@@ -22,7 +22,7 @@ class SubsystemThread : public QObject
 {
     Q_OBJECT
 public:
-    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic> lVector, vector<controlSpec> ctrlSpecs);    //class object destructor
+    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic> lVector, vector<meta *> mainMeta);    //class object destructor
     virtual ~SubsystemThread();                                                         //class object destructor
 
     void stop();                                    //stops data collection
@@ -39,7 +39,7 @@ public:
     int initiateRxn(int rxnCode);                   //execute configured reaction
     void calibrateData(meta * currSensor);
     void checkLogic(meta * currSensor);
-    vector<controlSpec> get_controlspecs();
+    vector<meta *> get_mainMeta();
 
     QTimer * timer;                                 //timer to implement sampling frequency
     DataMonitor * monitor;                          //pointer to a datamonitor object
@@ -52,12 +52,12 @@ public:
     string subsystemId;                             //identifies subsystem by name
 
     vector<meta *> sensorMeta;                      //cooling sensor metadata
+    vector<meta *> mainSensorVector;
     vector<QLineEdit *> edits;                      //lineEdits for displaying data
     vector<QLineEdit *> controlEdits;
     vector<QTimer *> editTimers;                    //stores checkTimers
     vector<response> responseVector;                //stores configured responses
     vector<logic> logicVector;
-    vector<controlSpec> controlSpecs;
 
     QQueue<string> * msgQueue;                      //queue to store messages for display
     bool error;

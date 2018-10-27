@@ -7,8 +7,8 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#define CAR 0
-#define DYNO 1
+#define DYNO 0
+#define CAR 1
 #define DASH_DISP 0
 #define BACK_DISP 1
 #define GLV 0
@@ -22,11 +22,13 @@ typedef struct{
     double minimum;
     double maximum;
     std::string subsystem;
+    std::string unit;
     int checkRate;
     int maxRxnCode;
     int minRxnCode;
     int normRxnCode;
     int canAddress;
+    int main;
     int i2cAddress;
     int gpioPin;
     int val;
@@ -53,10 +55,15 @@ typedef struct{
 
 typedef struct{
     std::string name;
-    int canaddress;
+    std::string type;
+    bool slider;
+    bool button;
+    int canAddress;
     int gpiopin;
-    int maximum;
-    int minimum;
+    int maxslider;
+    int minslider;
+    int pressVal;
+    int releaseVal;
 }controlSpec;
 
 typedef struct{
@@ -84,6 +91,13 @@ typedef struct{
     std::string name;
     int canAddress;
     int value;
+    bool active;
 }system_state;
+
+typedef struct{
+    int canAddress;
+    std::string name;
+    std::vector<system_state *> states;
+}statemachine;
 
 #endif // TYPEDEFS_H
