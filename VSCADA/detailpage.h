@@ -1,6 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
-
+#ifndef DETAILPAGE_H
+#define DETAILPAGE_H
 #include <QMainWindow>
 #include <QApplication>
 #include <QStandardItemModel>
@@ -14,20 +13,19 @@
 #include "typedefs.h"
 #include "canbus_interface.h"
 #include "subsystemthread.h"
-#include "detailpage.h"
 
 
 namespace Ui {
-class MainWindow;
+class detailPage;
 }
 
-class MainWindow : public QMainWindow
+class detailPage : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit detailPage(QWidget *parent = nullptr);
+    ~detailPage();
     void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
     void addPoint(int x, int y);
@@ -57,12 +55,10 @@ public:
     QPushButton * plotButton;
     QPushButton * exitButton;
     QPushButton * indiButton;
-    detailPage * detailWindow;
 
     QListWidget * message;
     QCustomPlot * plot;
     QLabel * ctrlLabel;
-
 
     int currentSystem;
     int currentSubSystem;
@@ -85,21 +81,15 @@ public:
 
     Config * conf;
 private slots:
-    void plotGraph();
     void update();
-    void openDetailWindow();
-    void closeDetailPage();
     void updateVals();
-    void updateGraph();
     void receiveMsg(string msg);
-    void receiveErrMsg(string msg);
-    void getCurrentSystem(int i);
     void deactivateStateMW(system_state * prevstate);
     void activateStateMW(system_state * nextState);
 
 private:
-    Ui::MainWindow *ui;
+    Ui::detailPage *ui;
 };
 
-#endif // MAINWINDOW_H
+#endif
 

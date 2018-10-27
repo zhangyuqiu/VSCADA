@@ -26,7 +26,8 @@ SOURCES += \
     qcustomplot.cpp \
     canbus_interface.cpp \
     subsystemthread.cpp \
-    gpio_interface.cpp
+    gpio_interface.cpp \
+    detailpage.cpp
 
 HEADERS += \
     db_engine.h \
@@ -40,10 +41,12 @@ HEADERS += \
     typedefs.h \
     canbus_interface.h \
     subsystemthread.h \
-    gpio_interface.h
+    gpio_interface.h \
+    detailpage.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    detailpage.ui
 
 QT += serialbus widgets
 QT += core

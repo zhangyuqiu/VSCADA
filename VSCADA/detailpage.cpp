@@ -1,9 +1,9 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "detailpage.h"
+#include "ui_detailpage.h"
 
-MainWindow::MainWindow(QWidget *parent) :
+detailPage::detailPage(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::detailPage)
 {
     ui->setupUi(this);
 
@@ -47,12 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
-    for (uint i = 0; i < subs.size(); i++){
-        connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
-        connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
-        connect(subs.at(i), SIGNAL(valueChanged()), this, SLOT(updateGraph()));
+    connect(subs.at(currentSystem), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
 
-    }
     connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
 
@@ -63,12 +59,12 @@ MainWindow::MainWindow(QWidget *parent) :
     // can bus init here
 }
 
-MainWindow::~MainWindow()
+detailPage::~detailPage()
 {
     delete ui;
 }
 
-void MainWindow::update(){
+void detailPage::update(){
 
     int sectionCount = 0;
     int fieldVCount = 0;
@@ -105,7 +101,7 @@ void MainWindow::update(){
 
 
 //main page
-    for (uint i = 0; i < subs.size(); i++){
+        int i=0;
         SubsystemThread * currSub = subs.at(i);
         vector<meta *> subMeta = currSub->get_mainMeta();
         QComboBox * box = new QComboBox;
@@ -193,7 +189,7 @@ void MainWindow::update(){
             systemBox.push_back(box);
 
         }
-    }
+
     QFrame *linea0 = new QFrame(this);
     linea0->setLineWidth(2);
     linea0->setMidLineWidth(1);
@@ -298,6 +294,7 @@ void MainWindow::update(){
     exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
     mainLayout->addWidget(exitButton,maxSensorRow+5,10,Qt::AlignCenter);
 
+
     QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
 
 
@@ -340,28 +337,13 @@ void MainWindow::update(){
     mainLayout->addWidget(message,maxSensorRow+7,8,maxSensorRow+11,10);
 
     QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
-    QObject::connect(indiButton, SIGNAL (clicked()), this , SLOT(openDetailWindow()));
+    QObject::connect(indiButton, SIGNAL (clicked()), this , SLOT(detailPage()));
 
 
-    for (int i=0; i<systemButton.size();i++){
-        if(i==0){
-            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(0);});
-        } else if(i==1){
-            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(1);});
-        } else if(i==2){
-            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(2);});
-        } else if(i==3){
-            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(3);});
-        } else if(i==4){
-            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(4);});
-        } else if(i==5){
-            connect(systemButton.at(i), &QPushButton::clicked,[this]{getCurrentSystem(5);});
-        }
-    }
 
 }
 
-void MainWindow::activateStateMW(system_state * nextState){
+void detailPage::activateStateMW(system_state * nextState){
 //    cout << "State Name: " << nextState->name << endl;
     for(uint i = 0; i < stateButtons.size(); i++){
 //        cout << "Comparing: " << nextState->name << " and " << stateButtons.at(i)->text().toStdString() << endl;
@@ -374,7 +356,7 @@ void MainWindow::activateStateMW(system_state * nextState){
     }
 }
 
-void MainWindow::deactivateStateMW(system_state * prevState){
+void detailPage::deactivateStateMW(system_state * prevState){
 //    cout << "Inside deactivation " << endl;
     for(uint i = 0; i < stateButtons.size(); i++){
         if (stateButtons.at(i)->text().toStdString().compare(prevState->name) == 0){
@@ -386,7 +368,7 @@ void MainWindow::deactivateStateMW(system_state * prevState){
     }
 }
 
-void MainWindow::drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay ){
+void detailPage::drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay ){
     edit= new QLineEdit();
     edit->setText(dataDisplay);
     //edit->setSizePolicy(QSizePolicy::Ignored,QSizePolicy:referred);
@@ -395,131 +377,27 @@ void MainWindow::drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay ){
     mainLayout->addWidget(edit,x,y);
 }
 
-void MainWindow::plotGraph(){
-    int max =20;
-    int mini=0;
-    xinit=0;
-    gx.clear();
-    gy.clear();
-    vector<SubsystemThread *> subs;
-     subs = conf->subsystems;
-    SubsystemThread * currSub = subs.at(currentSystem);
 
 
-
-
-    vector<meta *> subMeta = currSub->get_metadata();
-    meta * sensor =subMeta.at(currentSubSystem);
-    max = (sensor->maximum)*1.5;
-    mini = (sensor->minimum)*0.5;
-
-    QString choice= systemBox.at(currentSystem)->currentText();
-
-
-    for(int i=0;i<maxSensorRow;i++){
-       int x = choice.compare(systemName[currentSystem][i]);
-        if(x==0){
-        currentSubSystem=i;
-        }
-    }
-
-    plot = new QCustomPlot();
-    plot->addGraph();
-    plot->setFixedHeight(unitHeight*8);
-    plot->setFixedWidth(unitWidth*9);
-    plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
-    plot->graph(0)->setLineStyle(QCPGraph::lsLine);
-    plot->yAxis->setRange(mini, -(max-mini), Qt::AlignRight);
-//    plot->xAxis->setRange(0, -20, Qt::AlignRight);
-//    plot->graph(0)->addData(4,4);
-//    plot->graph(0)->addData(7,4);
-//    plot->graph(0)->addData(1,3);
-//    plot->graph(0)->addData(2,5);
-//    plot->graph(0)->addData(6,8);
-//       addPoint(4,4);
-//        addPoint(7,4);
-//        addPoint(1,3);
-//        addPoint(2,5);
-//        addPoint(6,8);
-    mainLayout->addWidget(plot,maxSensorRow+7,0,maxSensorRow+11,6);
-}
-
-void MainWindow::receiveMsg(string msg){
+void detailPage::receiveMsg(string msg){
     addErrorMessage(QString::fromStdString(msg));
 
 
 }
 
-void MainWindow::addPoint(int x, int y){
-    plot->xAxis->setRange(0, -(x+1), Qt::AlignRight);
-    gx.append(x);
-    gy.append(y);
-    plot->graph(0)->setData(gx,gy);
-    plot->replot();
-    plot->update();
-}
-
-void MainWindow::receiveErrMsg(string msg){
-    addErrorMessage(QString::fromStdString(msg));
-    vector<SubsystemThread *> subs;
-     subs = conf->subsystems;
-    for (uint i = 0; i < subs.size(); i++){
-            bool error = subs.at(i)->error;
-            if(error){
-                QPalette palb = systemButton.at(i)->palette();
-                palb.setColor(QPalette::Button, QColor(255,0,0));
-                systemButton.at(i)->setPalette(palb);
-            }
-     }
-
-}
 
 
-void MainWindow::addErrorMessage(QString eMessage){
+void detailPage::addErrorMessage(QString eMessage){
     message->addItem(eMessage);
     message->scrollToBottom();
 }
 
-void MainWindow::updateVals(){
+void detailPage::updateVals(){
 // addPoint(xinit,yinit);
 //yinit++;
 }
 
-void MainWindow::getCurrentSystem(int i){
-    currentSystem=i;
-}
 
-void MainWindow::openDetailWindow(){
-    detailWindow= new detailPage();
-    detailWindow->setWindowState((detailWindow->windowState()^Qt::WindowFullScreen));
-    detailWindow->show();
-    this->hide();
-}
 
-void MainWindow:: closeDetailPage(){
 
-}
 
-void MainWindow::updateGraph(){
-    vector<SubsystemThread *> subs;
-    subs = conf->subsystems;
-    cout << "Current System: " << currentSystem << endl;
-    SubsystemThread * currSub = subs.at(currentSystem);
-    vector<meta *> subMeta = currSub->get_metadata();
-//    cout << "TEST THIS: " << subMeta.size() << endl;
-    meta * sensor =subMeta.at(currentSubSystem);
-    int data=sensor->calVal;
-    addPoint(xinit,data);
-    xinit++;
-    for (uint i = 0; i < subs.size(); i++){
-            bool error = subs.at(i)->error;
-            QPalette palb = systemButton.at(i)->palette();
-            if(error){
-                palb.setColor(QPalette::Button, QColor(255,0,0));
-            }else{
-                palb.setColor(QPalette::Button, QColor(0,255,0));
-            }
-            systemButton.at(i)->setPalette(palb);
-     }
-
-}
