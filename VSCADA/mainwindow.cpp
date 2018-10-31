@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
-
+    connect(conf->dataCtrl, SIGNAL(updateFSM(statemachine *)), this, SLOT(updateFSM_MW(statemachine *)));
 
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
     timer->start(500);
@@ -227,11 +227,11 @@ void MainWindow::update(){
     stateFrame->setFrameShape(QFrame::VLine);
     stateFrame->setFrameShadow(QFrame::Raised);
     stateButtonLayout->addWidget(stateFrame);
-    for(uint t = 0; t < conf->dataCtrl->FSMs.size(); t++){
-        statemachine * currFSM = conf->dataCtrl->FSMs.at(t);
-        for (uint u = 0; u < currFSM->states.size(); u++){
-            system_state * currState = currFSM->states.at(u);
-            stateButton = new QPushButton(QString::fromStdString(currState->name));
+
+    for(uint t = 0; t < conf->FSMs.size(); t++){
+        statemachine * currFSM = conf->FSMs.at(t);
+//            stateButton = new QPushButton(QString::fromStdString(currFSM->name));
+            stateButton = new QPushButton("---");
             QPalette palplot = stateButton->palette();
             palplot.setColor(QPalette::Button, QColor(70,70,70));
             stateButton->setPalette(palplot);
@@ -239,9 +239,8 @@ void MainWindow::update(){
             stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
             stateButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
             stateButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-            stateButtons.push_back(stateButton);
+            FSMButtons.push_back(stateButton);
             stateButtonLayout->addWidget(stateButton);
-        }
     }
 
     for(uint s = 0; s < conf->sysStates.size(); s++){
@@ -362,11 +361,9 @@ void MainWindow::update(){
 }
 
 void MainWindow::activateStateMW(system_state * nextState){
-//    cout << "State Name: " << nextState->name << endl;
+
     for(uint i = 0; i < stateButtons.size(); i++){
-//        cout << "Comparing: " << nextState->name << " and " << stateButtons.at(i)->text().toStdString() << endl;
         if (stateButtons.at(i)->text().toStdString().compare(nextState->name) == 0){
-//            cout << "We're in!" << endl;
             QPalette palplot = stateButtons.at(i)->palette();
             palplot.setColor(QPalette::Button, QColor(50,205,50));
             stateButtons.at(i)->setPalette(palplot);
@@ -471,9 +468,25 @@ void MainWindow::receiveErrMsg(string msg){
                 systemButton.at(i)->setPalette(palb);
             }
      }
-
 }
 
+void MainWindow::updateFSM_MW(statemachine * currFSM){
+    cout << "In here" << endl;
+    for (uint i = 0; i < conf->FSMs.size(); i++){
+        statemachine * currMachine = conf->FSMs.at(i);
+        if (currMachine == currFSM){
+            for (uint j = 0; j < currMachine->states.size(); j++){
+                if (currMachine->states.at(j)->active){
+                    FSMButtons.at(i)->setText(QString::fromStdString(currMachine->states.at(j)->name));
+                    QPalette palb = FSMButtons.at(i)->palette();
+                    palb.setColor(QPalette::Button, QColor(50,205,50));
+                    FSMButtons.at(i)->setPalette(palb);
+                    return;
+                }
+            }
+        }
+    }
+}
 
 void MainWindow::addErrorMessage(QString eMessage){
     message->addItem(eMessage);

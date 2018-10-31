@@ -46,6 +46,7 @@ public:
     vector<QComboBox *> systemBox;
     vector<QPushButton *> systemButton;
     vector<QPushButton *> stateButtons;
+    vector<QPushButton *> FSMButtons;
     QString ** systemName;
 
 
@@ -96,6 +97,7 @@ private slots:
     void getCurrentSystem(int i);
     void deactivateStateMW(system_state * prevstate);
     void activateStateMW(system_state * nextState);
+    void updateFSM_MW(statemachine * currFSM);
 
 private:
     Ui::MainWindow *ui;

@@ -59,5 +59,6 @@ public slots:
 signals:
     void deactivateState(system_state * prevstate);
     void activateState(system_state * newState);
+    void updateFSM(statemachine * currFSM);
 };
 #endif // DATACONTROL_H

@@ -87,27 +87,12 @@ void canbus_interface::recieve_frame() {
     }
 
     int data = 0;
-    for (std::vector<datapoint>::iterator it = dpa.begin(); it != dpa.end(); ++it) {
-        if(it.base()->canAddress == recframe.frameId()) {
-
-            for (char i:a) {
-                data = data + static_cast<int>(i);
-            }
-
-            datapoint dp = *it;
-            dp.value = data;
-
-            *it = dp;
-            break;
-        }
-
-        if (it+1 == dpa.end()) {
-            qDebug() << "SensorIndex does not match configuration file" << endl;;
-            return;
-        }
+    for (char i:a) {
+        data = data + static_cast<int>(i);
     }
-    for (uint i = 0; i < ctrl->FSMs.size(); i++){
-        statemachine * currFSM = ctrl->FSMs.at(i);
+
+    for (uint i = 0; i < stateMachines.size(); i++){
+        statemachine * currFSM = stateMachines.at(i);
         if (currFSM->canAddress == recframe.frameId()){
             cout << endl << "FSM found" << endl << endl;
             for (int j = 0; j < currFSM->states.size(); j++){
@@ -117,9 +102,11 @@ void canbus_interface::recieve_frame() {
                     ctrl->change_system_state(currState);
                 } else if (currState->active){
                     cout << "DEACTIVATING " << currState->name << endl;
-                    emit ctrl->deactivateState(currState);
+//                    emit ctrl->deactivateState(currState);
+                    ctrl->deactivateLog(currState);
                 }
             }
+            emit ctrl->updateFSM(currFSM);
         }
     }
 
@@ -157,7 +144,8 @@ void canbus_interface::recieve_frame() {
 
     cout << "recframe ID: " << recframe.frameId();
     qDebug() << "frame recieved" <<endl;
-    qDebug() << QString::number(getdatapoint_canadd(recframe.frameId()).value) <<endl;
+    qDebug() << data << endl;
+//    qDebug() << QString::number(getdatapoint_canadd(recframe.frameId()).value) <<endl;
 }
 
 void canbus_interface::sendFrame(response rsp){
