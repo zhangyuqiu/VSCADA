@@ -35,6 +35,9 @@ private:
     std::vector<datapoint> dpa;
     std::string modulename;
 
+signals:
+    void process_can_data(uint32_t addr, uint64_t data);
+
 private slots:
     void recieve_frame();
     void sendFrame(response rsp);

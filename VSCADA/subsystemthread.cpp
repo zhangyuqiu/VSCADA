@@ -309,7 +309,7 @@ int SubsystemThread::initiateRxn(int rxnCode){
             rows.push_back(rsp.msg);
             logMsg(rsp.msg);
             emit pushMessage(rsp.msg);
-            if (rsp.canAddress >= 0){
+            if (rsp.primAddress >= 0){
                 cout << "sending out can data" << endl;
                 emit pushCANItem(rsp);
             }

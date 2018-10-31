@@ -64,7 +64,7 @@ int DataMonitor::initiateRxn(int rxnCode, meta *sensor){
         response rsp = responseVector.at(i);
         if (rsp.responseIndex == rxnCode){
             rows.push_back(rsp.msg);
-            if (rsp.canAddress >= 0){
+            if (rsp.primAddress >= 0){
 
             }
         }

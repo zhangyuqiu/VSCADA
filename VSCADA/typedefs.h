@@ -27,7 +27,9 @@ typedef struct{
     int maxRxnCode;
     int minRxnCode;
     int normRxnCode;
-    int canAddress;
+    int primAddress;
+    int auxAddress;
+    int offset;
     int main;
     int i2cAddress;
     int gpioPin;
@@ -35,7 +37,7 @@ typedef struct{
     double calConst;
     double calVal;
     void calData(){
-        calVal = (double)val*calConst;
+        calVal = static_cast<double>(val)*calConst;
     }
     void updateVal(int newVal)
       {
@@ -48,7 +50,9 @@ typedef struct{
     int value;
     bool monitored;
     bool displayed;
-    int canAddress;
+    int primAddress;
+    int auxAddress;
+    int offset;
     int gpioPin;
     std::string timestamp;
 }datapoint;
@@ -58,7 +62,9 @@ typedef struct{
     std::string type;
     bool slider;
     bool button;
-    int canAddress;
+    int primAddress;
+    int auxAddress;
+    int offset;
     int gpiopin;
     int maxslider;
     int minslider;
@@ -73,7 +79,9 @@ typedef struct{
     int canValue;
     int gpioValue;
     int defVal;
-    int canAddress;
+    int primAddress;
+    int auxAddress;
+    int offset;
     int gpioPin;
     int gpioPair;
 }response;
@@ -89,13 +97,17 @@ typedef struct{
 
 typedef struct{
     std::string name;
-    int canAddress;
+    int primAddress;
+    int auxAddress;
+    int offset;
     int value;
     bool active;
 }system_state;
 
 typedef struct{
-    int canAddress;
+    int primAddress;
+    int auxAddress;
+    int offset;
     std::string name;
     std::vector<system_state *> states;
 }statemachine;

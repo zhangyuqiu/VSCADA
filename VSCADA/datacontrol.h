@@ -8,6 +8,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <stack>
+#include <bitset>
 #include "db_engine.h"
 #include "typedefs.h"
 #include "iocontrol.h"
@@ -26,7 +27,7 @@ class DataControl : public QObject
     Q_OBJECT
 public:
     // Member function declarations
-    DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs, int mode, vector<controlSpec> ctrlSpecs);
+    DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs, int mode, vector<controlSpec> ctrlSpecs, vector<meta *> sensors);
     ~DataControl();
 
     int collectData();
@@ -37,6 +38,7 @@ public:
     int write_to_DYNO(controlSpec spec);
     int write_to_databaase(datapoint dp);
     int change_system_state(system_state * newState);
+    uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data);
     void init_meta_vector(vector<meta> vctr);
     int change_sampling_rate(controlSpec spec, int rate);
     vector<controlSpec> get_control_specs();
@@ -46,8 +48,10 @@ public:
     DataMonitor * monitor;
     DB_Engine * dbase;
     vector<system_state *> states;
+    vector<SubsystemThread *> subsystems;
     vector<statemachine *> FSMs;
     vector<controlSpec> controlSpecs;
+    vector<meta *> sensorVector;
 
     // overall system mode
     string currState;
@@ -56,6 +60,7 @@ public:
 
 public slots:
     void deactivateLog(system_state * prevstate);
+    void receive_can_data(uint32_t addr, uint64_t arr);
 signals:
     void deactivateState(system_state * prevstate);
     void activateState(system_state * newState);

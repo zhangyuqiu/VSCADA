@@ -5,22 +5,24 @@
 	</mode>
 	<statemachine>
 		<name>OverallFSM</name>
-		<canaddress>300</canaddress>
+		<primaddress>300</primaddress>
+		<auxaddress>62</auxaddress>
+		<offset>2</offset>
 		<state>
 			<name>Idle</name>
-			<value>1</value>
+			<value>0</value>
 		</state>
 		<state>
 			<name>Energized</name>
-			<value>2</value>
+			<value>1</value>
 		</state>
 		<state>
 			<name>Drive</name>
-			<value>3</value>
+			<value>2</value>
 		</state>
 		<state>
 			<name>Fault</name>
-			<value>4</value>
+			<value>3</value>
 		</state>
 	</statemachine>
 	<systemcontrols>
@@ -28,31 +30,41 @@
 			<name>Throttle</name>
 			<type>Slider</type>
 			<minrange>0</minrange>
-			<maxrange>100</maxrange>
-			<canaddress>234</canaddress>
+			<maxrange>301</maxrange>
+			<primaddress>61</primaddress>
+			<auxaddress>1</auxaddress>
+			<offset>1</offset>
 		</control>
 		<control>
 			<name>Brake</name>
 			<type>Button</type>
-			<canaddress>235</canaddress>
+			<primaddress>301</primaddress>
+			<auxaddress>60</auxaddress>
+			<offset>1</offset>
 			<pressvalue>1</pressvalue>
 			<releasevalue>0</releasevalue>
 		</control>
 	</systemcontrols>
 	<systemstate>
 		<name>Brake</name>
-		<canaddress>200</canaddress>
-		<value>20</value>
+		<primaddress>300</primaddress>
+		<auxaddress>61</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
 	</systemstate>
 	<systemstate>
 		<name>Throttle</name>
-		<canaddress>103</canaddress>
+		<primaddress>300</primaddress>
+		<auxaddress>60</auxaddress>
+		<offset>1</offset>
 		<value>1</value>
 	</systemstate>
 	<systemstate>
 		<name>Speed Lock</name>
-		<canaddress>102</canaddress>
-		<value>64</value>
+		<primaddress>300</primaddress>
+		<auxaddress>59</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
 	</systemstate>
 	<subsystem>
 		<name>TSV</name>
@@ -62,7 +74,9 @@
 			<sensor>
 				<id>0</id>
 				<name>TSVSensor</name>
-				<canaddress>256</canaddress>
+				<primaddress>400</primaddress>
+				<auxaddress>56</auxaddress>
+				<offset>8</offset>
 				<checkrate>5000</checkrate>
 				<unit>V</unit>
 				<main>1</main>
@@ -70,12 +84,14 @@
 				<maximum>143</maximum>
 				<minreaction>0</minreaction>
 				<maxreaction>2</maxreaction>
-				<multiplier>5.6</multiplier>
+				<multiplier>1</multiplier>
 			</sensor>
 			<sensor>
 				<id>1</id>
 				<name>TSVMISC</name>
-				<canaddress>273</canaddress>
+				<primaddress>400</primaddress>
+				<auxaddress>48</auxaddress>
+				<offset>8</offset>
 				<checkrate>6000</checkrate>
 				<unit>mA</unit>
 				<main>1</main>
@@ -83,7 +99,7 @@
 				<maximum>70</maximum>
 				<minreaction>1</minreaction>
 				<maxreaction>0</maxreaction>
-				<multiplier>8.6</multiplier>
+				<multiplier>1</multiplier>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -116,7 +132,9 @@
 			<sensor>
 				<id>3</id>
 				<name>TSITemp</name>
-				<canaddress>819</canaddress>
+				<primaddress>500</primaddress>
+				<auxaddress>56</auxaddress>
+				<offset>8</offset>
 				<checkrate>4000</checkrate>
 				<main>1</main>
 				<unit>Celcius</unit>
@@ -136,7 +154,9 @@
 			<sensor>
 				<id>4</id>
 				<name>GLVTemp</name>
-				<canaddress>1092</canaddress>
+				<primaddress>600</primaddress>
+				<auxaddress>56</auxaddress>
+				<offset>8</offset>
 				<checkrate>3000</checkrate>
 				<main>1</main>
 				<unit>Celcius</unit>

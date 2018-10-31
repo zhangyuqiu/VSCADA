@@ -14,13 +14,14 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
     for (uint i = 0; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(pushCANItem(response)), this, SLOT(sendFrame(response)));
     }
+    connect(this, SIGNAL(process_can_data(uint32_t,uint64_t)), ctrl, SLOT(receive_can_data(uint32_t,uint64_t)));
 
     datapoint dpt;
     for(uint i = 0; i < states.size(); i++){
         dpt.displayed = 0;
         dpt.monitored = 0;
         dpt.sensorIndex = -1;
-        dpt.canAddress = states.at(i)->canAddress;
+        dpt.primAddress = states.at(i)->primAddress;
         dpt.gpioPin = -1;
         dpt.value = 0;
         dpa.push_back(dpt);
@@ -30,7 +31,7 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
             dpt.displayed = 0;
             dpt.monitored = 0;
             dpt.sensorIndex = -1;
-            dpt.canAddress = stateMachines.at(i)->states.at(j)->canAddress;
+            dpt.primAddress = stateMachines.at(i)->states.at(j)->primAddress;
             dpt.gpioPin = -1;
             dpt.value = 0;
             dpa.push_back(dpt);
@@ -41,7 +42,7 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
         dpt.displayed = 0;
         dpt.monitored = 0;
         dpt.sensorIndex = sensorVector.at(i)->sensorIndex;
-        dpt.canAddress = sensorVector.at(i)->canAddress;
+        dpt.primAddress = sensorVector.at(i)->primAddress;
         dpt.gpioPin = sensorVector.at(i)->gpioPin;
         dpt.value = 0;
         dpa.push_back(dpt);
@@ -79,73 +80,19 @@ bool canbus_interface::canconnect() {
 void canbus_interface::recieve_frame() {
     qDebug() << "revieve_frame called" << endl;
     QCanBusFrame recframe = can_bus->readFrame();
-    QByteArray a = recframe.payload();
-    quint32 b = recframe.frameId();
+    QByteArray b = recframe.payload();
+    uint32_t a = recframe.frameId();
     if (dpa.empty()) {
         qDebug() << "Datapoint array has no item" <<endl;
         return;
     }
 
-    int data = 0;
-    for (char i:a) {
-        data = data + static_cast<int>(i);
+    uint64_t data = 0;
+    qDebug() << "QByteArray: " << b << endl;
+    for (int i = 0; i < b.size(); i++){
+        data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
     }
-
-    for (uint i = 0; i < stateMachines.size(); i++){
-        statemachine * currFSM = stateMachines.at(i);
-        if (currFSM->canAddress == recframe.frameId()){
-            cout << endl << "FSM found" << endl << endl;
-            for (int j = 0; j < currFSM->states.size(); j++){
-                system_state * currState = currFSM->states.at(j);
-                if(currState->value == data){
-                    cout << "ACTIVATING " << currState->name << endl;
-                    ctrl->change_system_state(currState);
-                } else if (currState->active){
-                    cout << "DEACTIVATING " << currState->name << endl;
-//                    emit ctrl->deactivateState(currState);
-                    ctrl->deactivateLog(currState);
-                }
-            }
-            emit ctrl->updateFSM(currFSM);
-        }
-    }
-
-    for (uint i = 0; i < states.size(); i++){
-        if(states.at(i)->canAddress == recframe.frameId() && states.at(i)->value == data){
-            cout << endl << "State found" << endl << endl;
-            ctrl->change_system_state(states.at(i));
-        } else if (states.at(i)->canAddress == recframe.frameId()){
-            emit ctrl->deactivateState(states.at(i));
-        }
-    }
-
-    for(uint i = 0; i < sensorVector.size(); i++){
-        if(sensorVector.at(i)->canAddress == recframe.frameId()){
-            meta * currSensor = sensorVector.at(i);
-            if (currSensor->val != data) {
-                currSensor->val = data;
-                for (uint j = 0; j < subsystems.size(); j++){
-                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-                        subsystems.at(j)->receiveData(currSensor);
-                        break;
-                    }
-                }
-            } else {
-                for (uint j = 0; j < subsystems.size(); j++){
-                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-                        subsystems.at(j)->checkThresholds(currSensor);
-                        subsystems.at(j)->updateEdits(currSensor);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    cout << "recframe ID: " << recframe.frameId();
-    qDebug() << "frame recieved" <<endl;
-    qDebug() << data << endl;
-//    qDebug() << QString::number(getdatapoint_canadd(recframe.frameId()).value) <<endl;
+    emit process_can_data(a,data);
 }
 
 void canbus_interface::sendFrame(response rsp){
@@ -154,7 +101,7 @@ void canbus_interface::sendFrame(response rsp){
     QDataStream streamArr(&byteArr, QIODevice::WriteOnly);
     streamArr << rsp.canValue;
     QCanBusFrame * outFrame = new QCanBusFrame;
-    outFrame->setFrameId(static_cast<quint32>(rsp.canAddress));
+    outFrame->setFrameId(static_cast<quint32>(rsp.primAddress));
     outFrame->setPayload(byteArr);
     can_bus->writeFrame(*outFrame);
 }
@@ -172,7 +119,7 @@ datapoint canbus_interface::getdatapoint(int index) { // return a datapoint with
 
 datapoint canbus_interface::getdatapoint_canadd(int canadd) { // return a datapoint with certain index. an empty datapoint will be returned if no such index
     for (datapoint d:dpa) {
-        if (d.canAddress == canadd) {
+        if (d.primAddress == canadd) {
             return d;
         }
     }

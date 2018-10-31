@@ -1,6 +1,6 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM, int mode, vector<controlSpec> ctrlSpecs){
+DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM, int mode, vector<controlSpec> ctrlSpecs, vector<meta *> sensors){
     // assign global objects
     systemMode = mode;
     if(mode == 1){
@@ -13,6 +13,8 @@ DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThre
     dbase = db;
     states = stts;
     FSMs = FSM;
+    sensorVector = sensors;
+    subsystems = threads;
     connect(this, SIGNAL(deactivateState(system_state)), this,SLOT(deactivateLog(system_state)));
 }
 
@@ -55,6 +57,70 @@ int DataControl::write_to_DYNO(controlSpec spec){
 int DataControl::change_sampling_rate(controlSpec spec, int rate){
     //change sampling rate for specific sensor(s)
     return 0;
+}
+
+void DataControl::receive_can_data(uint32_t addr, uint64_t data){
+
+    cout << endl << "Data Control Module" << endl;
+    cout << "Data Transmitted: " << data << endl;
+    for (uint i = 0; i < FSMs.size(); i++){
+        statemachine * currFSM = FSMs.at(i);
+        if (currFSM->primAddress == addr){
+            cout << endl << "FSM found" << endl << endl;
+            for (int j = 0; j < currFSM->states.size(); j++){
+                system_state * currState = currFSM->states.at(j);
+                if(currState->value == isolateData64(currState->auxAddress,currState->offset,data)){
+                    cout << "ACTIVATING " << currState->name << endl;
+                    change_system_state(currState);
+                } else if (currState->active){
+                    cout << "DEACTIVATING " << currState->name << endl;
+                    deactivateLog(currState);
+                }
+            }
+            emit updateFSM(currFSM);
+        }
+    }
+
+    for (uint i = 0; i < states.size(); i++){
+        if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data)){
+            cout << endl << "State found" << endl << endl;
+            change_system_state(states.at(i));
+        } else if (states.at(i)->primAddress == addr){
+            emit deactivateState(states.at(i));
+        }
+    }
+
+    for(uint i = 0; i < sensorVector.size(); i++){
+        if(sensorVector.at(i)->primAddress == addr){
+            meta * currSensor = sensorVector.at(i);
+            if (currSensor->val != isolateData64(currSensor->auxAddress,currSensor->offset,data)) {
+                cout << "Cal Constant: " << currSensor->calConst << endl;
+                currSensor->val = isolateData64(currSensor->auxAddress,currSensor->offset,data);
+                for (uint j = 0; j < subsystems.size(); j++){
+                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+                        subsystems.at(j)->receiveData(currSensor);
+                        break;
+                    }
+                }
+            } else {
+                for (uint j = 0; j < subsystems.size(); j++){
+                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+                        subsystems.at(j)->checkThresholds(currSensor);
+                        subsystems.at(j)->updateEdits(currSensor);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data){
+    if (auxAddress > 63 || offset > 64) return 0;
+    uint lastAddr = sizeof (data)*8 - offset;
+    data = data << auxAddress;
+    data = data >> lastAddr;
+    return static_cast<uint32_t>(data);
 }
 
 int DataControl::change_system_state(system_state * newState){

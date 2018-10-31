@@ -81,13 +81,20 @@ bool Config::read_config_file_data(){
             currSpec.maxslider = -1;
             currSpec.pressVal = -1;
             currSpec.releaseVal = -1;
+            currSpec.primAddress = -1;
+            currSpec.auxAddress = -1;
+            currSpec.offset = -1;
 
             QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
             for (int k = 0; k < ctrlSpecs.size(); k++){
                 if (controlXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                     currSpec.name = controlXteristics.at(j).firstChild().nodeValue().toStdString();
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
-                    currSpec.canAddress = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
+                    currSpec.primAddress = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
+                    currSpec.auxAddress = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
+                    currSpec.offset = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
                 } else if (controlXteristics.at(j).nodeName().toStdString().compare("gpiopin") == 0){
                     currSpec.gpiopin = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
                 }else if (controlXteristics.at(j).nodeName().toStdString().compare("minrange") == 0){
@@ -116,12 +123,18 @@ bool Config::read_config_file_data(){
         for (int j = 0; j < machineXteristics.size(); j++){
             if (machineXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                 thisFSM->name = machineXteristics.at(j).firstChild().nodeValue().toStdString();
-            } else if (machineXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
-                thisFSM->canAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
-            } else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
+            } else if (machineXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
+                thisFSM->primAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (machineXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
+                thisFSM->auxAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (machineXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
+                thisFSM->offset = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+            }else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
                 QDomNodeList stateXteristics = machineXteristics.at(j).childNodes();
                 thisState = new system_state;
-                thisState->canAddress = thisFSM->canAddress;
+                thisState->primAddress = thisFSM->primAddress;
+                thisState->auxAddress = thisFSM->auxAddress;
+                thisState->offset = thisFSM->offset;
                 for (int k = 0; k < stateXteristics.size(); k++){
                     if (stateXteristics.at(k).nodeName().toStdString().compare("name") == 0){
                         thisState->name = stateXteristics.at(k).firstChild().nodeValue().toStdString();
@@ -138,7 +151,7 @@ bool Config::read_config_file_data(){
     for (int i = 0; i < FSMs.size(); i++){
         cout << "state machine states: " << FSMs.at(i)->states.size() << endl;
         cout << "state machine name: " << FSMs.at(i)->name << endl;
-        cout << "state machine address: " << FSMs.at(i)->canAddress << endl;
+        cout << "state machine address: " << FSMs.at(i)->primAddress << endl;
     }
 
     for (int i = 0; i < systemStates.size(); i++){
@@ -147,8 +160,12 @@ bool Config::read_config_file_data(){
         for (int j = 0; j < stateXteristics.size(); j++){
             if (stateXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                 thisState->name = stateXteristics.at(j).firstChild().nodeValue().toStdString();
-            } else if (stateXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
-                thisState->canAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (stateXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
+                thisState->primAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (stateXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
+                thisState->auxAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (stateXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
+                thisState->offset = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
             } else if (stateXteristics.at(j).nodeName().toStdString().compare("value") == 0){
                 thisState->value = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
             }
@@ -159,7 +176,9 @@ bool Config::read_config_file_data(){
     for (int i = 0; i < responseNodes.size(); i++){
         QDomNodeList responseXteristics = responseNodes.at(i).childNodes();
         response thisRsp;
-        thisRsp.canAddress = -1;
+        thisRsp.primAddress = -1;
+        thisRsp.auxAddress = -1;
+        thisRsp.offset = -1;
         thisRsp.gpioPin = -1;
         thisRsp.canValue = -1;
         thisRsp.gpioValue = -1;
@@ -168,8 +187,12 @@ bool Config::read_config_file_data(){
                 thisRsp.responseIndex = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("description") == 0){
                 thisRsp.msg = responseXteristics.at(j).firstChild().nodeValue().toStdString();
-            } else if (responseXteristics.at(j).nodeName().toStdString().compare("canaddress") == 0){
-                thisRsp.canAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
+                thisRsp.primAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
+                thisRsp.auxAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (responseXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
+                thisRsp.offset = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("gpiopin") == 0){
                 thisRsp.gpioPin = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("gpioval") == 0){
@@ -184,7 +207,9 @@ bool Config::read_config_file_data(){
     for (uint i = 0; i < allResponses.size(); i++){
         cout << "Response ID: " << allResponses.at(i).responseIndex << endl;
         cout << "description: " << allResponses.at(i).msg << endl;
-        cout << "can address: " << allResponses.at(i).canAddress << endl;
+        cout << "can prim address: " << allResponses.at(i).primAddress << endl;
+        cout << "can aux address: " << allResponses.at(i).auxAddress << endl;
+        cout << "can offset: " << allResponses.at(i).offset << endl;
         cout << "can value: " << allResponses.at(i).canValue << endl;
         cout << "gpio pin: " << allResponses.at(i).gpioPin << endl;
         cout << "gpio value: " << allResponses.at(i).gpioValue << endl << endl;
@@ -225,7 +250,9 @@ bool Config::read_config_file_data(){
                     storedSensor->maxRxnCode = -1;
                     storedSensor->minRxnCode = -1;
                     storedSensor->normRxnCode = -1;
-                    storedSensor->canAddress = -1;
+                    storedSensor->primAddress = -1;
+                    storedSensor->auxAddress = -1;
+                    storedSensor->offset = -1;
                     storedSensor->i2cAddress = -1;
                     storedSensor->gpioPin = -1;
                     storedSensor->calConst = -1;
@@ -239,9 +266,13 @@ bool Config::read_config_file_data(){
                             storedSensor->unit = attributeList.at(m).firstChild().nodeValue().toStdString();
                         } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
                             storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("canaddress") == 0){
-                            storedSensor->canAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("primaddress") == 0){
+                            storedSensor->primAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             canSensors.push_back(storedSensor);
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("auxaddress") == 0){
+                            storedSensor->auxAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("offset") == 0){
+                            storedSensor->offset = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
                             storedSensor->minimum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("main") == 0){
@@ -428,7 +459,7 @@ bool Config::read_config_file_data(){
         dbase->insert_row("sensors",cols,rows);
     }
     dataMtr = new DataMonitor(allSensors,allResponses);
-    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates,FSMs,systemMode,controlSpecs);
+    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates,FSMs,systemMode,controlSpecs,storedSensors);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
     canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,dataCtrl,FSMs);
     for (uint i = 0; i < subsystems.size(); i++){
