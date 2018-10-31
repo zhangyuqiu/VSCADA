@@ -504,9 +504,10 @@ void MainWindow::getCurrentSystem(int i){
 
 void MainWindow::openDetailWindow(){
     detailWindow= new detailPage();
+    detailWindow->setCurrentSystem(currentSystem);
     detailWindow->setWindowState((detailWindow->windowState()^Qt::WindowFullScreen));
     detailWindow->show();
-    this->hide();
+    //this->hide();
 }
 
 void MainWindow:: closeDetailPage(){

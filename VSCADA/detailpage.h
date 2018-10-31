@@ -30,6 +30,7 @@ public:
     void addErrorMessage(QString message);
     void addPoint(int x, int y);
     void exit();
+    void setCurrentSystem(int current);
 
     vector<meta> GLV_meta;
     vector<meta> TSI_meta;
@@ -83,6 +84,7 @@ public:
 private slots:
     void update();
     void updateVals();
+
     void receiveMsg(string msg);
     void deactivateStateMW(system_state * prevstate);
     void activateStateMW(system_state * nextState);

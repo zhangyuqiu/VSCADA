@@ -43,18 +43,11 @@ detailPage::detailPage(QWidget *parent) :
 
     this->setCentralWidget(scrollArea);
 
-    update();
-
-    vector<SubsystemThread *> subs;
-    subs = conf->subsystems;
-    connect(subs.at(currentSystem), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
-
-    connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
-    connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
+    //update();
 
 
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
-    timer->start(500);
+//    connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
+//    timer->start(500);
 
     // can bus init here
 }
@@ -101,7 +94,7 @@ void detailPage::update(){
 
 
 //main page
-        int i=0;
+        int i=currentSystem;
         SubsystemThread * currSub = subs.at(i);
         vector<meta *> subMeta = currSub->get_mainMeta();
         QComboBox * box = new QComboBox;
@@ -329,7 +322,9 @@ void detailPage::update(){
     errorMessage = "Begin";
     addErrorMessage(errorMessage);
     QString  messageFont = QString::number(stringSize*1.5);
+    QString  messagedebug = QString::number(currentSystem);
     message->setStyleSheet("font:"+messageFont+"pt;");
+    message->addItem(messagedebug);
     message->addItem("FontSize:"+fontSize);
     message->setFixedHeight(unitHeight*6);
     message->setFixedWidth(unitWidth*7);
@@ -338,6 +333,14 @@ void detailPage::update(){
 
     QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
     QObject::connect(indiButton, SIGNAL (clicked()), this , SLOT(detailPage()));
+
+
+
+    connect(subs.at(currentSystem), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
+
+    connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
+    connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
+
 
 
 
@@ -398,6 +401,9 @@ void detailPage::updateVals(){
 }
 
 
-
+void detailPage::setCurrentSystem(int current){
+    this->currentSystem=current;
+    update();
+}
 
 
