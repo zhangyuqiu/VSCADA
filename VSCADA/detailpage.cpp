@@ -96,12 +96,16 @@ void detailPage::update(){
 //main page
         int i=currentSystem;
         SubsystemThread * currSub = subs.at(i);
-        vector<meta *> subMeta = currSub->get_mainMeta();
+        vector<meta *> subMeta = currSub->get_metadata();
         QComboBox * box = new QComboBox;
 
         if(subMeta.size() > 0){
             for (uint j = 0; j < subMeta.size(); j++){
-                fieldVCount = sectionCount;
+               if(fieldVCount>11){
+                  fieldVCount=0;
+                  fieldHCount++;
+               }
+                //fieldVCount = sectionCount;
                 fieldVCount++;
                 QLabel * label = new QLabel;
                 QPushButton * button = new QPushButton;
@@ -113,6 +117,13 @@ void detailPage::update(){
                     QString  subLabelFont = QString::number(stringSize*4);
                     label1->setStyleSheet("font:"+subLabelFont+"pt;");
                     mainLayout->addWidget(label1,fieldHCount,fieldVCount,1,2,Qt::AlignCenter);
+
+                    QFrame *linea0 = new QFrame(this);
+                    linea0->setLineWidth(2);
+                    linea0->setMidLineWidth(1);
+                    linea0->setFrameShape(QFrame::VLine);
+                    linea0->setFrameShadow(QFrame::Raised);
+                    mainLayout->addWidget(linea0,0,sectionCount,maxSensorRow+2,1);
 
                     button->setStyleSheet("font:10pt;");
                     button->setText(QString::fromStdString(currSub->subsystemId)+" Data");
@@ -131,16 +142,18 @@ void detailPage::update(){
                     button->setFixedWidth(static_cast<int>(unitWidth*1.5));
                     button->setFixedHeight(static_cast<int>(unitHeight*1.4));
                     systemButton.push_back(button);
-                    mainLayout->addWidget(button,maxSensorRow+3,fieldVCount,Qt::AlignCenter);
+                    mainLayout->addWidget(button,0,fieldVCount+3,Qt::AlignCenter);
 
-                   fieldHCount++;
+
 
                    box->setFixedWidth(static_cast<int>(unitWidth*1.5));
                    box->setFixedHeight(static_cast<int>(unitHeight*1.4));
                    QString  boxFont = QString::number(stringSize*1.2);
                    box->setStyleSheet("font:"+boxFont+"pt;");
-                   mainLayout->addWidget(box,maxSensorRow+3,fieldVCount+1,Qt::AlignCenter);
+                   mainLayout->addWidget(box,0,fieldVCount+4,Qt::AlignCenter);
+                    fieldHCount++;
                 }
+
                 label->setText(QString::fromStdString(subMeta.at(j)->sensorName));
                 label->setFixedWidth(unitWidth*2);
                 label->setFixedHeight(static_cast<int>(unitHeight*0.8));
@@ -153,23 +166,32 @@ void detailPage::update(){
 
                 mainLayout->addWidget(label,fieldHCount,fieldVCount);
                 fieldVCount++;
+
+
+
                 QLineEdit * edit = currSub->edits.at(j);
                 QString  editFont = QString::number(stringSize*1.8);
                 edit->setStyleSheet("font:"+editFont+"pt;");
                 edit->setFixedWidth(static_cast<int>(unitWidth*2.5));
                 edit->setFixedHeight(static_cast<int>(unitHeight*0.8));
                 mainLayout->addWidget(edit,fieldHCount,fieldVCount);
-                fieldHCount++;
+               fieldVCount++;
+
+
+               sectionCount += 3;
+
+               if(j<4){
+
+               QFrame *linea0 = new QFrame(this);
+               linea0->setLineWidth(2);
+               linea0->setMidLineWidth(1);
+               linea0->setFrameShape(QFrame::VLine);
+               linea0->setFrameShadow(QFrame::Raised);
+               mainLayout->addWidget(linea0,0,sectionCount,maxSensorRow+2,1);
+              }
+
             }
 
-            sectionCount += 3;
-            fieldHCount = 0;
-            QFrame *linea0 = new QFrame(this);
-            linea0->setLineWidth(2);
-            linea0->setMidLineWidth(1);
-            linea0->setFrameShape(QFrame::VLine);
-            linea0->setFrameShadow(QFrame::Raised);
-            mainLayout->addWidget(linea0,fieldHCount,sectionCount,maxSensorRow+2,1);
 
 
             QFrame *linea1 = new QFrame(this);
@@ -178,6 +200,7 @@ void detailPage::update(){
             linea1->setFrameShape(QFrame::VLine);
             linea1->setFrameShadow(QFrame::Raised);
             mainLayout->addWidget(linea1,maxSensorRow+1,sectionCount,maxSensorRow,1);
+
 
             systemBox.push_back(box);
 
@@ -190,12 +213,7 @@ void detailPage::update(){
     linea0->setFrameShadow(QFrame::Raised);
     mainLayout->addWidget(linea0,maxSensorRow+2,0,1,13);
 
-    QFrame *linea1 = new QFrame(this);
-    linea1->setLineWidth(2);
-    linea1->setMidLineWidth(1);
-    linea1->setFrameShape(QFrame::HLine);
-    linea1->setFrameShadow(QFrame::Raised);
-    mainLayout->addWidget(linea1,maxSensorRow+4,0,1,13);
+
     //main page end
 
 
@@ -216,11 +234,11 @@ void detailPage::update(){
     stateFrame->setFrameShape(QFrame::VLine);
     stateFrame->setFrameShadow(QFrame::Raised);
     stateButtonLayout->addWidget(stateFrame);
-    for(uint t = 0; t < conf->dataCtrl->FSMs.size(); t++){
-        statemachine * currFSM = conf->dataCtrl->FSMs.at(t);
-        for (uint u = 0; u < currFSM->states.size(); u++){
-            system_state * currState = currFSM->states.at(u);
-            stateButton = new QPushButton(QString::fromStdString(currState->name));
+
+    for(uint t = 0; t < conf->FSMs.size(); t++){
+        statemachine * currFSM = conf->FSMs.at(t);
+//            stateButton = new QPushButton(QString::fromStdString(currFSM->name));
+            stateButton = new QPushButton("---");
             QPalette palplot = stateButton->palette();
             palplot.setColor(QPalette::Button, QColor(70,70,70));
             stateButton->setPalette(palplot);
@@ -228,9 +246,8 @@ void detailPage::update(){
             stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
             stateButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
             stateButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-            stateButtons.push_back(stateButton);
+            FSMButtons.push_back(stateButton);
             stateButtonLayout->addWidget(stateButton);
-        }
     }
 
     for(uint s = 0; s < conf->sysStates.size(); s++){
@@ -291,17 +308,6 @@ void detailPage::update(){
     QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
 
 
-    indiButton =new QPushButton();
-    indiButton->setText("Detail");
-    QPalette palindi = indiButton->palette();
-    palindi.setColor(QPalette::Button, QColor(0,0,255));
-    indiButton->setPalette(palindi);
-    indiButton->setAutoFillBackground(true);
-    indiButton->setStyleSheet("font:"+butLabelFont+"pt;");
-    indiButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-    indiButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-    mainLayout->addWidget(indiButton,maxSensorRow+5,9,Qt::AlignCenter);
-
     QFrame *linea2 = new QFrame(this);
     linea2->setLineWidth(2);
     linea2->setMidLineWidth(1);
@@ -315,6 +321,9 @@ void detailPage::update(){
     linea3->setFrameShape(QFrame::HLine);
     linea3->setFrameShadow(QFrame::Raised);
     mainLayout->addWidget(linea3,maxSensorRow+6,0,1,13);
+
+    mainLayout->addWidget(systemButton.at(0),maxSensorRow+7,7,Qt::AlignCenter);
+    mainLayout->addWidget(systemBox.at(0),maxSensorRow+8,7,Qt::AlignCenter);
 
     QFont font = QFont ("Courier");
     message = new QListWidget();
@@ -332,7 +341,6 @@ void detailPage::update(){
     mainLayout->addWidget(message,maxSensorRow+7,8,maxSensorRow+11,10);
 
     QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
-    QObject::connect(indiButton, SIGNAL (clicked()), this , SLOT(detailPage()));
 
 
 
@@ -384,8 +392,45 @@ void detailPage::drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay ){
 
 void detailPage::receiveMsg(string msg){
     addErrorMessage(QString::fromStdString(msg));
+}
+
+void detailPage::plotGraph(){
+
+    int max =20;
+    int mini=0;
+    xinit=0;
+
+    gx.clear();
+    gy.clear();
+
+    vector<SubsystemThread *> subs;
+     subs = conf->subsystems;
+    SubsystemThread * currSub = subs.at(currentSystem);
 
 
+
+
+    vector<meta *> subMeta = currSub->get_metadata();
+    QString choice= systemBox.at(0)->currentText();
+    for(int i=0;i<maxSensorRow;i++){
+       int x = choice.compare(systemName[currentSystem][i]);
+        if(x==0){
+        currentSubSystem=i;
+        }
+    }
+
+
+    meta * sensor =subMeta.at(currentSubSystem);
+    max = (sensor->maximum)*1.5;
+    mini = (sensor->minimum)*0.5;
+    plot = new QCustomPlot();
+    plot->addGraph();
+    plot->setFixedHeight(unitHeight*8);
+    plot->setFixedWidth(unitWidth*9);
+    plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
+    plot->graph(0)->setLineStyle(QCPGraph::lsLine);
+    plot->yAxis->setRange(mini, -(max-mini), Qt::AlignRight);
+    mainLayout->addWidget(plot,maxSensorRow+7,0,maxSensorRow+11,6);
 }
 
 
