@@ -45,6 +45,7 @@ public:
     vector<QComboBox *> systemBox;
     vector<QPushButton *> systemButton;
     vector<QPushButton *> stateButtons;
+    vector<QPushButton *> FSMButtons;
     QString ** systemName;
 
 
@@ -84,7 +85,7 @@ public:
 private slots:
     void update();
     void updateVals();
-
+    void plotGraph();
     void receiveMsg(string msg);
     void deactivateStateMW(system_state * prevstate);
     void activateStateMW(system_state * nextState);

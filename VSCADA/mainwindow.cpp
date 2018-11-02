@@ -521,22 +521,12 @@ void MainWindow::plotGraph(){
 
     plot = new QCustomPlot();
     plot->addGraph();
-    plot->setFixedHeight(unitHeight*8);
-    plot->setFixedWidth(unitWidth*9);
+    plot->setFixedHeight(unitHeight*6);
+    plot->setFixedWidth(unitWidth*7);
     plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
     plot->graph(0)->setLineStyle(QCPGraph::lsLine);
     plot->yAxis->setRange(mini, -(max-mini), Qt::AlignRight);
-//    plot->xAxis->setRange(0, -20, Qt::AlignRight);
-//    plot->graph(0)->addData(4,4);
-//    plot->graph(0)->addData(7,4);
-//    plot->graph(0)->addData(1,3);
-//    plot->graph(0)->addData(2,5);
-//    plot->graph(0)->addData(6,8);
-//       addPoint(4,4);
-//        addPoint(7,4);
-//        addPoint(1,3);
-//        addPoint(2,5);
-//        addPoint(6,8);
+
     mainLayout->addWidget(plot,maxSensorRow+9,0,maxSensorRow+11,6);
 }
 
