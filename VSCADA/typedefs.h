@@ -62,6 +62,7 @@ typedef struct{
     std::string type;
     bool slider;
     bool button;
+    bool textField;
     int primAddress;
     int auxAddress;
     int offset;
@@ -70,6 +71,7 @@ typedef struct{
     int minslider;
     int pressVal;
     int releaseVal;
+    uint64_t sentVal;
 }controlSpec;
 
 typedef struct{

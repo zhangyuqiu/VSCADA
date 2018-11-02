@@ -41,7 +41,7 @@ signals:
 private slots:
     void recieve_frame();
     void sendFrame(response rsp);
-
+    void sendData(int addr, uint64_t data);
 };
 
 

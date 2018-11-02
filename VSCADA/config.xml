@@ -28,21 +28,28 @@
 	<systemcontrols>
 		<control>
 			<name>Throttle</name>
-			<type>Slider</type>
+			<type>slider</type>
 			<minrange>0</minrange>
 			<maxrange>301</maxrange>
 			<primaddress>61</primaddress>
-			<auxaddress>1</auxaddress>
-			<offset>1</offset>
+			<auxaddress>48</auxaddress>
+			<offset>16</offset>
 		</control>
 		<control>
 			<name>Brake</name>
-			<type>Button</type>
+			<type>button</type>
 			<primaddress>301</primaddress>
 			<auxaddress>60</auxaddress>
 			<offset>1</offset>
 			<pressvalue>1</pressvalue>
 			<releasevalue>0</releasevalue>
+		</control>
+		<control>
+			<name>MC Tests</name>
+			<type>textfield</type>
+			<primaddress>301</primaddress>
+			<auxaddress>52</auxaddress>
+			<offset>8</offset>
 		</control>
 	</systemcontrols>
 	<systemstate>

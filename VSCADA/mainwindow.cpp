@@ -56,6 +56,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(updateFSM(statemachine *)), this, SLOT(updateFSM_MW(statemachine *)));
+    connect(conf->dataCtrl, SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
+    connect(this, SIGNAL(sendControlValue(int, controlSpec *)), conf->dataCtrl, SLOT(receive_control_val(int, controlSpec *)));
 
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
     timer->start(500);
@@ -229,18 +231,16 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(stateFrame);
 
     for(uint t = 0; t < conf->FSMs.size(); t++){
-        statemachine * currFSM = conf->FSMs.at(t);
-//            stateButton = new QPushButton(QString::fromStdString(currFSM->name));
-            stateButton = new QPushButton("---");
-            QPalette palplot = stateButton->palette();
-            palplot.setColor(QPalette::Button, QColor(70,70,70));
-            stateButton->setPalette(palplot);
-            stateButton->setAutoFillBackground(true);
-            stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
-            stateButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-            stateButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-            FSMButtons.push_back(stateButton);
-            stateButtonLayout->addWidget(stateButton);
+        stateButton = new QPushButton("---");
+        QPalette palplot = stateButton->palette();
+        palplot.setColor(QPalette::Button, QColor(70,70,70));
+        stateButton->setPalette(palplot);
+        stateButton->setAutoFillBackground(true);
+        stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
+        stateButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+        stateButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+        FSMButtons.push_back(stateButton);
+        stateButtonLayout->addWidget(stateButton);
     }
 
     for(uint s = 0; s < conf->sysStates.size(); s++){
@@ -318,12 +318,71 @@ void MainWindow::update(){
     linea2->setFrameShadow(QFrame::Raised);
     mainLayout->addWidget(linea2,maxSensorRow+6,0,1,13);
 
+    controlsLayout = new QHBoxLayout;
+    for (uint i = 0; i < conf->controlSpecs.size(); i++){
+        controlSpec * currSpec = conf->controlSpecs.at(i);
+        if (currSpec->slider){
+            QVBoxLayout * sliderLayout = new QVBoxLayout;
+            currLabel = new QLabel(QString::fromStdString(currSpec->name));
+            currLabel->setAlignment(Qt::AlignCenter);
+            currLabel->setStyleSheet("font:"+labelFont+"pt;");
+            sliderLayout->addWidget(currLabel);
+            sliderControl = new QSlider(Qt::Horizontal);
+            sliderControl->setRange(currSpec->minslider,currSpec->maxslider);
+            QPalette palSlider = sliderControl->palette();
+            sliderControl->setMaximumWidth(unitWidth*5);
+            sliderLayout->addWidget(sliderControl);
+            sliderLayout->setAlignment(Qt::AlignCenter);
+            controlsLayout->addLayout(sliderLayout,Qt::AlignCenter);
+            controlSliders.push_back(sliderControl);
+            sliderCtrls.push_back(currSpec);
+            connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
+        }
+        if (currSpec->button){
+            buttonControl =new QPushButton();
+            buttonControl->setText(QString::fromStdString(currSpec->name));
+            QPalette palindi = buttonControl->palette();
+            palindi.setColor(QPalette::Button, QColor(142,45,197).darker());
+            buttonControl->setPalette(palindi);
+            buttonControl->setAutoFillBackground(true);
+            buttonControl->setStyleSheet("font:"+butLabelFont+"pt;");
+            buttonControl->setFixedWidth(static_cast<int>(unitWidth*1.2));
+            buttonControl->setFixedHeight(static_cast<int>(unitHeight*1.8));
+            controlButtons.push_back(buttonControl);
+            buttonCtrls.push_back(currSpec);
+            controlsLayout->addWidget(buttonControl,Qt::AlignCenter);
+            connect(buttonControl, SIGNAL(pressed()), this, SLOT(ctrlButtonPressed()));
+            connect(buttonControl, SIGNAL(released()), this, SLOT(ctrlButtonReleased()));
+        }
+        if (currSpec->textField){
+            QVBoxLayout * fieldLayout = new QVBoxLayout;
+            currLabel = new QLabel(QString::fromStdString(currSpec->name));
+            currLabel->setAlignment(Qt::AlignCenter);
+            currLabel->setStyleSheet("font:"+labelFont+"pt;");
+            fieldLayout->addWidget(currLabel);
+            editControl = new QLineEdit;
+            editControl->setMaximumWidth(unitWidth*5);
+            editControl->setStyleSheet("font:"+labelFont+"pt;");
+            fieldLayout->addWidget(editControl);
+            fieldLayout->setAlignment(Qt::AlignCenter);
+            controlEdits.push_back(editControl);
+            editCtrls.push_back(currSpec);
+            controlsLayout->addLayout(fieldLayout,Qt::AlignCenter);
+            connect(editControl, SIGNAL(returnPressed()), this, SLOT(editUpdated()));
+        }
+    }
+
+    currLabel = new QLabel("CONTROLS: ");
+    currLabel->setStyleSheet("font:"+labelFont+"pt;");
+    mainLayout->addWidget(currLabel,maxSensorRow+7,0,1,2);
+    mainLayout->addLayout(controlsLayout,maxSensorRow+7,2,1,13);
+
     QFrame *linea3 = new QFrame(this);
     linea3->setLineWidth(2);
     linea3->setMidLineWidth(1);
     linea3->setFrameShape(QFrame::HLine);
     linea3->setFrameShadow(QFrame::Raised);
-    mainLayout->addWidget(linea3,maxSensorRow+6,0,1,13);
+    mainLayout->addWidget(linea3,maxSensorRow+8,0,1,13);
 
     QFont font = QFont ("Courier");
     message = new QListWidget();
@@ -336,7 +395,7 @@ void MainWindow::update(){
     message->setFixedHeight(unitHeight*6);
     message->setFixedWidth(unitWidth*7);
     message->setFont(font);
-    mainLayout->addWidget(message,maxSensorRow+7,8,maxSensorRow+11,10);
+    mainLayout->addWidget(message,maxSensorRow+9,8,maxSensorRow+11,10);
 
     QObject::connect(plotButton, SIGNAL (clicked()), this , SLOT(plotGraph()));
     QObject::connect(indiButton, SIGNAL (clicked()), this , SLOT(openDetailWindow()));
@@ -358,6 +417,46 @@ void MainWindow::update(){
         }
     }
 
+}
+
+void MainWindow::sliderValChanged(int value){
+    cout << "Current Value: " << value << endl;
+    QObject* obj = sender();
+    for (uint i = 0; i < controlSliders.size(); i++){
+        if (obj == controlSliders.at(i)){
+            emit sendControlValue(value, sliderCtrls.at(i));
+        }
+    }
+}
+
+void MainWindow::ctrlButtonPressed(){
+    QObject* obj = sender();
+    for (uint i = 0; i < controlButtons.size(); i++){
+        if (obj == controlButtons.at(i)){
+            emit sendControlValue(buttonCtrls.at(i)->pressVal, buttonCtrls.at(i));
+        }
+    }
+}
+
+void MainWindow::ctrlButtonReleased(){
+    QObject* obj = sender();
+    for (uint i = 0; i < controlButtons.size(); i++){
+        if (obj == controlButtons.at(i)){
+            emit sendControlValue(buttonCtrls.at(i)->releaseVal, buttonCtrls.at(i));
+        }
+    }
+}
+
+void MainWindow::editUpdated(){
+    QObject* obj = sender();
+    for (uint i = 0; i < controlEdits.size(); i++){
+        if (obj == controlEdits.at(i)){
+            QLineEdit * edit = static_cast<QLineEdit *>(obj);
+            int val = stoi(edit->text().toStdString());
+            emit sendControlValue(val, editCtrls.at(i));
+            edit->setText("");
+        }
+    }
 }
 
 void MainWindow::activateStateMW(system_state * nextState){
@@ -438,7 +537,7 @@ void MainWindow::plotGraph(){
 //        addPoint(1,3);
 //        addPoint(2,5);
 //        addPoint(6,8);
-    mainLayout->addWidget(plot,maxSensorRow+7,0,maxSensorRow+11,6);
+    mainLayout->addWidget(plot,maxSensorRow+9,0,maxSensorRow+11,6);
 }
 
 void MainWindow::receiveMsg(string msg){
@@ -526,14 +625,14 @@ void MainWindow::updateGraph(){
     addPoint(xinit,data);
     xinit++;
     for (uint i = 0; i < subs.size(); i++){
-            bool error = subs.at(i)->error;
-            QPalette palb = systemButton.at(i)->palette();
-            if(error){
-                palb.setColor(QPalette::Button, QColor(255,0,0));
-            }else{
-                palb.setColor(QPalette::Button, QColor(0,255,0));
-            }
-            systemButton.at(i)->setPalette(palb);
+        bool error = subs.at(i)->error;
+        QPalette palb = systemButton.at(i)->palette();
+        if(error){
+            palb.setColor(QPalette::Button, QColor(255,0,0));
+        }else{
+            palb.setColor(QPalette::Button, QColor(0,255,0));
+        }
+        systemButton.at(i)->setPalette(palb);
      }
 
 }

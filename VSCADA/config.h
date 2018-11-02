@@ -44,7 +44,7 @@ public:
     vector<meta *> i2cSensors;
     system_state * thisState;
     vector<system_state *> sysStates;
-    vector<controlSpec> controls;
+    controlSpec * currSpec;
     statemachine * thisFSM;
     vector<statemachine *> FSMs;
     // submodule declarations
@@ -56,7 +56,7 @@ public:
     canbus_interface * canInterface;
     gpio_interface * gpioInterface;
     vector<SubsystemThread *> subsystems;
-    vector<controlSpec > controlSpecs;
+    vector<controlSpec *> controlSpecs;
     int systemMode;
 };
 

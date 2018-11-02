@@ -74,43 +74,46 @@ bool Config::read_config_file_data(){
     for (int i = 0; i < systemControls.size(); i++){
         QDomNodeList ctrlSpecs = systemControls.at(i).childNodes();
         for (int j = 0; j < ctrlSpecs.size(); j++){
-            controlSpec currSpec;
-            currSpec.button = false;
-            currSpec.slider = false;
-            currSpec.minslider = -1;
-            currSpec.maxslider = -1;
-            currSpec.pressVal = -1;
-            currSpec.releaseVal = -1;
-            currSpec.primAddress = -1;
-            currSpec.auxAddress = -1;
-            currSpec.offset = -1;
+            currSpec = new controlSpec;
+            currSpec->button = false;
+            currSpec->slider = false;
+            currSpec->textField = false;
+            currSpec->minslider = -1;
+            currSpec->maxslider = -1;
+            currSpec->pressVal = -1;
+            currSpec->releaseVal = -1;
+            currSpec->primAddress = -1;
+            currSpec->auxAddress = -1;
+            currSpec->offset = -1;
 
             QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
-            for (int k = 0; k < ctrlSpecs.size(); k++){
-                if (controlXteristics.at(j).nodeName().toStdString().compare("name") == 0){
-                    currSpec.name = controlXteristics.at(j).firstChild().nodeValue().toStdString();
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
-                    currSpec.primAddress = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
-                    currSpec.auxAddress = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
-                    currSpec.offset = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("gpiopin") == 0){
-                    currSpec.gpiopin = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
-                }else if (controlXteristics.at(j).nodeName().toStdString().compare("minrange") == 0){
-                    currSpec.minslider = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("maxrange") == 0){
-                    currSpec.maxslider = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("type") == 0){
-                    if(controlXteristics.at(j).firstChild().nodeValue().toStdString().compare("Button") == 0){
-                        currSpec.button = true;
-                    } else if(controlXteristics.at(j).firstChild().nodeValue().toStdString().compare("Slider") == 0){
-                        currSpec.slider = true;
+            for (int k = 0; k < controlXteristics.size(); k++){
+                if (controlXteristics.at(k).nodeName().toStdString().compare("name") == 0){
+                    currSpec->name = controlXteristics.at(k).firstChild().nodeValue().toStdString();
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
+                    currSpec->primAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
+                    currSpec->auxAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
+                    currSpec->offset = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("gpiopin") == 0){
+                    currSpec->gpiopin = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                }else if (controlXteristics.at(k).nodeName().toStdString().compare("minrange") == 0){
+                    currSpec->minslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("maxrange") == 0){
+                    currSpec->maxslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("type") == 0){
+                    if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("button") == 0){
+                        currSpec->button = true;
+                    } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("slider") == 0){
+                        currSpec->slider = true;
+                    } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("textfield") == 0){
+                        currSpec->textField = true;
                     }
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("pressvalue") == 0){
-                    currSpec.pressVal = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(j).nodeName().toStdString().compare("releasevalue") == 0){
-                    currSpec.releaseVal = stoi(controlXteristics.at(j).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("pressvalue") == 0){
+                    currSpec->pressVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("releasevalue") == 0){
+                    currSpec->releaseVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
                 }
             }
             controlSpecs.push_back(currSpec);

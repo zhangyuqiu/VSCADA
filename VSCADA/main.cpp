@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 
     palette.setColor(QPalette::Highlight, QColor(142,45,197).lighter());
     palette.setColor(QPalette::HighlightedText, Qt::black);
+
     QApplication::setPalette(palette);
 
     MainWindow * w = new MainWindow;

@@ -1,6 +1,6 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM, int mode, vector<controlSpec> ctrlSpecs, vector<meta *> sensors){
+DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM, int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors){
     // assign global objects
     systemMode = mode;
     if(mode == 1){
@@ -123,6 +123,15 @@ uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data)
     return static_cast<uint32_t>(data);
 }
 
+uint64_t DataControl::LSBto64Spec(uint auxAddress, uint offset, uint64_t data){
+    if (auxAddress > 63 || offset > 64) return 0;
+    uint lastAddr = sizeof (data)*8 - offset;
+    uint firstAddr = sizeof (data)*8 - auxAddress;
+    data = data << lastAddr;
+    data = data >> firstAddr;
+    return data;
+}
+
 int DataControl::change_system_state(system_state * newState){
     newState->active = true;
     vector<string> cols;
@@ -157,11 +166,26 @@ void DataControl::deactivateLog(system_state *prevstate){
     rows.push_back("Entered State");
     dbase->insert_row("system_states",cols,rows);
 }
+
 int DataControl::collectData(){
     return 0;
 }
 
-vector<controlSpec> DataControl::get_control_specs(){
+void DataControl::receive_control_val(int data, controlSpec * spec){
+    int addr = spec->primAddress;
+    uint64_t fullData = static_cast<uint64_t>(data);
+    fullData = LSBto64Spec(spec->auxAddress,spec->offset,fullData);
+    spec->sentVal = spec->sentVal & ~LSBto64Spec(spec->auxAddress,spec->offset,0xFFFFFFFF);
+    spec->sentVal = spec->sentVal | fullData;
+    stringstream s;
+    s << showbase << internal << setfill('0');
+    s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr << endl;
+
+    emit pushMessage(s.str());
+    emit sendCANData(addr,spec->sentVal);
+}
+
+vector<controlSpec *> DataControl::get_control_specs(){
     return controlSpecs;
 }
 

@@ -10,6 +10,7 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
+    connect(ctrl, SIGNAL(sendCANData(int, uint64_t)), this, SLOT(sendData(int, uint64_t)));
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(pushCANItem(response)), this, SLOT(sendFrame(response)));
@@ -102,6 +103,20 @@ void canbus_interface::sendFrame(response rsp){
     streamArr << rsp.canValue;
     QCanBusFrame * outFrame = new QCanBusFrame;
     outFrame->setFrameId(static_cast<quint32>(rsp.primAddress));
+    outFrame->setPayload(byteArr);
+    can_bus->writeFrame(*outFrame);
+}
+
+void canbus_interface::sendData(int addr, uint64_t data){
+    cout << "actively wirting" << endl;
+    QByteArray byteArr;
+    char * charData = static_cast<char*>(static_cast<void*>(&data));
+    for(int i = sizeof(data)-1; i >= 0; i--){
+        byteArr.append(charData[i]);
+    }
+    qDebug() << "QByteArray Value: " << byteArr << endl;
+    QCanBusFrame * outFrame = new QCanBusFrame;
+    outFrame->setFrameId(static_cast<quint32>(addr));
     outFrame->setPayload(byteArr);
     can_bus->writeFrame(*outFrame);
 }

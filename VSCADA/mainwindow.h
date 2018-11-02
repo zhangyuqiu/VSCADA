@@ -43,6 +43,14 @@ public:
     vector<QLineEdit *> TSVEdits;
     vector<QLineEdit *> COOLINGEdits;
 
+    vector<QSlider *> controlSliders;
+    vector<QPushButton *> controlButtons;
+    vector<QLineEdit *> controlEdits;
+
+    vector<controlSpec *> sliderCtrls;
+    vector<controlSpec *> buttonCtrls;
+    vector<controlSpec *> editCtrls;
+
     vector<QComboBox *> systemBox;
     vector<QPushButton *> systemButton;
     vector<QPushButton *> stateButtons;
@@ -54,10 +62,15 @@ public:
     QWidget * central;
 
 
+    QLabel * currLabel;
     QPushButton * stateButton;
     QPushButton * plotButton;
     QPushButton * exitButton;
     QPushButton * indiButton;
+    QPushButton * buttonControl;
+    QHBoxLayout * controlsLayout;
+    QSlider * sliderControl;
+    QLineEdit * editControl;
     detailPage * detailWindow;
 
     QListWidget * message;
@@ -85,6 +98,10 @@ public:
     datapoint data;
 
     Config * conf;
+
+signals:
+    void sendControlValue(int data, controlSpec * spec);
+
 private slots:
     void plotGraph();
     void update();
@@ -98,6 +115,10 @@ private slots:
     void deactivateStateMW(system_state * prevstate);
     void activateStateMW(system_state * nextState);
     void updateFSM_MW(statemachine * currFSM);
+    void sliderValChanged(int value);
+    void ctrlButtonPressed();
+    void ctrlButtonReleased();
+    void editUpdated();
 
 private:
     Ui::MainWindow *ui;

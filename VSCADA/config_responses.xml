@@ -13,14 +13,18 @@
 		<id>2</id>
 		<description>Writing to CAN and GPIO</description>
 		<gpiopin>4</gpiopin>
-		<canaddress>123</canaddress>
+		<primaddress>123</primaddress>
+		<auxaddress>0</auxaddress>
+		<offset>32</offset>
 		<gpioval>243</gpioval>
 		<canval>345</canval>
 	</response>
 	<response>
 		<id>3</id>
 		<description>Writing to CAN</description>
-		<canaddress>345</canaddress>
+		<primaddress>345</primaddress>
+		<auxaddress>0</auxaddress>
+		<offset>32</offset>
 		<canval>33</canval>
 	</response>
 	<response>
