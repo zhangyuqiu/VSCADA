@@ -97,27 +97,27 @@ bool Config::read_config_file_data(){
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->primAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: primary address error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: primary address not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->auxAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: aux address error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: aux address not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->offset = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: address offset error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: address offset not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("gpiopin") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->gpiopin = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: GPIO pin error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: GPIO pin not an integer");
                     }else if (controlXteristics.at(k).nodeName().toStdString().compare("minrange") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->minslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: min slider value error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: min slider value not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("maxrange") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->maxslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: max slider value error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: max slider value not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("type") == 0){
                         if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("button") == 0){
                             currSpec->button = true;
@@ -131,11 +131,11 @@ bool Config::read_config_file_data(){
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("pressvalue") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->pressVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: press value error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: press value not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("releasevalue") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->releaseVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: release value error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: release value not an integer");
                     }
                 }
                 controlSpecs.push_back(currSpec);
@@ -156,15 +156,15 @@ bool Config::read_config_file_data(){
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
                 if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
                     thisFSM->primAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: primary address error: not an integer");
+                else configErrors.push_back("CONFIG ERROR: primary address not an integer");
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
                 if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
                     thisFSM->auxAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: aux address error: not an integer");
+                else configErrors.push_back("CONFIG ERROR: aux address not an integer");
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
                 if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
                     thisFSM->offset = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: address offset error: not an integer");
+                else configErrors.push_back("CONFIG ERROR: address offset not an integer");
             }else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
                 QDomNodeList stateXteristics = machineXteristics.at(j).childNodes();
                 thisState = new system_state;
@@ -177,7 +177,7 @@ bool Config::read_config_file_data(){
                     } else if (stateXteristics.at(k).nodeName().toStdString().compare("value") == 0){
                         if (isInteger(stateXteristics.at(k).firstChild().nodeValue().toStdString()))
                             thisState->value = stoi(stateXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: state value error: not an integer");
+                        else configErrors.push_back("CONFIG ERROR: state value not an integer");
                     }
                 }
                 thisFSM->states.push_back(thisState);
@@ -205,13 +205,21 @@ bool Config::read_config_file_data(){
             if (statusXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                 thisState->name = statusXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
-                thisState->primAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisState->primAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: primary address not an integer");
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
-                thisState->auxAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisState->auxAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: aux address not an integer");
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
-                thisState->offset = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisState->offset = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: address offset not an integer");
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("value") == 0){
-                thisState->value = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisState->value = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: state value not an integer");
             }
         }
         sysStates.push_back(thisState);
@@ -232,21 +240,35 @@ bool Config::read_config_file_data(){
         thisRsp.gpioValue = -1;
         for (int j = 0; j < responseXteristics.size(); j++){
             if (responseXteristics.at(j).nodeName().toStdString().compare("id") == 0){
-                thisRsp.responseIndex = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisRsp.responseIndex = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: response index not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("description") == 0){
                 thisRsp.msg = responseXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
-                thisRsp.primAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisRsp.primAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: primary address not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
-                thisRsp.auxAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisRsp.auxAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: aux address not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
-                thisRsp.offset = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisRsp.offset = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: address offset not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("gpiopin") == 0){
-                thisRsp.gpioPin = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisRsp.gpioPin = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: GPIO pin not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("gpioval") == 0){
-                thisRsp.gpioValue = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisRsp.gpioValue = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: GPIO response value not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("canval") == 0){
-                thisRsp.canValue = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisRsp.canValue = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: CAN response value not an integer");
             }
         }
         allResponses.push_back(thisRsp);
@@ -286,9 +308,13 @@ bool Config::read_config_file_data(){
             if (subsystemXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                 subSystemId = subsystemXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if(subsystemXteristics.at(j).nodeName().toStdString().compare("minrate") == 0){
-                minrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    minrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: subsystem min rate not an integer");
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("maxrate") == 0){
-                maxrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    maxrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: subsystem min rate not an integer");
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("sensors") == 0){
                 QDomNodeList sensorsList = subsystemXteristics.at(j).childNodes();
                 for (int k = 0; k < sensorsList.size(); k++){
@@ -319,35 +345,57 @@ bool Config::read_config_file_data(){
                         } else if(attributeList.at(m).nodeName().toStdString().compare("unit") == 0){
                             storedSensor->unit = attributeList.at(m).firstChild().nodeValue().toStdString();
                         } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
-                            storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor index not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("primaddress") == 0){
-                            storedSensor->primAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->primAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor primary address not an integer");
                             canSensors.push_back(storedSensor);
                         } else if (attributeList.at(m).nodeName().toStdString().compare("auxaddress") == 0){
-                            storedSensor->auxAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->auxAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor aux address not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("offset") == 0){
-                            storedSensor->offset = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->offset = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor address offset not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
                             storedSensor->minimum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("main") == 0){
-                            storedSensor->main = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->main = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor main field not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
                             storedSensor->maximum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minresponse") == 0){
-                            storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor min reaction code not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maxresponse") == 0){
-                            storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor max reaction code not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("normresponse") == 0){
-                            storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor norm reaction code not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
-                            storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor check rate not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("multiplier") == 0){
                             storedSensor->calConst = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
-                            storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor GPIO pin not an integer");
                             gpioSensors.push_back(storedSensor);
                         } else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
-                            storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor i2c address not an integer");
                             i2cSensors.push_back(storedSensor);
                         }
                     }
