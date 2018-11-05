@@ -27,7 +27,9 @@ SOURCES += \
     canbus_interface.cpp \
     subsystemthread.cpp \
     gpio_interface.cpp \
-    detailpage.cpp
+    detailpage.cpp \
+    dashboard.cpp \
+    qcgaugewidget.cpp
 
 HEADERS += \
     db_engine.h \
@@ -42,11 +44,14 @@ HEADERS += \
     canbus_interface.h \
     subsystemthread.h \
     gpio_interface.h \
-    detailpage.h
+    detailpage.h \
+    dashboard.h \
+    qcgaugewidget.h
 
 FORMS += \
         mainwindow.ui \
-    detailpage.ui
+    detailpage.ui \
+    dashboard.ui
 
 QT += serialbus widgets
 QT += core

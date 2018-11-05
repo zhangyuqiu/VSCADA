@@ -2,6 +2,7 @@
 #include <QApplication>
 #include "typedefs.h"
 #include "config.h"
+#include "dashboard.h"
 
 int main(int argc, char *argv[])
 {
@@ -29,8 +30,9 @@ int main(int argc, char *argv[])
     QApplication::setPalette(palette);
 
     MainWindow * w = new MainWindow;
+    dashboard * d= new dashboard;
+    //d->setWindowState((w->windowState()^Qt::WindowFullScreen));
     w->setWindowState((w->windowState()^Qt::WindowFullScreen));
-    datapoint d;
     w->show();
 
     return a.exec();
