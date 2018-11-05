@@ -9,12 +9,16 @@ Config::~Config(){
 
 bool Config::read_config_file_data(){
 
+    //local declarations
     vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;
     vector<response> allResponses;
     vector<int> minrates;
     vector<logic> logicVector;
-//    vector<statemachine> FSMs;
+
+    //************************************//
+    //*****extract file to DOM object*****//
+    //************************************//
 
     qDebug("Inside the PARSE Slot");
     QDomDocument doc;
@@ -28,97 +32,120 @@ bool Config::read_config_file_data(){
     f.close();
     qDebug("File was closed Successfully");
 
-     QDomDocument respDoc;
-     QFile fl("config_responses.xml");
-     if(!fl.open(QIODevice::ReadOnly))
-     {
-         qDebug("Error While Reading the File");
-     }
 
-     respDoc.setContent(&fl);
-     fl.close();
+    //************************************************//
+    //*****extract individual types from xml file*****//
+    //************************************************//
 
-     QDomDocument logicDoc;
-     QFile fl2("config_logic.xml");
-     if(!fl2.open(QIODevice::ReadOnly))
-     {
-         qDebug("Error While Reading the File");
-     }
-
-     logicDoc.setContent(&fl2);
-     fl2.close();
-
-    QDomNodeList mode = logicDoc.elementsByTagName("mode");
+    QDomNodeList mode = doc.elementsByTagName("mode");
     QDomNodeList systemControls = doc.elementsByTagName("systemcontrols");
-    QDomNodeList responseNodes = respDoc.elementsByTagName("response");
+    QDomNodeList responseNodes = doc.elementsByTagName("response");
     QDomNodeList subsystemNodes = doc.elementsByTagName("subsystem");
-    QDomNodeList systemStates = doc.elementsByTagName("systemstate");
+    QDomNodeList systemStatuses = doc.elementsByTagName("systemstatus");
     QDomNodeList stateMachines = doc.elementsByTagName("statemachine");
-    QDomNodeList systemLogic = logicDoc.elementsByTagName("logic");
+    QDomNodeList systemLogic = doc.elementsByTagName("logic");
 
+#ifdef CONFIG_PRINT
     cout << "Number of responses: " << responseNodes.size() << endl;
     cout << "Number of system controls: " << systemControls.size() << endl;
     cout << "Number of subsystems: " << subsystemNodes.size() << endl;
     cout << "Number of logic configurations: " << systemLogic.size() << endl;
-    cout << "Number of system states: " << systemStates.size() << endl;
+    cout << "Number of system states: " << systemStatuses.size() << endl;
     cout << "Number of state machines: " << stateMachines.size() << endl;
+#endif
+
+    //*************************//
+    //*****get system mode*****//
+    //*************************//
 
     for (int i = 0; i < mode.size(); i++){
-        if(mode.at(i).firstChild().nodeValue().toStdString().compare("0") == 0){
-            systemMode = DYNO;
-        } else if(mode.at(i).firstChild().nodeValue().toStdString().compare("1") == 0){
-            systemMode = CAR;
-        }
-    }
-
-    for (int i = 0; i < systemControls.size(); i++){
-        QDomNodeList ctrlSpecs = systemControls.at(i).childNodes();
-        for (int j = 0; j < ctrlSpecs.size(); j++){
-            currSpec = new controlSpec;
-            currSpec->button = false;
-            currSpec->slider = false;
-            currSpec->textField = false;
-            currSpec->minslider = -1;
-            currSpec->maxslider = -1;
-            currSpec->pressVal = -1;
-            currSpec->releaseVal = -1;
-            currSpec->primAddress = -1;
-            currSpec->auxAddress = -1;
-            currSpec->offset = -1;
-
-            QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
-            for (int k = 0; k < controlXteristics.size(); k++){
-                if (controlXteristics.at(k).nodeName().toStdString().compare("name") == 0){
-                    currSpec->name = controlXteristics.at(k).firstChild().nodeValue().toStdString();
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
-                    currSpec->primAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
-                    currSpec->auxAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
-                    currSpec->offset = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("gpiopin") == 0){
-                    currSpec->gpiopin = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                }else if (controlXteristics.at(k).nodeName().toStdString().compare("minrange") == 0){
-                    currSpec->minslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("maxrange") == 0){
-                    currSpec->maxslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("type") == 0){
-                    if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("button") == 0){
-                        currSpec->button = true;
-                    } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("slider") == 0){
-                        currSpec->slider = true;
-                    } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("textfield") == 0){
-                        currSpec->textField = true;
-                    }
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("pressvalue") == 0){
-                    currSpec->pressVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                } else if (controlXteristics.at(k).nodeName().toStdString().compare("releasevalue") == 0){
-                    currSpec->releaseVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+        QDomNodeList modeXteristics = mode.at(i).childNodes();
+        for (int j = 0; j < modeXteristics.size(); j++){
+            if (modeXteristics.at(j).nodeName().toStdString().compare("type") == 0){
+                if(modeXteristics.at(j).firstChild().nodeValue().toStdString().compare("0") == 0){
+                    systemMode = DYNO;
+                } else if(mode.at(i).firstChild().nodeValue().toStdString().compare("1") == 0){
+                    systemMode = CAR;
                 }
             }
-            controlSpecs.push_back(currSpec);
         }
     }
+
+    //**************************************************//
+    //*****for DYNO mode, process all control items*****//
+    //**************************************************//
+    if (systemMode == DYNO){
+        for (int i = 0; i < systemControls.size(); i++){
+            QDomNodeList ctrlSpecs = systemControls.at(i).childNodes();
+            for (int j = 0; j < ctrlSpecs.size(); j++){
+                currSpec = new controlSpec;
+                currSpec->button = false;
+                currSpec->slider = false;
+                currSpec->textField = false;
+                currSpec->minslider = -1;
+                currSpec->maxslider = -1;
+                currSpec->pressVal = -1;
+                currSpec->releaseVal = -1;
+                currSpec->primAddress = -1;
+                currSpec->auxAddress = -1;
+                currSpec->offset = -1;
+
+                QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
+                for (int k = 0; k < controlXteristics.size(); k++){
+                    if (controlXteristics.at(k).nodeName().toStdString().compare("name") == 0){
+                        currSpec->name = controlXteristics.at(k).firstChild().nodeValue().toStdString();
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->primAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: primary address error: not an integer");
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->auxAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: aux address error: not an integer");
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->offset = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: address offset error: not an integer");
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("gpiopin") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->gpiopin = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: GPIO pin error: not an integer");
+                    }else if (controlXteristics.at(k).nodeName().toStdString().compare("minrange") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->minslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: min slider value error: not an integer");
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("maxrange") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->maxslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: max slider value error: not an integer");
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("type") == 0){
+                        if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("button") == 0){
+                            currSpec->button = true;
+                        } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("slider") == 0){
+                            currSpec->slider = true;
+                        } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("textfield") == 0){
+                            currSpec->textField = true;
+                        } else {
+                            configErrors.push_back("CONFIG ERROR: invalid control type");
+                        }
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("pressvalue") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->pressVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: press value error: not an integer");
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("releasevalue") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->releaseVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: release value error: not an integer");
+                    }
+                }
+                controlSpecs.push_back(currSpec);
+            }
+        }
+    }
+
+    //***************************************//
+    //*****process system state machines*****//
+    //***************************************//
 
     for (int i = 0; i < stateMachines.size(); i++){
         thisFSM = new statemachine;
@@ -127,11 +154,17 @@ bool Config::read_config_file_data(){
             if (machineXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                 thisFSM->name = machineXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
-                thisFSM->primAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisFSM->primAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: primary address error: not an integer");
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
-                thisFSM->auxAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisFSM->auxAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: aux address error: not an integer");
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
-                thisFSM->offset = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    thisFSM->offset = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: address offset error: not an integer");
             }else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
                 QDomNodeList stateXteristics = machineXteristics.at(j).childNodes();
                 thisState = new system_state;
@@ -142,7 +175,9 @@ bool Config::read_config_file_data(){
                     if (stateXteristics.at(k).nodeName().toStdString().compare("name") == 0){
                         thisState->name = stateXteristics.at(k).firstChild().nodeValue().toStdString();
                     } else if (stateXteristics.at(k).nodeName().toStdString().compare("value") == 0){
-                        thisState->value = stoi(stateXteristics.at(k).firstChild().nodeValue().toStdString());
+                        if (isInteger(stateXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            thisState->value = stoi(stateXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: state value error: not an integer");
                     }
                 }
                 thisFSM->states.push_back(thisState);
@@ -151,30 +186,40 @@ bool Config::read_config_file_data(){
         FSMs.push_back(thisFSM);
     }
 
-    for (int i = 0; i < FSMs.size(); i++){
-        cout << "state machine states: " << FSMs.at(i)->states.size() << endl;
+#ifdef CONFIG_PRINT
+    for (uint i = 0; i < FSMs.size(); i++){
         cout << "state machine name: " << FSMs.at(i)->name << endl;
+        cout << "state machine states: " << FSMs.at(i)->states.size() << endl;
         cout << "state machine address: " << FSMs.at(i)->primAddress << endl;
     }
+#endif
 
-    for (int i = 0; i < systemStates.size(); i++){
+    //*********************************//
+    //*****process system statuses*****//
+    //*********************************//
+
+    for (int i = 0; i < systemStatuses.size(); i++){
         thisState = new system_state;
-        QDomNodeList stateXteristics = systemStates.at(i).childNodes();
-        for (int j = 0; j < stateXteristics.size(); j++){
-            if (stateXteristics.at(j).nodeName().toStdString().compare("name") == 0){
-                thisState->name = stateXteristics.at(j).firstChild().nodeValue().toStdString();
-            } else if (stateXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
-                thisState->primAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
-            } else if (stateXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
-                thisState->auxAddress = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
-            } else if (stateXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
-                thisState->offset = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
-            } else if (stateXteristics.at(j).nodeName().toStdString().compare("value") == 0){
-                thisState->value = stoi(stateXteristics.at(j).firstChild().nodeValue().toStdString());
+        QDomNodeList statusXteristics = systemStatuses.at(i).childNodes();
+        for (int j = 0; j < statusXteristics.size(); j++){
+            if (statusXteristics.at(j).nodeName().toStdString().compare("name") == 0){
+                thisState->name = statusXteristics.at(j).firstChild().nodeValue().toStdString();
+            } else if (statusXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
+                thisState->primAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (statusXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
+                thisState->auxAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (statusXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
+                thisState->offset = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+            } else if (statusXteristics.at(j).nodeName().toStdString().compare("value") == 0){
+                thisState->value = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
             }
         }
         sysStates.push_back(thisState);
     }
+
+    //**********************************//
+    //*****process system responses*****//
+    //**********************************//
 
     for (int i = 0; i < responseNodes.size(); i++){
         QDomNodeList responseXteristics = responseNodes.at(i).childNodes();
@@ -207,6 +252,7 @@ bool Config::read_config_file_data(){
         allResponses.push_back(thisRsp);
     }
 
+#ifdef CONFIG_PRINT
     for (uint i = 0; i < allResponses.size(); i++){
         cout << "Response ID: " << allResponses.at(i).responseIndex << endl;
         cout << "description: " << allResponses.at(i).msg << endl;
@@ -217,6 +263,11 @@ bool Config::read_config_file_data(){
         cout << "gpio pin: " << allResponses.at(i).gpioPin << endl;
         cout << "gpio value: " << allResponses.at(i).gpioValue << endl << endl;
     }
+#endif
+
+    //***********************************************//
+    //*****process system subsystems and sensors*****//
+    //***********************************************//
 
     for (int i = 0; i < static_cast<int>(subsystemNodes.size()); i++){
         int minrate = 0;
@@ -282,11 +333,11 @@ bool Config::read_config_file_data(){
                             storedSensor->main = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
                             storedSensor->maximum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("minreaction") == 0){
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("minresponse") == 0){
                             storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("maxreaction") == 0){
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("maxresponse") == 0){
                             storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("normreaction") == 0){
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("normresponse") == 0){
                             storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
                             storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
@@ -310,13 +361,20 @@ bool Config::read_config_file_data(){
 
             }
         }
+
+        //launch a subsystem thread
+
         SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,mainMeta);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
     }
 
-    for (int i = 0; i < static_cast<int>(systemLogic.size()); i++){
+    //*********************************************//
+    //*****process system logic configurations*****//
+    //*********************************************//
+
+    for (int i = 0; i < systemLogic.size(); i++){
         QDomNodeList logicConfigs = systemLogic.at(i).childNodes();
         for (int j = 0; j < logicConfigs.size(); j++){
             logic thisLogic;
@@ -343,7 +401,7 @@ bool Config::read_config_file_data(){
                         thisLogic.val2 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
                     } else if (stateNodes.at(k).nodeName().toStdString().compare("name") == 0){
                         thisLogic.logicName = stateNodes.at(k).firstChild().nodeValue().toStdString();
-                    } else if (stateNodes.at(k).nodeName().toStdString().compare("reactionid") == 0){
+                    } else if (stateNodes.at(k).nodeName().toStdString().compare("responseid") == 0){
                         int rxnVal = stoi(stateNodes.at(k).firstChild().nodeValue().toStdString());
                         for (uint m = 0; m < allResponses.size(); m++){
                             if (allResponses.at(m).responseIndex == rxnVal){
@@ -361,6 +419,7 @@ bool Config::read_config_file_data(){
         }
     }
 
+#ifdef CONFIG_PRINT
     cout << "Logic Configured: " << endl;
     for (uint i = 0; i < logicVector.size(); i++){
         cout << "Logic Name: " << logicVector.at(i).logicName << endl;
@@ -368,6 +427,7 @@ bool Config::read_config_file_data(){
         cout << "Logic Sensor2: " << logicVector.at(i).sensor2->sensorName << " value: " << logicVector.at(i).val2 << endl;
         cout << "Logic response: " << logicVector.at(i).rsp.msg << endl << endl;
     }
+#endif
 
     //********************************************************//
     //              PREPARE DATABASE INIT SCRIPT              //
@@ -377,39 +437,45 @@ bool Config::read_config_file_data(){
     dbScript.open ("script.sql");
 
     // write create universal tables
+    dbScript << "create table if not exists system_info(" << endl;
+    dbScript << "starttime char not null," << endl;
+    dbScript << "endtime char not null" << endl;
+    dbScript << ");" << endl;
+
     dbScript << "create table if not exists system_log(" << endl;
     dbScript << "time char not null," << endl;
-    dbScript << "reactionId char not null," << endl;
+    dbScript << "responseid char not null," << endl;
     dbScript << "message char not null" << endl;
     dbScript << ");" << endl;
 
     dbScript << "create table if not exists sensors(" << endl;
-    dbScript << "sensorIndex char not null," << endl;
-    dbScript << "sensorName char not null," << endl;
+    dbScript << "sensorindex char not null," << endl;
+    dbScript << "sensorname char not null," << endl;
     dbScript << "subsystem char not null," << endl;
-    dbScript << "minThreshold char not null," << endl;
-    dbScript << "maxThreshold char not null," << endl;
-    dbScript << "maxReactionId char not null," << endl;
-    dbScript << "minReactionId char not null," << endl;
-    dbScript << "calConstant char not null" << endl;
+    dbScript << "minthreshold char not null," << endl;
+    dbScript << "maxthreshold char not null," << endl;
+    dbScript << "maxresponseid char not null," << endl;
+    dbScript << "minresponseid char not null," << endl;
+    dbScript << "calconstant char not null" << endl;
     dbScript << ");" << endl;
 
-    dbScript << "create table if not exists reactions(" << endl;
-    dbScript << "reactionId char not null," << endl;
-    dbScript << "message char not null" << endl;
-    dbScript << ");" << endl;
+//    dbScript << "create table if not exists responses(" << endl;
+//    dbScript << "responseid char not null," << endl;
+//    dbScript << "message char not null" << endl;
+//    dbScript << ");" << endl;
 
-    dbScript << "create table if not exists system_info(" << endl;
-    dbScript << "runId char not null," << endl;
-    dbScript << "startTime char not null," << endl;
-    dbScript << "endTime char not null" << endl;
-    dbScript << ");" << endl;
+//    dbScript << "create table if not exists statemachines(" << endl;
+//    dbScript << "time char not null," << endl;
+//    dbScript << "state char not null," << endl;
+//    dbScript << "message char not null" << endl;
+//    dbScript << ");" << endl;
 
-    dbScript << "create table if not exists system_states(" << endl;
-    dbScript << "time char not null," << endl;
-    dbScript << "state char not null," << endl;
-    dbScript << "message char not null" << endl;
-    dbScript << ");" << endl;
+//    dbScript << "create table if not exists statuses(" << endl;
+//    dbScript << "time char not null," << endl;
+//    dbScript << "status char not null," << endl;
+//    dbScript << "value char not null," << endl;
+//    dbScript << "message char not null" << endl;
+//    dbScript << ");" << endl;
 
     //create subsystem tables
     for (uint i = 0; i < subsystems.size(); i++){
@@ -417,7 +483,7 @@ bool Config::read_config_file_data(){
         dbScript << scriptTableArg << endl;
         dbScript << "time char not null," << endl;
         dbScript << "sensorindex char not null," << endl;
-        dbScript << "sensorName char not null," << endl;
+        dbScript << "sensorname char not null," << endl;
         dbScript << "value char not null" << endl;
         dbScript << ");" << endl;
     }
@@ -427,7 +493,7 @@ bool Config::read_config_file_data(){
         dbScript << scriptTableArg << endl;
         dbScript << "time char not null," << endl;
         dbScript << "sensorindex char not null," << endl;
-        dbScript << "sensorName char not null," << endl;
+        dbScript << "sensorname char not null," << endl;
         dbScript << "value char not null" << endl;
         dbScript << ");" << endl;
     }
@@ -436,18 +502,19 @@ bool Config::read_config_file_data(){
     //run script
     dbase = new DB_Engine();
     dbase->runScript("script.sql");
-    //*************************FINISH**************************//
 
-    cout << "All Sensors: " << storedSensors.size() << endl;
+    //****************************************//
+    //*****record all sensors to database*****//
+    //****************************************//
     vector<string> cols;
-    cols.push_back("sensorIndex");
-    cols.push_back("sensorName");
+    cols.push_back("sensorindex");
+    cols.push_back("sensorname");
     cols.push_back("subsystem");
-    cols.push_back("minThreshold");
-    cols.push_back("maxThreshold");
-    cols.push_back("maxReactionId");
-    cols.push_back("minReactionId");
-    cols.push_back("calConstant");
+    cols.push_back("minthreshold");
+    cols.push_back("maxthreshold");
+    cols.push_back("maxresponseid");
+    cols.push_back("minresponseid");
+    cols.push_back("calconstant");
     vector<string> rows;
     for (uint n = 0; n < storedSensors.size(); n++){
         rows.clear();
@@ -461,8 +528,24 @@ bool Config::read_config_file_data(){
         rows.push_back(to_string(storedSensors.at(n)->calConst));
         dbase->insert_row("sensors",cols,rows);
     }
+
+    //********************************//
+    //*****initialize system info*****//
+    //********************************//
+    cols.clear();
+    rows.clear();
+    cols.push_back("starttime");
+    cols.push_back("endtime");
+    rows.push_back(get_curr_time());
+    rows.push_back("0");
+    dbase->insert_row("system_info",cols,rows);
+
+
+    //****************************************//
+    //*****launch internal worker modules*****//
+    //****************************************//
     dataMtr = new DataMonitor(allSensors,allResponses);
-    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates,FSMs,systemMode,controlSpecs,storedSensors);
+    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates,FSMs,systemMode,controlSpecs,storedSensors,allResponses);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
     canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,dataCtrl,FSMs);
     for (uint i = 0; i < subsystems.size(); i++){
@@ -473,6 +556,31 @@ bool Config::read_config_file_data(){
         subsystems.at(i)->start();
     }
     gpioInterface->startGPIOCheck();
-    cout << "Returning from config" << endl;
     return true;
+}
+
+/**
+ * @brief Config::isInteger checks whether string represents an integer
+ * @param s : input string
+ * @return true if input string is an integer. Otherwise returns false
+ */
+bool Config::isInteger(const string & s){
+   if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
+
+   char * p ;
+   strtol(s.c_str(), &p, 10) ;
+
+   return (*p == 0) ;
+}
+
+/**
+ * @brief SubsystemThread::get_curr_time - retrieves current operation system time
+ * @return
+ */
+string Config::get_curr_time(){
+    time_t t = time(nullptr);
+    struct tm now = *localtime(&t);
+    char buf[20];
+    strftime(buf, sizeof(buf),"%D_%T",&now);
+    return buf;
 }

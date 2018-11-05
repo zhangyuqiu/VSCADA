@@ -1,77 +1,67 @@
+create table if not exists system_info(
+starttime char not null,
+endtime char not null
+);
 create table if not exists system_log(
 time char not null,
-reactionId char not null,
+responseid char not null,
 message char not null
 );
 create table if not exists sensors(
-sensorIndex char not null,
-sensorName char not null,
+sensorindex char not null,
+sensorname char not null,
 subsystem char not null,
-minThreshold char not null,
-maxThreshold char not null,
-maxReactionId char not null,
-minReactionId char not null,
-calConstant char not null
-);
-create table if not exists reactions(
-reactionId char not null,
-message char not null
-);
-create table if not exists system_info(
-runId char not null,
-startTime char not null,
-endTime char not null
-);
-create table if not exists system_states(
-time char not null,
-state char not null,
-message char not null
+minthreshold char not null,
+maxthreshold char not null,
+maxresponseid char not null,
+minresponseid char not null,
+calconstant char not null
 );
 create table if not exists TSV_rawdata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );
 create table if not exists COOLING_rawdata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );
 create table if not exists TSI_rawdata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );
 create table if not exists GLV_rawdata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );
 create table if not exists TSV_caldata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );
 create table if not exists COOLING_caldata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );
 create table if not exists TSI_caldata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );
 create table if not exists GLV_caldata(
 time char not null,
 sensorindex char not null,
-sensorName char not null,
+sensorname char not null,
 value char not null
 );

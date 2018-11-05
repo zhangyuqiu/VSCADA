@@ -23,7 +23,7 @@ class iocontrol;
 class DB_Engine;
 class SubsystemThread;
 
-#define CONFIG_PRINTOUTS
+#define CONFIG_PRINT
 
 using namespace std;
 
@@ -35,9 +35,12 @@ public:
     Config();
     ~Config();
     bool read_config_file_data();
+    bool isInteger(const string & s);
+    string get_curr_time();
 
     //sensor vectors
     meta * storedSensor;
+    vector<string> configErrors;
     vector<meta *> storedSensors;
     vector<meta *> canSensors;
     vector<meta *> gpioSensors;

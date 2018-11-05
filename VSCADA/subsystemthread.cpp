@@ -293,34 +293,33 @@ void SubsystemThread::StartInternalThread()
  * @param rxnCode
  * @return
  */
-int SubsystemThread::initiateRxn(int rxnCode){
-    //print to log
-    vector<string> cols;
-    vector<string> rows;
-    cols.push_back("time");
-    cols.push_back("reactionId");
-    cols.push_back("message");
-    rows.push_back(get_curr_time());
-    rows.push_back(to_string(rxnCode));
+//void SubsystemThread::initiateRxn(int rxnCode){
+//    //print to log
+//    vector<string> cols;
+//    vector<string> rows;
+//    cols.push_back("time");
+//    cols.push_back("reactionId");
+//    cols.push_back("message");
+//    rows.push_back(get_curr_time());
+//    rows.push_back(to_string(rxnCode));
 
-    for (uint i = 0; i < responseVector.size(); i++){
-        response rsp = responseVector.at(i);
-        if (rsp.responseIndex == rxnCode){
-            rows.push_back(rsp.msg);
-            logMsg(rsp.msg);
-            emit pushMessage(rsp.msg);
-            if (rsp.primAddress >= 0){
-                cout << "sending out can data" << endl;
-                emit pushCANItem(rsp);
-            }
-            if (rsp.gpioPin >= 0){
-                emit pushGPIOData(rsp);
-            }
-        }
-    }
-    dbase->insert_row("system_log",cols,rows);
-    return 0;
-}
+//    for (uint i = 0; i < responseVector.size(); i++){
+//        response rsp = responseVector.at(i);
+//        if (rsp.responseIndex == rxnCode){
+//            rows.push_back(rsp.msg);
+//            logMsg(rsp.msg);
+//            emit pushMessage(rsp.msg);
+//            if (rsp.primAddress >= 0){
+//                cout << "sending out can data" << endl;
+//                emit pushCANItem(rsp);
+//            }
+//            if (rsp.gpioPin >= 0){
+//                emit pushGPIOData(rsp);
+//            }
+//        }
+//    }
+//    dbase->insert_row("system_log",cols,rows);
+//}
 
 /**
  * @brief SubsystemThread::get_curr_time - retrieves current operation system time

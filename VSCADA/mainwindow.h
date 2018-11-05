@@ -30,6 +30,9 @@ public:
     ~MainWindow();
     void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
     void addErrorMessage(QString message);
+    int active_dialog(string msg);
+    int passive_dialog(string msg);
+    string info_dialog(string msg);
     void addPoint(int x, int y);
     void exit();
 
@@ -119,6 +122,7 @@ private slots:
     void ctrlButtonPressed();
     void ctrlButtonReleased();
     void editUpdated();
+    void shutdownSystem();
 
 private:
     Ui::MainWindow *ui;

@@ -1,6 +1,5 @@
 <system>
 	<mode>
-		<name>CAR</name>
 		<type>0</type>
 	</mode>
 	<statemachine>
@@ -30,7 +29,7 @@
 			<name>Throttle</name>
 			<type>slider</type>
 			<minrange>0</minrange>
-			<maxrange>301</maxrange>
+			<maxrange>30</maxrange>
 			<primaddress>61</primaddress>
 			<auxaddress>48</auxaddress>
 			<offset>16</offset>
@@ -52,27 +51,101 @@
 			<offset>8</offset>
 		</control>
 	</systemcontrols>
-	<systemstate>
+	<systemstatus>
 		<name>Brake</name>
 		<primaddress>300</primaddress>
 		<auxaddress>61</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
-	</systemstate>
-	<systemstate>
+	</systemstatus>
+	<systemstatus>
 		<name>Throttle</name>
 		<primaddress>300</primaddress>
 		<auxaddress>60</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
-	</systemstate>
-	<systemstate>
+	</systemstatus>
+	<systemstatus>
 		<name>Speed Lock</name>
 		<primaddress>300</primaddress>
 		<auxaddress>59</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
-	</systemstate>
+	</systemstatus>
+	<response>
+		<id>0</id>
+		<description>Ignore Event</description>
+	</response>
+	<response>
+		<id>1</id>
+		<description>Writing to GPIO pin</description>
+		<gpiopin>20</gpiopin>
+		<gpioval>1</gpioval>
+	</response>
+	<response>
+		<id>2</id>
+		<description>Writing to CAN and GPIO</description>
+		<gpiopin>4</gpiopin>
+		<primaddress>123</primaddress>
+		<auxaddress>0</auxaddress>
+		<offset>32</offset>
+		<gpioval>243</gpioval>
+		<canval>345</canval>
+	</response>
+	<response>
+		<id>3</id>
+		<description>Writing to CAN</description>
+		<primaddress>345</primaddress>
+		<auxaddress>0</auxaddress>
+		<offset>32</offset>
+		<canval>33</canval>
+	</response>
+	<response>
+		<id>4</id>
+		<description>Turn on LED</description>
+		<gpiopin>21</gpiopin>
+		<gpioval>1</gpioval>
+	</response>
+	<response>
+		<id>5</id>
+		<description>Turn off LED</description>
+		<gpiopin>21</gpiopin>
+		<gpioval>0</gpioval>
+	</response>
+	<response>
+		<id>6</id>
+		<description>GLV fault signals</description>
+		<gpiopin>21</gpiopin>
+		<gpioval>1</gpioval>
+	</response>
+	<logic>
+		<sensorid1>2</sensorid1>
+		<sensorid2>1</sensorid2>
+		<state>
+			<name>Both High</name>
+			<val1>1</val1>
+			<val2>1</val2>
+			<responseid>3</responseid>
+		</state>
+		<state>
+			<name>Val1 High</name>
+			<val1>1</val1>
+			<val2>0</val2>
+			<responseid>4</responseid>
+		</state>
+		<state>
+			<name>Val2 High</name>
+			<val1>0</val1>
+			<val2>1</val2>
+			<responseid>5</responseid>
+		</state>
+		<state>
+			<name>None High</name>
+			<val1>0</val1>
+			<val2>0</val2>
+			<responseid>1</responseid>
+		</state>
+	</logic>
 	<subsystem>
 		<name>TSV</name>
 		<maxrate>500</maxrate>
@@ -89,8 +162,8 @@
 				<main>1</main>
 				<minimum>4</minimum>
 				<maximum>143</maximum>
-				<minreaction>0</minreaction>
-				<maxreaction>2</maxreaction>
+				<minresponse>0</minresponse>
+				<maxresponse>2</maxresponse>
 				<multiplier>1</multiplier>
 			</sensor>
 			<sensor>
@@ -104,8 +177,8 @@
 				<main>1</main>
 				<minimum>34</minimum>
 				<maximum>70</maximum>
-				<minreaction>1</minreaction>
-				<maxreaction>0</maxreaction>
+				<minresponse>1</minresponse>
+				<maxresponse>0</maxresponse>
 				<multiplier>1</multiplier>
 			</sensor>
 		</sensors>
@@ -124,9 +197,9 @@
 				<unit>Celcius</unit>
 				<minimum>1</minimum>
 				<maximum>4</maximum>
-				<normreaction>5</normreaction>
-				<minreaction>4</minreaction>
-				<maxreaction>5</maxreaction>
+				<normresponse>5</normresponse>
+				<minresponse>4</minresponse>
+				<maxresponse>5</maxresponse>
 				<multiplier>2.3</multiplier>
 			</sensor>
 		</sensors>
@@ -147,8 +220,8 @@
 				<unit>Celcius</unit>
 				<minimum>10</minimum>
 				<maximum>40</maximum>
-				<minreaction>0</minreaction>
-				<maxreaction>3</maxreaction>
+				<minresponse>0</minresponse>
+				<maxresponse>3</maxresponse>
 				<multiplier>4.3</multiplier>
 			</sensor>
 		</sensors>
@@ -169,8 +242,8 @@
 				<unit>Celcius</unit>
 				<minimum>10</minimum>
 				<maximum>30</maximum>
-				<minreaction>0</minreaction>
-				<maxreaction>3</maxreaction>
+				<minresponse>0</minresponse>
+				<maxresponse>3</maxresponse>
 				<multiplier>3.3</multiplier>
 			</sensor>
 			<sensor>
@@ -181,8 +254,8 @@
 				<main>1</main>
 				<minimum>0</minimum>
 				<maximum>1</maximum>
-				<minreaction>0</minreaction>
-				<maxreaction>0</maxreaction>
+				<minresponse>0</minresponse>
+				<maxresponse>0</maxresponse>
 				<multiplier>1</multiplier>
 			</sensor>
 			<sensor>
@@ -193,8 +266,8 @@
 				<main>1</main>
 				<minimum>0</minimum>
 				<maximum>1</maximum>
-				<minreaction>0</minreaction>
-				<maxreaction>0</maxreaction>
+				<minresponse>0</minresponse>
+				<maxresponse>0</maxresponse>
 				<multiplier>1</multiplier>
 			</sensor>
 			<sensor>
@@ -206,8 +279,8 @@
 				<unit>V</unit>
 				<minimum>20</minimum>
 				<maximum>50</maximum>
-				<minreaction>4</minreaction>
-				<maxreaction>5</maxreaction>
+				<minresponse>4</minresponse>
+				<maxresponse>5</maxresponse>
 				<multiplier>9.4</multiplier>
 			</sensor>
 		</sensors>

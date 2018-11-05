@@ -61,12 +61,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
     timer->start(500);
-
+    for (uint i = 0; i < conf->configErrors.size(); i++){
+        addErrorMessage(QString::fromStdString(conf->configErrors.at(i)));
+    }
     // can bus init here
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow(){
     delete ui;
 }
 
@@ -297,7 +298,7 @@ void MainWindow::update(){
     exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
     mainLayout->addWidget(exitButton,maxSensorRow+5,10,Qt::AlignCenter);
 
-    QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
+    QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(shutdownSystem()));
 
 
     indiButton =new QPushButton();
@@ -361,6 +362,7 @@ void MainWindow::update(){
             currLabel->setStyleSheet("font:"+labelFont+"pt;");
             fieldLayout->addWidget(currLabel);
             editControl = new QLineEdit;
+            editControl->setValidator( new QIntValidator(0, 999999999, this) );
             editControl->setMaximumWidth(unitWidth*5);
             editControl->setStyleSheet("font:"+labelFont+"pt;");
             fieldLayout->addWidget(editControl);
@@ -532,8 +534,6 @@ void MainWindow::plotGraph(){
 
 void MainWindow::receiveMsg(string msg){
     addErrorMessage(QString::fromStdString(msg));
-
-
 }
 
 void MainWindow::addPoint(int x, int y){
@@ -546,6 +546,7 @@ void MainWindow::addPoint(int x, int y){
 }
 
 void MainWindow::receiveErrMsg(string msg){
+    QString str = QString::fromStdString(msg);
     addErrorMessage(QString::fromStdString(msg));
     vector<SubsystemThread *> subs;
      subs = conf->subsystems;
@@ -600,6 +601,127 @@ void MainWindow::openDetailWindow(){
 }
 
 void MainWindow:: closeDetailPage(){
+
+}
+
+/**
+ * @brief MainWindow::passive_dialog creates a passive dialog box displaying
+ *  the respective message. User response is not required
+ * @param msg message to be displayed on the dialog box
+ * @return 1 upon succesful run
+ */
+int MainWindow::passive_dialog(string msg){
+    QDialog dlg;
+    QVBoxLayout la(&dlg);
+    QLabel ed;
+    ed.setText(QString::fromStdString(msg));
+    la.addWidget(&ed);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok);
+
+    connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(close()));
+
+    la.addWidget(buttonBox);
+    dlg.setLayout(&la);
+    dlg.adjustSize();
+
+    dlg.exec();
+    return 1;
+}
+
+/**
+ * @brief MainWindow::active_dialog creates an interactive dialog on which the
+ *  user can either accept or reject a request
+ * @param msg message to be displayed on the dialog
+ * @return either accepted or rejected
+ */
+int MainWindow::active_dialog(string msg){
+    QDialog dlg;
+    QVBoxLayout la(&dlg);
+    QLabel ed;
+    ed.setText(QString::fromStdString(msg));
+    la.addWidget(&ed);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+    connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
+
+    la.addWidget(buttonBox);
+    dlg.setLayout(&la);
+    int result = dlg.exec();
+
+    if(result == QDialog::Accepted){
+        return QDialog::Accepted;
+    } else {
+        return QDialog::Rejected;
+    }
+    return QDialog::Rejected;
+}
+
+/**
+ * @brief MainWindow::info_dialog creates an interactive dialog on which the
+ *  user can either accept or reject a request
+ * @param msg message to be displayed on the dialog
+ * @return either accepted or rejected
+ */
+string MainWindow::info_dialog(string msg){
+    QDialog dlg;
+    QLineEdit edit;
+    QVBoxLayout la(&dlg);
+    QLabel ed;
+    ed.setText(QString::fromStdString(msg));
+    la.addWidget(&ed);
+    la.addWidget(&edit);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+    connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
+
+    la.addWidget(buttonBox);
+    dlg.setLayout(&la);
+reprompt:
+    int result = dlg.exec();
+
+    if(result == QDialog::Accepted){
+        string str = edit.text().toStdString();
+        if (str.compare("") == 0){
+            goto reprompt;
+        }
+        str += ".db";
+        return str;
+    } else {
+        return "0";
+    }
+}
+
+void MainWindow::shutdownSystem(){
+    int confirmation = active_dialog("Save Session?");
+    string clearMsg = "Save session as?\n Please enter name without space characters";
+    string errMsg = "Name contains space characters. Please try again:";
+    bool error = 0;
+    string name = "";
+    if (confirmation == QDialog::Accepted){
+repeat:
+        if (error) name = info_dialog(errMsg);
+        else name = info_dialog(clearMsg);
+
+        if (name.compare("0") != 0){
+            for (uint i = 0; i < name.size(); ++i){
+                if (name[i] == ' '){
+                    goto repeat;
+                }
+            }
+            conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
+            conf->dataCtrl->saveSession(name);
+            passive_dialog("Saved!");
+        }
+        this->close();
+    } else {
+        conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
+        this->close();
+    }
 
 }
 

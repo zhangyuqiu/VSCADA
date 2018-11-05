@@ -1,6 +1,8 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM, int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors){
+DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads,
+                         vector<system_state *> stts, vector<statemachine *> FSM, int mode,
+                         vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp){
     // assign global objects
     systemMode = mode;
     if(mode == 1){
@@ -14,8 +16,12 @@ DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThre
     states = stts;
     FSMs = FSM;
     sensorVector = sensors;
+    responseVector = rsp;
     subsystems = threads;
     connect(this, SIGNAL(deactivateState(system_state)), this,SLOT(deactivateLog(system_state)));
+    for (uint i = 0 ; i < threads.size(); i++){
+        connect(threads.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
+    }
 }
 
 DataControl::~DataControl(){
@@ -171,6 +177,52 @@ int DataControl::collectData(){
     return 0;
 }
 
+void DataControl::executeRxn(int rxnCode){
+    //print to log
+    vector<string> cols;
+    vector<string> rows;
+    cols.push_back("time");
+    cols.push_back("reactionId");
+    cols.push_back("message");
+    rows.push_back(get_curr_time());
+    rows.push_back(to_string(rxnCode));
+
+    for (uint i = 0; i < responseVector.size(); i++){
+        response rsp = responseVector.at(i);
+        if (rsp.responseIndex == rxnCode){
+            rows.push_back(rsp.msg);
+            logMsg(rsp.msg);
+            emit pushMessage(rsp.msg);
+            if (rsp.primAddress >= 0){
+                cout << "sending out can data" << endl;
+                uint64_t fullData = static_cast<uint64_t>(rsp.canValue);
+                fullData = LSBto64Spec(rsp.auxAddress,rsp.offset,fullData);
+                emit sendCANData(rsp.primAddress,fullData);
+            }
+            if (rsp.gpioPin >= 0){
+                emit pushGPIOData(rsp);
+            }
+        }
+    }
+    dbase->insert_row("system_log",cols,rows);
+}
+
+/**
+ * @brief SubsystemThread::enqueueMsg - logs message in the database
+ * @param msg
+ */
+void DataControl::logMsg(string msg){
+    vector<string> cols;
+    vector<string> rows;
+    cols.push_back("time");
+    cols.push_back("responseid");
+    cols.push_back("message");
+    rows.push_back(get_curr_time());
+    rows.push_back("console");
+    rows.push_back(msg);
+    dbase->insert_row("system_log",cols,rows);
+}
+
 void DataControl::receive_control_val(int data, controlSpec * spec){
     int addr = spec->primAddress;
     uint64_t fullData = static_cast<uint64_t>(data);
@@ -179,14 +231,22 @@ void DataControl::receive_control_val(int data, controlSpec * spec){
     spec->sentVal = spec->sentVal | fullData;
     stringstream s;
     s << showbase << internal << setfill('0');
-    s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr << endl;
-
+    s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
+    logMsg(s.str());
     emit pushMessage(s.str());
     emit sendCANData(addr,spec->sentVal);
 }
 
 vector<controlSpec *> DataControl::get_control_specs(){
     return controlSpecs;
+}
+
+void DataControl::saveSession(string name){
+    string systemString = "mv system.db ./savedsessions/";
+    systemString += name;
+    system(systemString.c_str());
+    systemString = "rm system.db";
+    system(systemString.c_str());
 }
 
 /**

@@ -36,7 +36,6 @@ public:
     vector<meta *> get_metadata();                  //retrieves a configured list of sensors
     void setMonitor(DataMonitor * mtr);             //sets monitor object
     void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
-    int initiateRxn(int rxnCode);                   //execute configured reaction
     void calibrateData(meta * currSensor);
     void checkLogic(meta * currSensor);
     vector<meta *> get_mainMeta();
@@ -90,6 +89,7 @@ signals:
     void pushMessage(string msg);
     void pushErrMsg(string msg);
     void valueChanged();
+    void initiateRxn(int rxnCode);                               //execute configured reaction
 };
 
 #endif // SUBSYSTEMTHREAD_H

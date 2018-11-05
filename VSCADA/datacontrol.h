@@ -27,7 +27,7 @@ class DataControl : public QObject
     Q_OBJECT
 public:
     // Member function declarations
-    DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs, int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors);
+    DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs, int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp);
     ~DataControl();
 
     int collectData();
@@ -41,13 +41,16 @@ public:
     uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data);
     uint64_t LSBto64Spec(uint auxAddress, uint offset, uint64_t data);
     void init_meta_vector(vector<meta> vctr);
+    void logMsg(string msg);
     int change_sampling_rate(controlSpec spec, int rate);
     vector<controlSpec *> get_control_specs();
     string get_curr_time();
+    void saveSession(string name);
 
     // active submodule pointers
     DataMonitor * monitor;
     DB_Engine * dbase;
+    vector<response> responseVector;
     vector<system_state *> states;
     vector<SubsystemThread *> subsystems;
     vector<statemachine *> FSMs;
@@ -60,10 +63,12 @@ public:
     string modeName;
 
 public slots:
+    void executeRxn(int rxnCode);
     void deactivateLog(system_state * prevstate);
     void receive_can_data(uint32_t addr, uint64_t arr);
     void receive_control_val(int data, controlSpec * spec);
 signals:
+    void pushGPIOData(response rsp);
     void sendCANData(int address, uint64_t data);
     void deactivateState(system_state * prevstate);
     void activateState(system_state * newState);
