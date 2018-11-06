@@ -9,13 +9,12 @@
 #include "typedefs.h"
 #include "datamonitor.h"
 #include "datacontrol.h"
-#include "iocontrol.h"
 #include "db_engine.h"
 #include "gpio_interface.h"
 #include "canbus_interface.h"
 #include "subsystemthread.h"
 #include <QtXml/QtXml>
-
+#include "libusb_interface/test-usb7204.h"
 
 class DataControl;
 class DataMonitor;

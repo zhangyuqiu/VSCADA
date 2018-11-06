@@ -8,7 +8,7 @@ Config::~Config(){
 }
 
 bool Config::read_config_file_data(){
-
+//    funct();
     //local declarations
     vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;

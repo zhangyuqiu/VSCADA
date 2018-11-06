@@ -10,17 +10,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 LIBS += -l sqlite3
 LIBS += -pthread
-#LIBS += -lltdl
-#LIBS += -lcrypt
-#LIBS += -lm
-#LIBS += -lltdl
+LIBS += -lusb-1.0
+LIBS += -lhidapi-hidraw
 
 SOURCES += \
         main.cpp \
     db_engine.cpp \
     datamonitor.cpp \
     datacontrol.cpp \
-    iocontrol.cpp \
     config.cpp \
     mainwindow.cpp\
     qcustomplot.cpp \
@@ -29,13 +26,15 @@ SOURCES += \
     gpio_interface.cpp \
     detailpage.cpp \
     dashboard.cpp \
-    qcgaugewidget.cpp
+    qcgaugewidget.cpp \
+    libusb_interface/pmd.c \
+    libusb_interface/test-usb7204.c \
+    libusb_interface/usb-7204.c \
 
 HEADERS += \
     db_engine.h \
     datamonitor.h \
     datacontrol.h \
-    iocontrol.h \
     typedefs.h \
     config.h \
     mainwindow.h\
@@ -46,7 +45,10 @@ HEADERS += \
     gpio_interface.h \
     detailpage.h \
     dashboard.h \
-    qcgaugewidget.h
+    qcgaugewidget.h \
+    libusb_interface/pmd.h \
+    libusb_interface/usb-7204.h \
+    libusb_interface/test-usb7204.h
 
 FORMS += \
         mainwindow.ui \
