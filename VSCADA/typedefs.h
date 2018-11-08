@@ -32,8 +32,9 @@ typedef struct{
     int offset;
     int main;
     int i2cAddress;
+    int usbChannel;
     int gpioPin;
-    int val;
+    double val;
     double calConst;
     double calVal;
     void calData(){
@@ -71,6 +72,8 @@ typedef struct{
     int minslider;
     int pressVal;
     int releaseVal;
+    int usbChannel;
+    double multiplier;
     uint64_t sentVal;
 }controlSpec;
 

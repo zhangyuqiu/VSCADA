@@ -15,6 +15,9 @@
 class iocontrol;
 #include "subsystemthread.h"
 class SubsystemThread;
+#include "usb7402_interface.h"
+#include "gpio_interface.h"
+#include "canbus_interface.h"
 
 #define OFF 0
 #define IDLE_MODE 1
@@ -27,7 +30,7 @@ class DataControl : public QObject
     Q_OBJECT
 public:
     // Member function declarations
-    DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs, int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp);
+    DataControl(DataMonitor * mtr, gpio_interface *gpio, canbus_interface *can, usb7402_interface * usb, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs, int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp);
     ~DataControl();
 
     int collectData();
@@ -50,6 +53,9 @@ public:
     // active submodule pointers
     DataMonitor * monitor;
     DB_Engine * dbase;
+    gpio_interface * gpioInterface;
+    canbus_interface * canInterface;
+    usb7402_interface * usb7204;
     vector<response> responseVector;
     vector<system_state *> states;
     vector<SubsystemThread *> subsystems;
@@ -70,6 +76,7 @@ public slots:
 signals:
     void pushGPIOData(response rsp);
     void sendCANData(int address, uint64_t data);
+    void sendToUSB7204(uint8_t channel, float voltage);
     void deactivateState(system_state * prevstate);
     void activateState(system_state * newState);
     void updateFSM(statemachine * currFSM);

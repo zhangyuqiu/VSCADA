@@ -1,6 +1,6 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThread *> threads,
+DataControl::DataControl(DataMonitor * mtr, gpio_interface * gpio, canbus_interface * can, usb7402_interface * usb, DB_Engine * db, vector<SubsystemThread *> threads,
                          vector<system_state *> stts, vector<statemachine *> FSM, int mode,
                          vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp){
     // assign global objects
@@ -18,10 +18,16 @@ DataControl::DataControl(DataMonitor * mtr, DB_Engine * db, vector<SubsystemThre
     sensorVector = sensors;
     responseVector = rsp;
     subsystems = threads;
+    usb7204 = usb;
+    gpioInterface = gpio;
+    canInterface = can;
     connect(this, SIGNAL(deactivateState(system_state)), this,SLOT(deactivateLog(system_state)));
     for (uint i = 0 ; i < threads.size(); i++){
         connect(threads.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
     }
+    connect(this, SIGNAL(sendUSBData(uint8_t, float)), usb7204, SLOT(writeUSBData(uint8_t, float)));
+    connect(this, SIGNAL(sendCANData(int, uint64_t)), canInterface, SLOT(sendData(int, uint64_t)));
+    connect(canInterface, SIGNAL(process_can_data(uint32_t,uint64_t)), this, SLOT(receive_can_data(uint32_t,uint64_t)));
 }
 
 DataControl::~DataControl(){
@@ -225,16 +231,24 @@ void DataControl::logMsg(string msg){
 
 void DataControl::receive_control_val(int data, controlSpec * spec){
     int addr = spec->primAddress;
-    uint64_t fullData = static_cast<uint64_t>(data);
-    fullData = LSBto64Spec(spec->auxAddress,spec->offset,fullData);
-    spec->sentVal = spec->sentVal & ~LSBto64Spec(spec->auxAddress,spec->offset,0xFFFFFFFF);
-    spec->sentVal = spec->sentVal | fullData;
     stringstream s;
-    s << showbase << internal << setfill('0');
-    s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
-    logMsg(s.str());
+    if (addr != -1){
+        data = data*spec->multiplier;
+        uint64_t fullData = static_cast<uint64_t>(data);
+        fullData = LSBto64Spec(spec->auxAddress,spec->offset,fullData);
+        spec->sentVal = spec->sentVal & ~LSBto64Spec(spec->auxAddress,spec->offset,0xFFFFFFFF);
+        spec->sentVal = spec->sentVal | fullData;
+        s << showbase << internal << setfill('0');
+        s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
+        logMsg(s.str());
+        emit sendCANData(addr,spec->sentVal);
+    } else if (spec->usbChannel != -1){
+        float usbData = static_cast<float>(data)*static_cast<float>(spec->multiplier);
+        emit sendToUSB7204(static_cast<uint8_t>(spec->usbChannel),usbData);
+        s << "Value " << usbData << " written to usb out channel " << spec->usbChannel;
+        logMsg(s.str());
+    }
     emit pushMessage(s.str());
-    emit sendCANData(addr,spec->sentVal);
 }
 
 vector<controlSpec *> DataControl::get_control_specs(){

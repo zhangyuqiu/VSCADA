@@ -201,7 +201,7 @@ void gpio_interface::gpioCheckTasks(){
         if (currVal != pinData.at(i)){
             pinData.at(i) = currVal;
             gpioSensors.at(i)->val = currVal;
-            sensorValueChanged(gpioSensors.at(i));
+            emit sensorValueChanged(gpioSensors.at(i));
         }
     }
     for (uint i = 0; i < i2cSlaveAddresses.size(); i++){
@@ -209,7 +209,7 @@ void gpio_interface::gpioCheckTasks(){
         if (currVal != i2cData.at(i)){
             i2cData.at(i) = currVal;
             i2cSensors.at(i)->val = currVal;
-            sensorValueChanged(i2cSensors.at(i));
+            emit sensorValueChanged(i2cSensors.at(i));
         }
     }
 }
@@ -220,7 +220,6 @@ void gpio_interface::writeGPIOData(response rsp){
 
 int gpio_interface::startGPIOCheck(){
     timer->start(500);
-//    StartInternalThread();
     return 0;
 }
 

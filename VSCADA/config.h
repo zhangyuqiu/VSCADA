@@ -14,7 +14,7 @@
 #include "canbus_interface.h"
 #include "subsystemthread.h"
 #include <QtXml/QtXml>
-#include "libusb_interface/test-usb7204.h"
+#include "usb7402_interface.h"
 
 class DataControl;
 class DataMonitor;
@@ -43,6 +43,7 @@ public:
     vector<meta *> storedSensors;
     vector<meta *> canSensors;
     vector<meta *> gpioSensors;
+    vector<meta *> usbSensors;
     vector<meta *> i2cSensors;
     system_state * thisState;
     vector<system_state *> sysStates;
@@ -57,6 +58,7 @@ public:
     SubsystemThread * genericThread;
     canbus_interface * canInterface;
     gpio_interface * gpioInterface;
+    usb7402_interface * usb7204;
     vector<SubsystemThread *> subsystems;
     vector<controlSpec *> controlSpecs;
     int systemMode;

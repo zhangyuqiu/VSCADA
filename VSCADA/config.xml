@@ -26,13 +26,12 @@
 	</statemachine>
 	<systemcontrols>
 		<control>
-			<name>Throttle</name>
+			<name>Valve</name>
 			<type>slider</type>
 			<minrange>0</minrange>
-			<maxrange>30</maxrange>
-			<primaddress>61</primaddress>
-			<auxaddress>48</auxaddress>
-			<offset>16</offset>
+			<maxrange>100</maxrange>
+			<multiplier>0.04</multiplier>
+			<usbchannel>0</usbchannel>
 		</control>
 		<control>
 			<name>Brake</name>
@@ -223,6 +222,28 @@
 				<minresponse>0</minresponse>
 				<maxresponse>3</maxresponse>
 				<multiplier>4.3</multiplier>
+			</sensor>
+			<sensor>
+				<id>8</id>
+				<name>Strain Gauge</name>
+				<checkrate>5000</checkrate>
+				<main>1</main>
+				<usbchannel>1</usbchannel>
+				<unit>Pounds</unit>
+				<minimum>0</minimum>
+				<maximum>4</maximum>
+				<multiplier>-1</multiplier>
+			</sensor>
+			<sensor>
+				<id>9</id>
+				<name>RPM</name>
+				<checkrate>5000</checkrate>
+				<main>1</main>
+				<usbchannel>0</usbchannel>
+				<unit>RPM</unit>
+				<minimum>0</minimum>
+				<maximum>200</maximum>
+				<multiplier>-200</multiplier>
 			</sensor>
 		</sensors>
 	</subsystem>

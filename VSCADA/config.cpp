@@ -86,14 +86,20 @@ bool Config::read_config_file_data(){
                 currSpec->maxslider = -1;
                 currSpec->pressVal = -1;
                 currSpec->releaseVal = -1;
+                currSpec->usbChannel = -1;
                 currSpec->primAddress = -1;
                 currSpec->auxAddress = -1;
                 currSpec->offset = -1;
+                currSpec->multiplier = 1;
 
                 QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
                 for (int k = 0; k < controlXteristics.size(); k++){
                     if (controlXteristics.at(k).nodeName().toStdString().compare("name") == 0){
                         currSpec->name = controlXteristics.at(k).firstChild().nodeValue().toStdString();
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("usbchannel") == 0){
+                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            currSpec->usbChannel = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: USB channel not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->primAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
@@ -118,6 +124,8 @@ bool Config::read_config_file_data(){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
                             currSpec->maxslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
                         else configErrors.push_back("CONFIG ERROR: max slider value not an integer");
+                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("multiplier") == 0){
+                            currSpec->multiplier = stod(controlXteristics.at(k).firstChild().nodeValue().toStdString());
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("type") == 0){
                         if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("button") == 0){
                             currSpec->button = true;
@@ -392,7 +400,12 @@ bool Config::read_config_file_data(){
                                 storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor GPIO pin not an integer");
                             gpioSensors.push_back(storedSensor);
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("usbchannel") == 0){
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->usbChannel = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
+                            usbSensors.push_back(storedSensor);
+                        }else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor i2c address not an integer");
@@ -593,9 +606,16 @@ bool Config::read_config_file_data(){
     //*****launch internal worker modules*****//
     //****************************************//
     dataMtr = new DataMonitor(allSensors,allResponses);
-    dataCtrl = new DataControl(dataMtr,dbase,subsystems,sysStates,FSMs,systemMode,controlSpecs,storedSensors,allResponses);
+    usb7204 = new usb7402_interface(usbSensors,subsystems);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,dataCtrl,FSMs);
+    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,FSMs);
+    dataCtrl = new DataControl(dataMtr,gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
+                               FSMs,systemMode,controlSpecs,storedSensors,allResponses);
+
+
+    //**********************************//
+    //*****launch subsystem threads*****//
+    //**********************************//
     for (uint i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
         thread->setMonitor(dataMtr);
@@ -604,6 +624,7 @@ bool Config::read_config_file_data(){
         subsystems.at(i)->start();
     }
     gpioInterface->startGPIOCheck();
+    usb7204->startUSBCheck();
     return true;
 }
 

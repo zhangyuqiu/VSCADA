@@ -30,6 +30,7 @@ SOURCES += \
     libusb_interface/pmd.c \
     libusb_interface/test-usb7204.c \
     libusb_interface/usb-7204.c \
+    usb7402_interface.cpp
 
 HEADERS += \
     db_engine.h \
@@ -48,7 +49,8 @@ HEADERS += \
     qcgaugewidget.h \
     libusb_interface/pmd.h \
     libusb_interface/usb-7204.h \
-    libusb_interface/test-usb7204.h
+    libusb_interface/test-usb7204.h \
+    usb7402_interface.h
 
 FORMS += \
         mainwindow.ui \

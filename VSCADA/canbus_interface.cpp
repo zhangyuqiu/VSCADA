@@ -1,8 +1,8 @@
 #include "canbus_interface.h"
 
-canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state *> stts, DataControl *control, vector<statemachine *> FSMs) {
+canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string modulename, std::vector<SubsystemThread *> subs, vector<system_state *> stts, vector<statemachine *> FSMs) {
     this->modulename = modulename;
-    ctrl = control;
+//    ctrl = control;
     states = stts;
     stateMachines = FSMs;
     sensorVector = sensorVec;
@@ -10,12 +10,12 @@ canbus_interface::canbus_interface(std::vector<meta *> sensorVec, std::string mo
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
-    connect(ctrl, SIGNAL(sendCANData(int, uint64_t)), this, SLOT(sendData(int, uint64_t)));
+//    connect(ctrl, SIGNAL(sendCANData(int, uint64_t)), this, SLOT(sendData(int, uint64_t)));
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(pushCANItem(response)), this, SLOT(sendFrame(response)));
     }
-    connect(this, SIGNAL(process_can_data(uint32_t,uint64_t)), ctrl, SLOT(receive_can_data(uint32_t,uint64_t)));
+//    connect(this, SIGNAL(process_can_data(uint32_t,uint64_t)), ctrl, SLOT(receive_can_data(uint32_t,uint64_t)));
 
     datapoint dpt;
     for(uint i = 0; i < states.size(); i++){
