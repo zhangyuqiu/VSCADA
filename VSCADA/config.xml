@@ -163,7 +163,7 @@
 				<maximum>143</maximum>
 				<minresponse>0</minresponse>
 				<maxresponse>2</maxresponse>
-				<multiplier>1</multiplier>
+				<calmultiplier>1</calmultiplier>
 			</sensor>
 			<sensor>
 				<id>1</id>
@@ -178,7 +178,7 @@
 				<maximum>70</maximum>
 				<minresponse>1</minresponse>
 				<maxresponse>0</maxresponse>
-				<multiplier>1</multiplier>
+				<calmultiplier>1</calmultiplier>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -199,7 +199,7 @@
 				<normresponse>5</normresponse>
 				<minresponse>4</minresponse>
 				<maxresponse>5</maxresponse>
-				<multiplier>2.3</multiplier>
+				<calmultiplier>2.3</calmultiplier>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -221,7 +221,7 @@
 				<maximum>40</maximum>
 				<minresponse>0</minresponse>
 				<maxresponse>3</maxresponse>
-				<multiplier>4.3</multiplier>
+				<calmultiplier>4.3</calmultiplier>
 			</sensor>
 			<sensor>
 				<id>8</id>
@@ -232,7 +232,7 @@
 				<unit>Pounds</unit>
 				<minimum>0</minimum>
 				<maximum>4</maximum>
-				<multiplier>-1</multiplier>
+				<calmultiplier>-1</calmultiplier>
 			</sensor>
 			<sensor>
 				<id>9</id>
@@ -243,7 +243,7 @@
 				<unit>RPM</unit>
 				<minimum>0</minimum>
 				<maximum>200</maximum>
-				<multiplier>-200</multiplier>
+				<calmultiplier>-200</calmultiplier>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -265,7 +265,7 @@
 				<maximum>30</maximum>
 				<minresponse>0</minresponse>
 				<maxresponse>3</maxresponse>
-				<multiplier>3.3</multiplier>
+				<calmultiplier>3.3</calmultiplier>
 			</sensor>
 			<sensor>
 				<id>5</id>
@@ -277,7 +277,7 @@
 				<maximum>1</maximum>
 				<minresponse>0</minresponse>
 				<maxresponse>0</maxresponse>
-				<multiplier>1</multiplier>
+				<calmultiplier>1</calmultiplier>
 			</sensor>
 			<sensor>
 				<id>6</id>
@@ -289,7 +289,7 @@
 				<maximum>1</maximum>
 				<minresponse>0</minresponse>
 				<maxresponse>0</maxresponse>
-				<multiplier>1</multiplier>
+				<calmultiplier>1</calmultiplier>
 			</sensor>
 			<sensor>
 				<id>7</id>
@@ -302,7 +302,7 @@
 				<maximum>50</maximum>
 				<minresponse>4</minresponse>
 				<maxresponse>5</maxresponse>
-				<multiplier>9.4</multiplier>
+				<calmultiplier>9.4</calmultiplier>
 			</sensor>
 		</sensors>
 	</subsystem>

@@ -1,30 +1,48 @@
 #include "datacontrol.h"
 
-DataControl::DataControl(DataMonitor * mtr, gpio_interface * gpio, canbus_interface * can, usb7402_interface * usb, DB_Engine * db, vector<SubsystemThread *> threads,
-                         vector<system_state *> stts, vector<statemachine *> FSM, int mode,
-                         vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp){
-    // assign global objects
+/**
+ * @brief DataControl::DataControl class control
+ * @param gpio : GPIO interface module
+ * @param can : CAN interface module
+ * @param usb : USB7204 interface module
+ * @param db : SQLITE database engine
+ * @param threads : subsystem threads
+ * @param stts : system statuses
+ * @param FSM : system finite state machines
+ * @param mode : system mode
+ * @param ctrlSpecs : control specifications
+ * @param sensors : system sensors
+ * @param rsp : system responses
+ */
+DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_interface * usb, DB_Engine * db,
+                         vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM,
+                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp){
+
+    // set mode parameters
     systemMode = mode;
     if(mode == 1){
         modeName = "DYNO";
     } else if (mode == 0){
         modeName = "CAR";
     }
-    controlSpecs = ctrlSpecs;
-    monitor = mtr;
+
+    // assign global objects
     dbase = db;
-    states = stts;
     FSMs = FSM;
-    sensorVector = sensors;
+    usb7204 = usb;
+    states = stts;
+    canInterface = can;
     responseVector = rsp;
     subsystems = threads;
-    usb7204 = usb;
     gpioInterface = gpio;
-    canInterface = can;
-    connect(this, SIGNAL(deactivateState(system_state)), this,SLOT(deactivateLog(system_state)));
+    sensorVector = sensors;
+    controlSpecs = ctrlSpecs;
+
+    //signal-slot connections
     for (uint i = 0 ; i < threads.size(); i++){
         connect(threads.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
     }
+    connect(this, SIGNAL(deactivateState(system_state)), this,SLOT(deactivateLog(system_state)));
     connect(this, SIGNAL(sendUSBData(uint8_t, float)), usb7204, SLOT(writeUSBData(uint8_t, float)));
     connect(this, SIGNAL(sendCANData(int, uint64_t)), canInterface, SLOT(sendData(int, uint64_t)));
     connect(canInterface, SIGNAL(process_can_data(uint32_t,uint64_t)), this, SLOT(receive_can_data(uint32_t,uint64_t)));
@@ -34,58 +52,38 @@ DataControl::~DataControl(){
 
 }
 
-void DataControl::init_meta_vector(vector<meta> vctr){
-
-}
-
-int DataControl::write_to_CAN(controlSpec spec){
-    //write to CAN in response to data
-    //log this activity to db
-    //display change on back screen
-    return 0;
-}
-
-int DataControl::write_to_USB(controlSpec spec){
-    //write to USB in response to data
-    //log this activity to db
-    //display change on back screen
-    return 0;
-}
-
-int DataControl::write_to_GPIO(controlSpec spec){
-    //write to USB in response to data
-    //log this activity to db
-    //display change on back screen
-    return 0;
-}
-
-int DataControl::write_to_DYNO(controlSpec spec){
-    //write to DYNO in response to user input or data
-    //log this activity to db
-    //display write on back screen
-    return 0;
-}
-
-int DataControl::change_sampling_rate(controlSpec spec, int rate){
+/**
+ * @brief DataControl::change_sampling_rate changes the samplong rates of GPIO and USB interfaces
+ * @param rate : new sampling rate
+ * @return 0 on success, 0 otherwise
+ */
+int DataControl::change_sampling_rate(int rate){
     //change sampling rate for specific sensor(s)
-    return 0;
+    try {
+        usb7204->setSamplingRate(rate);
+        gpioInterface->setSamplingRate(rate);
+        return 1;
+    } catch (...) {
+        logMsg("ERROR: Smapling Rate not changed");
+        return 0;
+    }
 }
 
+/**
+ * @brief DataControl::receive_can_data : gets data from canbus
+ * @param addr : CAN address
+ * @param data : data transmitted
+ */
 void DataControl::receive_can_data(uint32_t addr, uint64_t data){
-
-    cout << endl << "Data Control Module" << endl;
-    cout << "Data Transmitted: " << data << endl;
+    //check whether address matches any state machine address
     for (uint i = 0; i < FSMs.size(); i++){
         statemachine * currFSM = FSMs.at(i);
-        if (currFSM->primAddress == addr){
-            cout << endl << "FSM found" << endl << endl;
-            for (int j = 0; j < currFSM->states.size(); j++){
+        if (currFSM->primAddress == static_cast<int>(addr)){
+            for (uint j = 0; j < currFSM->states.size(); j++){
                 system_state * currState = currFSM->states.at(j);
                 if(currState->value == isolateData64(currState->auxAddress,currState->offset,data)){
-                    cout << "ACTIVATING " << currState->name << endl;
                     change_system_state(currState);
                 } else if (currState->active){
-                    cout << "DEACTIVATING " << currState->name << endl;
                     deactivateLog(currState);
                 }
             }
@@ -93,6 +91,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
         }
     }
 
+    //check whether address matches any status address
     for (uint i = 0; i < states.size(); i++){
         if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data)){
             cout << endl << "State found" << endl << endl;
@@ -102,6 +101,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
         }
     }
 
+    //check whether address matches any sensor address
     for(uint i = 0; i < sensorVector.size(); i++){
         if(sensorVector.at(i)->primAddress == addr){
             meta * currSensor = sensorVector.at(i);
@@ -127,6 +127,13 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
     }
 }
 
+/**
+ * @brief DataControl::isolateData64 isolate bits of data as specified
+ * @param auxAddress : starting bit - LSB -> 63, MSB -> 0
+ * @param offset : number of bits in field
+ * @param data : bitstream (64) to be isolated
+ * @return 32 bit result
+ */
 uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data){
     if (auxAddress > 63 || offset > 64) return 0;
     uint lastAddr = sizeof (data)*8 - offset;
@@ -135,6 +142,13 @@ uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data)
     return static_cast<uint32_t>(data);
 }
 
+/**
+ * @brief DataControl::LSBto64Spec shift specified LSBits to specified field
+ * @param auxAddress : starting bit of target field - LSB -> 63, MSB -> 0
+ * @param offset : number of bits in field
+ * @param data : bitstream (64) to be isolated
+ * @return 64 bit result
+ */
 uint64_t DataControl::LSBto64Spec(uint auxAddress, uint offset, uint64_t data){
     if (auxAddress > 63 || offset > 64) return 0;
     uint lastAddr = sizeof (data)*8 - offset;
@@ -144,7 +158,13 @@ uint64_t DataControl::LSBto64Spec(uint auxAddress, uint offset, uint64_t data){
     return data;
 }
 
+/**
+ * @brief DataControl::change_system_state changes state as specified
+ * @param newState : state to be activated
+ * @return 1 on success, 0 otherwise
+ */
 int DataControl::change_system_state(system_state * newState){
+    try{
     newState->active = true;
     vector<string> cols;
     cols.push_back("time");
@@ -163,9 +183,16 @@ int DataControl::change_system_state(system_state * newState){
 
     //display change on back and front screen
     emit activateState(newState);
-    return 0;
+    return 1;
+    } catch(...){
+        return 0;
+    }
 }
 
+/**
+ * @brief DataControl::deactivateLog records state-exitting to database
+ * @param prevstate : state being exitted
+ */
 void DataControl::deactivateLog(system_state *prevstate){
     prevstate->active = false;
     vector<string> cols;
@@ -175,15 +202,15 @@ void DataControl::deactivateLog(system_state *prevstate){
     vector<string> rows;
     rows.push_back(get_curr_time());
     rows.push_back(prevstate->name);
-    rows.push_back("Entered State");
+    rows.push_back("Exit State");
     dbase->insert_row("system_states",cols,rows);
 }
 
-int DataControl::collectData(){
-    return 0;
-}
-
-void DataControl::executeRxn(int rxnCode){
+/**
+ * @brief DataControl::executeRxn executes specified response
+ * @param responseIndex : response identifier
+ */
+void DataControl::executeRxn(int responseIndex){
     //print to log
     vector<string> cols;
     vector<string> rows;
@@ -191,16 +218,14 @@ void DataControl::executeRxn(int rxnCode){
     cols.push_back("reactionId");
     cols.push_back("message");
     rows.push_back(get_curr_time());
-    rows.push_back(to_string(rxnCode));
+    rows.push_back(to_string(responseIndex));
 
     for (uint i = 0; i < responseVector.size(); i++){
         response rsp = responseVector.at(i);
-        if (rsp.responseIndex == rxnCode){
+        if (rsp.responseIndex == responseIndex){
             rows.push_back(rsp.msg);
             logMsg(rsp.msg);
-            emit pushMessage(rsp.msg);
             if (rsp.primAddress >= 0){
-                cout << "sending out can data" << endl;
                 uint64_t fullData = static_cast<uint64_t>(rsp.canValue);
                 fullData = LSBto64Spec(rsp.auxAddress,rsp.offset,fullData);
                 emit sendCANData(rsp.primAddress,fullData);
@@ -227,8 +252,14 @@ void DataControl::logMsg(string msg){
     rows.push_back("console");
     rows.push_back(msg);
     dbase->insert_row("system_log",cols,rows);
+    emit pushMessage(msg);
 }
 
+/**
+ * @brief DataControl::receive_control_val : receives control signal to be sent
+ * @param data : data to be sent
+ * @param spec : specifications of control signal
+ */
 void DataControl::receive_control_val(int data, controlSpec * spec){
     int addr = spec->primAddress;
     stringstream s;
@@ -240,21 +271,27 @@ void DataControl::receive_control_val(int data, controlSpec * spec){
         spec->sentVal = spec->sentVal | fullData;
         s << showbase << internal << setfill('0');
         s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
-        logMsg(s.str());
         emit sendCANData(addr,spec->sentVal);
     } else if (spec->usbChannel != -1){
         float usbData = static_cast<float>(data)*static_cast<float>(spec->multiplier);
         emit sendToUSB7204(static_cast<uint8_t>(spec->usbChannel),usbData);
         s << "Value " << usbData << " written to usb out channel " << spec->usbChannel;
-        logMsg(s.str());
     }
-    emit pushMessage(s.str());
+    logMsg(s.str());
 }
 
+/**
+ * @brief DataControl::get_control_specs : returns all configured control specs
+ * @return
+ */
 vector<controlSpec *> DataControl::get_control_specs(){
     return controlSpecs;
 }
 
+/**
+ * @brief DataControl::saveSession : saves database fiel in the savedsessions folder
+ * @param name : name of saved file
+ */
 void DataControl::saveSession(string name){
     string systemString = "mv system.db ./savedsessions/";
     systemString += name;

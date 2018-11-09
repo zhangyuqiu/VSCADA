@@ -1,5 +1,10 @@
 #include "usb7402_interface.h"
 
+/**
+ * @brief usb7402_interface::usb7402_interface : class constructor
+ * @param sensors : configures USB7204 configured sensors
+ * @param subs : configured subsystems
+ */
 usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThread *> subs)
 {
     subsystems = subs;
@@ -55,19 +60,54 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
     }
 }
 
+/**
+ * @brief usb7402_interface::~usb7402_interface : class destructor
+ */
 usb7402_interface::~usb7402_interface()
 {
     //blah...
 }
 
+/**
+ * @brief usb7402_interface::writeUSBData : writes data to specified channel
+ * @param channel : channel to write data to
+ * @param voltage : value to write to channel
+ */
 void usb7402_interface::writeUSBData(uint8_t channel, float voltage){
     usbAOut_USB7204(udev, channel, voltage);
 }
 
-int usb7402_interface::startUSBCheck(){
-    timer->start(1000);
+/**
+ * @brief usb7402_interface::setSamplingRate : sets the sampling rate of reading USB sensors
+ * @param newRate : rate to be set
+ * @return
+ */
+void usb7402_interface::setSamplingRate(int newRate){
+    samplingRate = newRate;
+    stopUSBCheck();
+    startUSBCheck();
 }
 
+/**
+ * @brief usb7402_interface::startUSBCheck : start sampling data
+ * @return
+ */
+void usb7402_interface::startUSBCheck(){
+    timer->start(samplingRate);
+}
+
+/**
+ * @brief usb7402_interface::stopUSBCheck : stop sampling data
+ */
+void usb7402_interface::stopUSBCheck(){
+    timer->stop();
+}
+
+/**
+ * @brief usb7402_interface::readChannel : reads specified channel
+ * @param channel : channel to be read
+ * @return
+ */
 double usb7402_interface::readChannel(uint8_t channel){
     int flag = fcntl(fileno(stdin), F_GETFL);
     fcntl(0, F_SETFL, flag | O_NONBLOCK);
@@ -81,6 +121,9 @@ double usb7402_interface::readChannel(uint8_t channel){
     return readVal;
 }
 
+/**
+ * @brief usb7402_interface::usbCheckTasks : tasks to check whether sensor values have changed
+ */
 void usb7402_interface::usbCheckTasks(){
     for (uint i = 0; i < sensorVector.size(); i++){
         meta * currSensor = sensorVector.at(i);

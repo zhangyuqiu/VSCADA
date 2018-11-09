@@ -17,102 +17,93 @@
 #define COOLING 3
 
 typedef struct{
-    int sensorIndex;
-    std::string sensorName;
-    double minimum;
-    double maximum;
-    std::string subsystem;
-    std::string unit;
+    int main;
+    double val;
+    int offset;
+    int gpioPin;
     int checkRate;
+    double calVal;
     int maxRxnCode;
     int minRxnCode;
-    int normRxnCode;
-    int primAddress;
     int auxAddress;
-    int offset;
-    int main;
     int i2cAddress;
     int usbChannel;
-    int gpioPin;
-    double val;
+    double minimum;
+    double maximum;
     double calConst;
-    double calVal;
-    void calData(){
-        calVal = static_cast<double>(val)*calConst;
-    }
+    int sensorIndex;
+    int normRxnCode;
+    int primAddress;
+    double calMultiplier;
+
+    std::string unit;
+    std::string subsystem;
+    std::string sensorName;
+
     void updateVal(int newVal)
-      {
+    {
         val = newVal;
-      }
+    }
+    void calData(){
+        calVal = val*calMultiplier + calConst;
+    }
 }meta;
 
 typedef struct{
-    int sensorIndex;
-    int value;
-    bool monitored;
-    bool displayed;
-    int primAddress;
-    int auxAddress;
-    int offset;
-    int gpioPin;
-    std::string timestamp;
-}datapoint;
-
-typedef struct{
-    std::string name;
-    std::string type;
-    bool slider;
-    bool button;
-    bool textField;
-    int primAddress;
-    int auxAddress;
     int offset;
     int gpiopin;
+    bool slider;
+    bool button;
+    int pressVal;
     int maxslider;
     int minslider;
-    int pressVal;
     int releaseVal;
     int usbChannel;
-    double multiplier;
+    int auxAddress;
+    bool textField;
+    int primAddress;
     uint64_t sentVal;
+    std::string name;
+    std::string type;
+    double multiplier;
 }controlSpec;
 
 typedef struct{
-    int responseIndex;
-    int displayTarget;
-    std::string msg;
-    int canValue;
-    int gpioValue;
     int defVal;
-    int primAddress;
-    int auxAddress;
     int offset;
     int gpioPin;
     int gpioPair;
+    int canValue;
+    int gpioValue;
+    int auxAddress;
+    std::string msg;
+    int primAddress;
+    int responseIndex;
+    int displayTarget;
 }response;
 
 typedef struct{
-    std::string logicName;
-    meta * sensor1;
-    meta * sensor2;
     double val1;
     double val2;
     response rsp;
+    meta * sensor1;
+    meta * sensor2;
+    std::string logicName;
 }logic;
 
 typedef struct{
-    std::string name;
-    int primAddress;
-    int auxAddress;
-    int offset;
     int value;
+    int offset;
     bool active;
+    int auxAddress;
+    int primAddress;
+    std::string name;
 }system_state;
 
 typedef struct{
-    int primAddress;
-    int auxAddress;
     int offset;
+    int auxAddress;
+    int primAddress;
     std::string name;
     std::vector<system_state *> states;
 }statemachine;

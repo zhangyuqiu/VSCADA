@@ -33,15 +33,19 @@ class gpio_interface : public QObject
 public:
     gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, vector<response> responses, vector<SubsystemThread *> subs);
     ~gpio_interface();
-    int GPIOExport(int pin);
-    int GPIOUnexport(int pin);
-    int GPIODirection(int pin, int dir);
+
+    void stopGPIOCheck();
+    void startGPIOCheck();
     int GPIORead(int pin);
-    int GPIOWrite(int pin, int value);
-    int startGPIOCheck();
-    int stopGPIOCheck();
+    int GPIOExport(int pin);
     int i2cRead(int address);
+    int GPIOUnexport(int pin);
+    void setSamplingRate(int newRate);
+    int GPIOWrite(int pin, int value);
+    int GPIODirection(int pin, int dir);
     int i2cWrite(int address, int data);
+
+    int samplingRate = 500;
 
     QTimer * timer;
     vector<int> pinData;
@@ -54,7 +58,7 @@ public:
     vector<SubsystemThread *> subsystems;
 
  protected:
-    virtual void gpioCheckTasks();                      //runs collection tasks
+    virtual void gpioCheckTasks();
 
 private:
     /** Links the member function to ordinary space */

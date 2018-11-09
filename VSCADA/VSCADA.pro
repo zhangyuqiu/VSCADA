@@ -16,7 +16,6 @@ LIBS += -lhidapi-hidraw
 SOURCES += \
         main.cpp \
     db_engine.cpp \
-    datamonitor.cpp \
     datacontrol.cpp \
     config.cpp \
     mainwindow.cpp\
@@ -34,7 +33,6 @@ SOURCES += \
 
 HEADERS += \
     db_engine.h \
-    datamonitor.h \
     datacontrol.h \
     typedefs.h \
     config.h \

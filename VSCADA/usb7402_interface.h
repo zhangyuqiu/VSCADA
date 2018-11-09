@@ -27,9 +27,11 @@ public:
     usb7402_interface(vector<meta *> sensors, vector<SubsystemThread *> subs);
     ~usb7402_interface();
 
-    double readChannel(uint8_t channel);
+    void stopUSBCheck();
+    void startUSBCheck();
     int writeChannel(int channel);
-    int startUSBCheck();
+    void setSamplingRate(int newRate);
+    double readChannel(uint8_t channel);
 
     QTimer * timer;
     vector<meta *> sensorVector;
@@ -38,6 +40,7 @@ public:
     float voltage;
     uint8_t gain;
     uint16_t wvalue;
+    int samplingRate = 1000;
     libusb_device_handle *udev;
     Calibration_AIN table_AIN[NMODE][NGAINS_USB7204][NCHAN_USB7204];
 

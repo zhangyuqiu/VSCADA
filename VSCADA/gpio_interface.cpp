@@ -1,5 +1,12 @@
 #include "gpio_interface.h"
 
+/**
+ * @brief gpio_interface::gpio_interface : class constructor
+ * @param gpioSen : configured GPIO sensors
+ * @param i2cSen : configured I2C sensors
+ * @param responses : configured responses
+ * @param subs : configured subsystems
+ */
 gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, vector<response> responses, vector<SubsystemThread *> subs)
 {
     subsystems = subs;
@@ -38,10 +45,12 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
         connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
         connect(subsystems.at(i), SIGNAL(pushGPIOData(response)), this, SLOT(writeGPIOData(response)));
     }
-
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
 }
 
+/**
+ * @brief gpio_interface::~gpio_interface : class destructor
+ */
 gpio_interface::~gpio_interface(){
     for (uint i = 0; i < gpioSensors.size(); i++){
         meta * currSensor = gpioSensors.at(i);
@@ -194,6 +203,9 @@ int gpio_interface::GPIOWrite(int pin, int value)
     return(0);
 }
 
+/**
+ * @brief gpio_interface::gpioCheckTasks : collect configured GPIO data
+ */
 void gpio_interface::gpioCheckTasks(){
     cout << "GPIO Tasks running" << endl;
     for (uint i = 0; i < activePins.size(); i++){
@@ -214,20 +226,43 @@ void gpio_interface::gpioCheckTasks(){
     }
 }
 
+/**
+ * @brief gpio_interface::writeGPIOData : writes response values to GPIO pin
+ * @param rsp : response parameters
+ */
 void gpio_interface::writeGPIOData(response rsp){
     GPIOWrite(rsp.gpioPin,rsp.gpioValue);
 }
 
-int gpio_interface::startGPIOCheck(){
-    timer->start(500);
-    return 0;
+/**
+ * @brief gpio_interface::setSamplingRate : sets sampling rate
+ * @param newRate : rate to be set
+ */
+void gpio_interface::setSamplingRate(int newRate){
+    samplingRate = newRate;
+    stopGPIOCheck();
+    startGPIOCheck();
 }
 
-int gpio_interface::stopGPIOCheck(){
-    //stop thread
-    return 0;
+/**
+ * @brief gpio_interface::startGPIOCheck : starts sampling timer
+ */
+void gpio_interface::startGPIOCheck(){
+    timer->start(samplingRate);
 }
 
+/**
+ * @brief gpio_interface::stopGPIOCheck : stops sampling timer
+ */
+void gpio_interface::stopGPIOCheck(){
+    timer->stop();
+}
+
+/**
+ * @brief gpio_interface::i2cRead : reads the I2C bus on the specified address
+ * @param address : I2C slave address
+ * @return : 0 on success, -1 otherwise
+ */
 int gpio_interface::i2cRead(int address){
     int file_i2c;
     long length = 4; //number of bytes to read
@@ -263,6 +298,12 @@ int gpio_interface::i2cRead(int address){
     return static_cast<int>(*buffer);
 }
 
+/**
+ * @brief gpio_interface::i2cWrite : writes to I2C bus
+ * @param address : slave address
+ * @param data : data to write to slave
+ * @return : 0 on success, -1 otherwise
+ */
 int gpio_interface::i2cWrite(int address, int data){
     int file_i2c;
     long length = 4;

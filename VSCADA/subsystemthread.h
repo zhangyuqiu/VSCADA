@@ -11,7 +11,6 @@
 #include <QQueue>
 #include <iomanip>
 #include "typedefs.h"
-#include "datamonitor.h"
 #include "db_engine.h"
 
 class DataMonitor;
@@ -83,8 +82,7 @@ public slots:
     void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds
     void checkTimeout();                                        //check whether we haven't received some data
 
-signals:
-    void pushCANItem(response rsp);                             //execute response to CAN
+signals:                           //execute response to CAN
     void pushGPIOData(response rsp);                            //execute response to GPIO
     void pushMessage(string msg);
     void pushErrMsg(string msg);

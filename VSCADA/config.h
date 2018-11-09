@@ -7,7 +7,6 @@
 #include <iostream>
 #include <fstream>
 #include "typedefs.h"
-#include "datamonitor.h"
 #include "datacontrol.h"
 #include "db_engine.h"
 #include "gpio_interface.h"
@@ -16,11 +15,6 @@
 #include <QtXml/QtXml>
 #include "usb7402_interface.h"
 
-class DataControl;
-class DataMonitor;
-class iocontrol;
-class DB_Engine;
-class SubsystemThread;
 
 #define CONFIG_PRINT
 
@@ -33,35 +27,38 @@ public:
     // member function declarations
     Config();
     ~Config();
+    string get_curr_time();
     bool read_config_file_data();
     bool isInteger(const string & s);
-    string get_curr_time();
 
-    //sensor vectors
+    //system mode : CAR or DYNO
+    int systemMode;
+
+    //dummy variables
     meta * storedSensor;
-    vector<string> configErrors;
-    vector<meta *> storedSensors;
-    vector<meta *> canSensors;
-    vector<meta *> gpioSensors;
-    vector<meta *> usbSensors;
-    vector<meta *> i2cSensors;
-    system_state * thisState;
-    vector<system_state *> sysStates;
     controlSpec * currSpec;
     statemachine * thisFSM;
-    vector<statemachine *> FSMs;
-    // submodule declarations
-    DataControl * dataCtrl;
-    DataMonitor * dataMtr;
-    DB_Engine * dbase;
-    iocontrol * ioControl;
-    SubsystemThread * genericThread;
-    canbus_interface * canInterface;
-    gpio_interface * gpioInterface;
-    usb7402_interface * usb7204;
-    vector<SubsystemThread *> subsystems;
-    vector<controlSpec *> controlSpecs;
-    int systemMode;
-};
+    system_state * thisState;
 
+    //data vectors
+    vector<meta *> canSensors;
+    vector<meta *> usbSensors;
+    vector<meta *> i2cSensors;
+    vector<meta *> gpioSensors;
+    vector<string> configErrors;
+    vector<meta *> storedSensors;
+
+    vector<statemachine *> FSMs;
+    vector<system_state *> sysStates;
+    vector<controlSpec *> controlSpecs;
+
+    // submodule declarations
+    DB_Engine * dbase;
+    DataControl * dataCtrl;
+    usb7402_interface * usb7204;
+    gpio_interface * gpioInterface;
+    canbus_interface * canInterface;
+    vector<SubsystemThread *> subsystems;
+
+};
 #endif // CONFIG_H

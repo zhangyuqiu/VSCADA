@@ -1,14 +1,26 @@
 ﻿#include "config.h"
 
+/**
+ * @brief Config::Config class constructor
+ */
 Config::Config(){
+    //blah...
 }
 
+/**
+ * @brief Config::~Config class destructor
+ */
 Config::~Config(){
-
+    //blah...
 }
 
+/**
+ * @brief Config::read_config_file_data : reads configuration file
+ *  and stores all configured data
+ * @return
+ */
 bool Config::read_config_file_data(){
-//    funct();
+    try {
     //local declarations
     vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;
@@ -70,6 +82,11 @@ bool Config::read_config_file_data(){
             }
         }
     }
+
+#ifdef CONFIG_PRINT
+    if (systemMode) cout << "System Mode: " << systemMode << ": CAR" << endl;
+    else cout << "System Mode: " << systemMode << ": DYNO" << endl;
+#endif
 
     //**************************************************//
     //*****for DYNO mode, process all control items*****//
@@ -343,7 +360,8 @@ bool Config::read_config_file_data(){
                     storedSensor->offset = -1;
                     storedSensor->i2cAddress = -1;
                     storedSensor->gpioPin = -1;
-                    storedSensor->calConst = -1;
+                    storedSensor->calMultiplier = 1;
+                    storedSensor->calConst = 0;
                     storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
                     QDomNodeList attributeList = sensor.childNodes();
@@ -393,8 +411,10 @@ bool Config::read_config_file_data(){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor check rate not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("multiplier") == 0){
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("calconstant") == 0){
                             storedSensor->calConst = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("calmultiplier") == 0){
+                            storedSensor->calMultiplier = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
                         } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
@@ -520,24 +540,6 @@ bool Config::read_config_file_data(){
     dbScript << "calconstant char not null" << endl;
     dbScript << ");" << endl;
 
-//    dbScript << "create table if not exists responses(" << endl;
-//    dbScript << "responseid char not null," << endl;
-//    dbScript << "message char not null" << endl;
-//    dbScript << ");" << endl;
-
-//    dbScript << "create table if not exists statemachines(" << endl;
-//    dbScript << "time char not null," << endl;
-//    dbScript << "state char not null," << endl;
-//    dbScript << "message char not null" << endl;
-//    dbScript << ");" << endl;
-
-//    dbScript << "create table if not exists statuses(" << endl;
-//    dbScript << "time char not null," << endl;
-//    dbScript << "status char not null," << endl;
-//    dbScript << "value char not null," << endl;
-//    dbScript << "message char not null" << endl;
-//    dbScript << ");" << endl;
-
     //create subsystem tables
     for (uint i = 0; i < subsystems.size(); i++){
         string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_rawdata(";
@@ -605,11 +607,10 @@ bool Config::read_config_file_data(){
     //****************************************//
     //*****launch internal worker modules*****//
     //****************************************//
-    dataMtr = new DataMonitor(allSensors,allResponses);
     usb7204 = new usb7402_interface(usbSensors,subsystems);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(storedSensors,"STUFF",subsystems,sysStates,FSMs);
-    dataCtrl = new DataControl(dataMtr,gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
+    canInterface = new canbus_interface();
+    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
                                FSMs,systemMode,controlSpecs,storedSensors,allResponses);
 
 
@@ -618,7 +619,6 @@ bool Config::read_config_file_data(){
     //**********************************//
     for (uint i = 0; i < subsystems.size(); i++){
         SubsystemThread * thread = subsystems.at(i);
-        thread->setMonitor(dataMtr);
         thread->set_rate(minrates.at(i));
         thread->setDB(dbase);
         subsystems.at(i)->start();
@@ -626,6 +626,11 @@ bool Config::read_config_file_data(){
     gpioInterface->startGPIOCheck();
     usb7204->startUSBCheck();
     return true;
+
+    } catch (...) {
+        configErrors.push_back("CRITICAL WARNING: CONFIGURATION UNSUCCESSFUL!!!");
+        return false;
+    }
 }
 
 /**
@@ -634,12 +639,11 @@ bool Config::read_config_file_data(){
  * @return true if input string is an integer. Otherwise returns false
  */
 bool Config::isInteger(const string & s){
-   if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
+    char * p ;
+    if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
+    strtol(s.c_str(), &p, 10) ;
 
-   char * p ;
-   strtol(s.c_str(), &p, 10) ;
-
-   return (*p == 0) ;
+    return (*p == 0);
 }
 
 /**

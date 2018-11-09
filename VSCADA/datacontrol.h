@@ -12,9 +12,7 @@
 #include <iomanip>
 #include "db_engine.h"
 #include "typedefs.h"
-class iocontrol;
 #include "subsystemthread.h"
-class SubsystemThread;
 #include "usb7402_interface.h"
 #include "gpio_interface.h"
 #include "canbus_interface.h"
@@ -30,56 +28,52 @@ class DataControl : public QObject
     Q_OBJECT
 public:
     // Member function declarations
-    DataControl(DataMonitor * mtr, gpio_interface *gpio, canbus_interface *can, usb7402_interface * usb, DB_Engine * db, vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs, int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp);
+    DataControl(gpio_interface *gpio, canbus_interface *can, usb7402_interface * usb, DB_Engine * db,
+                vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs,
+                int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp);
     ~DataControl();
 
-    int collectData();
     void setMode(int md);
-    int write_to_CAN(controlSpec spec);
-    int write_to_USB(controlSpec spec);
-    int write_to_GPIO(controlSpec spec);
-    int write_to_DYNO(controlSpec spec);
-    int write_to_databaase(datapoint dp);
-    int change_system_state(system_state * newState);
-    uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data);
-    uint64_t LSBto64Spec(uint auxAddress, uint offset, uint64_t data);
-    void init_meta_vector(vector<meta> vctr);
-    void logMsg(string msg);
-    int change_sampling_rate(controlSpec spec, int rate);
-    vector<controlSpec *> get_control_specs();
     string get_curr_time();
+    void logMsg(string msg);
     void saveSession(string name);
+    int change_sampling_rate(int rate);
+    vector<controlSpec *> get_control_specs();
+    void init_meta_vector(vector<meta> vctr);
+    int change_system_state(system_state * newState);
+    uint64_t LSBto64Spec(uint auxAddress, uint offset, uint64_t data);
+    uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data);
 
     // active submodule pointers
-    DataMonitor * monitor;
     DB_Engine * dbase;
+    DataMonitor * monitor;
+    usb7402_interface * usb7204;
+    vector<statemachine *> FSMs;
+    vector<meta *> sensorVector;
+    vector<system_state *> states;
     gpio_interface * gpioInterface;
     canbus_interface * canInterface;
-    usb7402_interface * usb7204;
     vector<response> responseVector;
-    vector<system_state *> states;
-    vector<SubsystemThread *> subsystems;
-    vector<statemachine *> FSMs;
     vector<controlSpec *> controlSpecs;
-    vector<meta *> sensorVector;
+    vector<SubsystemThread *> subsystems;
 
     // overall system mode
-    string currState;
     int systemMode;
     string modeName;
+    string currState;
 
 public slots:
-    void executeRxn(int rxnCode);
+    void executeRxn(int responseIndex);
     void deactivateLog(system_state * prevstate);
     void receive_can_data(uint32_t addr, uint64_t arr);
     void receive_control_val(int data, controlSpec * spec);
 signals:
-    void pushGPIOData(response rsp);
-    void sendCANData(int address, uint64_t data);
-    void sendToUSB7204(uint8_t channel, float voltage);
-    void deactivateState(system_state * prevstate);
-    void activateState(system_state * newState);
-    void updateFSM(statemachine * currFSM);
     void pushMessage(string msg);
+    void pushGPIOData(response rsp);
+    void updateFSM(statemachine * currFSM);
+    void activateState(system_state * newState);
+    void sendCANData(int address, uint64_t data);
+    void deactivateState(system_state * prevstate);
+    void sendToUSB7204(uint8_t channel, float voltage);
 };
 #endif // DATACONTROL_H

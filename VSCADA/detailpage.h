@@ -79,7 +79,7 @@ public:
 
      QVector<double> gx,gy;
 
-    datapoint data;
+//    datapoint data;
 
     Config * conf;
 private slots:
