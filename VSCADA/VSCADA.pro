@@ -29,7 +29,8 @@ SOURCES += \
     libusb_interface/pmd.c \
     libusb_interface/test-usb7204.c \
     libusb_interface/usb-7204.c \
-    usb7402_interface.cpp
+    usb7402_interface.cpp \
+    postprocess.cpp
 
 HEADERS += \
     db_engine.h \
@@ -48,12 +49,14 @@ HEADERS += \
     libusb_interface/pmd.h \
     libusb_interface/usb-7204.h \
     libusb_interface/test-usb7204.h \
-    usb7402_interface.h
+    usb7402_interface.h \
+    postprocess.h
 
 FORMS += \
         mainwindow.ui \
     detailpage.ui \
-    dashboard.ui
+    dashboard.ui \
+    postprocess.ui
 
 QT += serialbus widgets
 QT += core

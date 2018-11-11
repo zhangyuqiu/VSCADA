@@ -3,6 +3,7 @@
 #include "typedefs.h"
 #include "config.h"
 #include "dashboard.h"
+#include "postprocess.h"
 
 int main(int argc, char *argv[])
 {
@@ -31,9 +32,10 @@ int main(int argc, char *argv[])
 
     MainWindow * w = new MainWindow;
     dashboard * d= new dashboard;
+    postProcess * p = new postProcess;
     //d->setWindowState((w->windowState()^Qt::WindowFullScreen));
-    w->setWindowState((w->windowState()^Qt::WindowFullScreen));
-    w->show();
+    p->setWindowState((w->windowState()^Qt::WindowFullScreen));
+    p->show();
 
     return a.exec();
 }
