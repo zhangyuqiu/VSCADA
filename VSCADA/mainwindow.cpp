@@ -57,6 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(updateFSM(statemachine *)), this, SLOT(updateFSM_MW(statemachine *)));
     connect(conf->dataCtrl, SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
+    connect(conf->usb7204, SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
     connect(this, SIGNAL(sendControlValue(int, controlSpec *)), conf->dataCtrl, SLOT(receive_control_val(int, controlSpec *)));
 
     connect(timer, SIGNAL(timeout()), this, SLOT(updateVals()));
@@ -728,7 +729,7 @@ repeat:
 void MainWindow::updateGraph(){
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
-    cout << "Current System: " << currentSystem << endl;
+//    cout << "Current System: " << currentSystem << endl;
     SubsystemThread * currSub = subs.at(currentSystem);
     vector<meta *> subMeta = currSub->get_metadata();
 //    cout << "TEST THIS: " << subMeta.size() << endl;

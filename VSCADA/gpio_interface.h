@@ -41,7 +41,6 @@ public:
     int i2cRead(int address);
     int GPIOUnexport(int pin);
     void setSamplingRate(int newRate);
-    int GPIOWrite(int pin, int value);
     int GPIODirection(int pin, int dir);
     int i2cWrite(int address, int data);
 
@@ -68,7 +67,8 @@ private:
 
 public slots:
     void StartInternalThread(){InternalThreadEntryFunc(this);}
-    void writeGPIOData(response rsp);
+//    void writeGPIOData(response rsp);
+    void GPIOWrite(int pin, int value);
 
 signals:
     void sensorValueChanged(meta * sensor);

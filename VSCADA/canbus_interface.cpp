@@ -45,13 +45,12 @@ bool canbus_interface::canconnect() {
  * @brief canbus_interface::recieve_frame signal triggered when CAN frame is received
  */
 void canbus_interface::recieve_frame() {
-    qDebug() << "revieve_frame called" << endl;
     QCanBusFrame recframe = can_bus->readFrame();
     QByteArray b = recframe.payload();
     uint32_t a = recframe.frameId();
 
     uint64_t data = 0;
-    qDebug() << "QByteArray: " << b << endl;
+    qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
     for (int i = 0; i < b.size(); i++){
         data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
     }

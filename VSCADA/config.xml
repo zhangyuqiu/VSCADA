@@ -82,13 +82,19 @@
 		<gpioval>1</gpioval>
 	</response>
 	<response>
+		<id>7</id>
+		<description>Turn off PIN 20</description>
+		<gpiopin>20</gpiopin>
+		<gpioval>0</gpioval>
+	</response>
+	<response>
 		<id>2</id>
 		<description>Writing to CAN and GPIO</description>
 		<gpiopin>4</gpiopin>
 		<primaddress>123</primaddress>
 		<auxaddress>0</auxaddress>
 		<offset>32</offset>
-		<gpioval>243</gpioval>
+		<gpioval>1</gpioval>
 		<canval>345</canval>
 	</response>
 	<response>
@@ -177,7 +183,8 @@
 				<minimum>34</minimum>
 				<maximum>70</maximum>
 				<minresponse>1</minresponse>
-				<maxresponse>0</maxresponse>
+				<normresponse>7</normresponse>
+				<maxresponse>1</maxresponse>
 				<calmultiplier>1</calmultiplier>
 			</sensor>
 		</sensors>

@@ -624,7 +624,7 @@ bool Config::read_config_file_data(){
         subsystems.at(i)->start();
     }
     gpioInterface->startGPIOCheck();
-    usb7204->startUSBCheck();
+    if (usb7204->isActive) usb7204->startUSBCheck();
     return true;
 
     } catch (...) {

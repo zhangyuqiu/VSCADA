@@ -37,12 +37,15 @@ public:
     vector<meta *> sensorVector;
     vector<SubsystemThread *> subsystems;
 
+    bool isActive = 0;
     float voltage;
     uint8_t gain;
     uint16_t wvalue;
     int samplingRate = 1000;
     libusb_device_handle *udev;
     Calibration_AIN table_AIN[NMODE][NGAINS_USB7204][NCHAN_USB7204];
+
+    string initErr = "ERROR: USB-7204 device was not found on startup";
 
 protected:
    virtual void usbCheckTasks();                      //runs collection tasks
@@ -55,10 +58,11 @@ private:
 
 public slots:
    void StartInternalThread(){InternalThreadEntryFunc(this);}
-   void writeUSBData(uint8_t channel, float voltage);
+   void writeUSBData(uint8_t channel, float voltage, bool * success);
 
 signals:
    void sensorValueChanged(meta * sensor);
+   void pushMessage(string msg);
 };
 
 #endif // USB7402_INTERFACE_H

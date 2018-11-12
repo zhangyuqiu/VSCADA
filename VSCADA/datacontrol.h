@@ -69,11 +69,11 @@ public slots:
     void receive_control_val(int data, controlSpec * spec);
 signals:
     void pushMessage(string msg);
-    void pushGPIOData(response rsp);
+    void pushGPIOData(int pin, int value);
     void updateFSM(statemachine * currFSM);
     void activateState(system_state * newState);
     void sendCANData(int address, uint64_t data);
     void deactivateState(system_state * prevstate);
-    void sendToUSB7204(uint8_t channel, float voltage);
+    void sendToUSB7204(uint8_t channel, float voltage, bool*);
 };
 #endif // DATACONTROL_H

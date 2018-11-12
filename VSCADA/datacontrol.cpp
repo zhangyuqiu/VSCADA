@@ -39,11 +39,12 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     controlSpecs = ctrlSpecs;
 
     //signal-slot connections
-    for (uint i = 0 ; i < threads.size(); i++){
-        connect(threads.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
+    for (uint i = 0 ; i < subsystems.size(); i++){
+        connect(subsystems.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
     }
-    connect(this, SIGNAL(deactivateState(system_state)), this,SLOT(deactivateLog(system_state)));
-    connect(this, SIGNAL(sendUSBData(uint8_t, float)), usb7204, SLOT(writeUSBData(uint8_t, float)));
+    connect(this, SIGNAL(pushGPIOData(int,int)), gpioInterface,SLOT(GPIOWrite(int,int)));
+    connect(this, SIGNAL(deactivateState(system_state *)), this,SLOT(deactivateLog(system_state *)));
+    connect(this, SIGNAL(sendToUSB7204(uint8_t, float, bool*)), usb7204, SLOT(writeUSBData(uint8_t, float, bool*)));
     connect(this, SIGNAL(sendCANData(int, uint64_t)), canInterface, SLOT(sendData(int, uint64_t)));
     connect(canInterface, SIGNAL(process_can_data(uint32_t,uint64_t)), this, SLOT(receive_can_data(uint32_t,uint64_t)));
 }
@@ -106,7 +107,6 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
         if(sensorVector.at(i)->primAddress == addr){
             meta * currSensor = sensorVector.at(i);
             if (currSensor->val != isolateData64(currSensor->auxAddress,currSensor->offset,data)) {
-                cout << "Cal Constant: " << currSensor->calConst << endl;
                 currSensor->val = isolateData64(currSensor->auxAddress,currSensor->offset,data);
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
@@ -231,7 +231,7 @@ void DataControl::executeRxn(int responseIndex){
                 emit sendCANData(rsp.primAddress,fullData);
             }
             if (rsp.gpioPin >= 0){
-                emit pushGPIOData(rsp);
+                emit pushGPIOData(rsp.gpioPin,rsp.gpioValue);
             }
         }
     }
@@ -272,12 +272,16 @@ void DataControl::receive_control_val(int data, controlSpec * spec){
         s << showbase << internal << setfill('0');
         s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
         emit sendCANData(addr,spec->sentVal);
+        logMsg(s.str());
     } else if (spec->usbChannel != -1){
         float usbData = static_cast<float>(data)*static_cast<float>(spec->multiplier);
-        emit sendToUSB7204(static_cast<uint8_t>(spec->usbChannel),usbData);
-        s << "Value " << usbData << " written to usb out channel " << spec->usbChannel;
+        bool success = true;
+        emit sendToUSB7204(static_cast<uint8_t>(spec->usbChannel),usbData, &success);
+        if (success){
+            s << "Value " << usbData << " written to usb out channel " << spec->usbChannel;
+            logMsg(s.str());
+        }
     }
-    logMsg(s.str());
 }
 
 /**

@@ -43,7 +43,6 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
-        connect(subsystems.at(i), SIGNAL(pushGPIOData(response)), this, SLOT(writeGPIOData(response)));
     }
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
 }
@@ -180,7 +179,7 @@ int gpio_interface::GPIORead(int pin)
  * @param value
  * @return
  */
-int gpio_interface::GPIOWrite(int pin, int value)
+void gpio_interface::GPIOWrite(int pin, int value)
 {
     static const char s_values_str[] = "01";
 
@@ -191,23 +190,19 @@ int gpio_interface::GPIOWrite(int pin, int value)
     fd = open(path, O_WRONLY);
     if (-1 == fd) {
         fprintf(stderr, "Failed to open gpio value for writing!\n");
-        return(-1);
     }
 
     if (1 != write(fd, &s_values_str[LOW == value ? 0 : 1], 1)) {
         fprintf(stderr, "Failed to write value!\n");
-        return(-1);
     }
 
     close(fd);
-    return(0);
 }
 
 /**
  * @brief gpio_interface::gpioCheckTasks : collect configured GPIO data
  */
 void gpio_interface::gpioCheckTasks(){
-    cout << "GPIO Tasks running" << endl;
     for (uint i = 0; i < activePins.size(); i++){
         int currVal = GPIORead(activePins.at(i));
         if (currVal != pinData.at(i)){
@@ -224,14 +219,6 @@ void gpio_interface::gpioCheckTasks(){
             emit sensorValueChanged(i2cSensors.at(i));
         }
     }
-}
-
-/**
- * @brief gpio_interface::writeGPIOData : writes response values to GPIO pin
- * @param rsp : response parameters
- */
-void gpio_interface::writeGPIOData(response rsp){
-    GPIOWrite(rsp.gpioPin,rsp.gpioValue);
 }
 
 /**
@@ -272,7 +259,7 @@ int gpio_interface::i2cRead(int address){
     const char * filename = "/dev/i2c-1";
     if ((file_i2c = open(filename, O_RDONLY)) < 0)
     {
-        printf("Failed to open the i2c bus");
+        printf("Failed to open the i2c bus\n");
         return -1;
     }
 
