@@ -424,7 +424,7 @@ bool Config::read_config_file_data(){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->usbChannel = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
-                            usbSensors.push_back(storedSensor);
+//                            usbSensors.push_back(storedSensor);
                         }else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
