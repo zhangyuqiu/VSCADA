@@ -7,11 +7,17 @@ TARGET = VSCADA
 QT     += xml
 QT     += core gui printsupport sql
 DEFINES += QT_DEPRECATED_WARNINGS
+INCLUDEPATH += $$_PRO_FILE_PWD_
 
 LIBS += -l sqlite3
 LIBS += -pthread
-LIBS += -lusb-1.0
-LIBS += -lhidapi-hidraw
+#LIBS += -lusb-1.0
+#LIBS += -lhid -lsetupapi
+LIBS += -l:libudev.so.1
+LIBS += -l:libc.so.6
+LIBS += -l:libusb-1.0.so.0
+LIBS += -l:ld-linux.so.3
+LIBS += -lstdc++
 
 SOURCES += \
         main.cpp \
@@ -29,7 +35,8 @@ SOURCES += \
     libusb_interface/pmd.c \
     libusb_interface/test-usb7204.c \
     libusb_interface/usb-7204.c \
-    usb7402_interface.cpp
+    usb7402_interface.cpp \
+    libusb_interface/hidapi.c
 
 HEADERS += \
     db_engine.h \
@@ -48,7 +55,8 @@ HEADERS += \
     libusb_interface/pmd.h \
     libusb_interface/usb-7204.h \
     libusb_interface/test-usb7204.h \
-    usb7402_interface.h
+    usb7402_interface.h \
+    libusb_interface/hidapi.h
 
 FORMS += \
         mainwindow.ui \

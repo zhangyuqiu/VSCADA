@@ -23,9 +23,10 @@
 #ifdef __cplusplus
 extern "C" { 
 #endif 
-#include <libusb-1.0/libusb.h>
-#include "hidapi/hidapi.h"
-#include <time.h>
+#include </usr/include/libusb-1.0/libusb.h>
+#include "hidapi.h"
+#include </usr/include/time.h>
+#include </usr/include/stdint.h>
 
 /* These definitions are used to build the request type in usb_control_msg */
 #define MCC_VID         (0x09db)  // Vendor ID for Measurement Computing
