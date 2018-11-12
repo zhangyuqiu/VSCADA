@@ -10,44 +10,44 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
     subsystems = subs;
     sensorVector = sensors;
     udev = 0;
-    int ret = libusb_init(NULL);
-    if (ret < 0) {
-      perror("libusb_init: Failed to initialize libusb");
-      exit(1);
-    }
+                //    int ret = libusb_init(NULL);
+                //    if (ret < 0) {
+                //      perror("libusb_init: Failed to initialize libusb");
+                //      exit(1);
+                //    }
 
-    if ((udev = usb_device_find_USB_MCC(USB7204_PID, NULL))) {
-      printf("USB-7204 Device is found!\n");
-    } else {
-      printf("No device found.\n");
-      exit(0);
-    }
+                //    if ((udev = usb_device_find_USB_MCC(USB7204_PID, NULL))) {
+                //      printf("USB-7204 Device is found!\n");
+                //    } else {
+                //      printf("No device found.\n");
+                //      exit(0);
+                //    }
 
-    // some initialization
-    printf("Building calibration table.  This may take a while ...\n");
-    usbBuildGainTable_USB7204(udev, table_AIN);
-    int i = 0;
-    int j = 0;
-    for (i = 0; i < NGAINS_USB7204; i++ ) {
-      for (j = 0; j < NCHAN_USB7204/2; j++) {
-        printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
-           i, j, table_AIN[DF][i][j].slope, table_AIN[DF][i][j].intercept);
-      }
-    }
-    i = BP_10_00V;
-    for (j = 0; j < NCHAN_USB7204; j++) {
-      printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
-         i, j, table_AIN[SE][i][j].slope, table_AIN[SE][i][j].intercept);
-    }
+                //    // some initialization
+                //    printf("Building calibration table.  This may take a while ...\n");
+                //    usbBuildGainTable_USB7204(udev, table_AIN);
+                //    int i = 0;
+                //    int j = 0;
+                //    for (i = 0; i < NGAINS_USB7204; i++ ) {
+                //      for (j = 0; j < NCHAN_USB7204/2; j++) {
+                //        printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
+                //           i, j, table_AIN[DF][i][j].slope, table_AIN[DF][i][j].intercept);
+                //      }
+                //    }
+                //    i = BP_10_00V;
+                //    for (j = 0; j < NCHAN_USB7204; j++) {
+                //      printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
+                //         i, j, table_AIN[SE][i][j].slope, table_AIN[SE][i][j].intercept);
+                //    }
 
-    //print out the wMaxPacketSize.  Should be 64.
-    printf("\nwMaxPacketSize = %d\n", usb_get_max_packet_size(udev,0));
+                //    //print out the wMaxPacketSize.  Should be 64.
+                //    printf("\nwMaxPacketSize = %d\n", usb_get_max_packet_size(udev,0));
 
-    struct tm date;
+                //    struct tm date;
 
-    // Print the calibration date
-    getMFGCAL_USB7204(udev, &date);
-    printf("\nLast Calibration date: %s", asctime(&date));
+                //    // Print the calibration date
+                //    getMFGCAL_USB7204(udev, &date);
+                //    printf("\nLast Calibration date: %s", asctime(&date));
 
     gain = BP_5_00V;
     voltage = 4.9;

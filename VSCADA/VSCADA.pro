@@ -36,7 +36,8 @@ SOURCES += \
     libusb_interface/test-usb7204.c \
     libusb_interface/usb-7204.c \
     usb7402_interface.cpp \
-    libusb_interface/hidapi.c
+    libusb_interface/hidapi.c \
+    postprocess.cpp
 
 HEADERS += \
     db_engine.h \
@@ -56,12 +57,14 @@ HEADERS += \
     libusb_interface/usb-7204.h \
     libusb_interface/test-usb7204.h \
     usb7402_interface.h \
-    libusb_interface/hidapi.h
+    libusb_interface/hidapi.h \
+    postprocess.h
 
 FORMS += \
         mainwindow.ui \
     detailpage.ui \
-    dashboard.ui
+    dashboard.ui \
+    postprocess.ui
 
 QT += serialbus widgets
 QT += core
