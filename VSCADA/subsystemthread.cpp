@@ -38,6 +38,20 @@ SubsystemThread::~SubsystemThread(){
 
 }
 
+void SubsystemThread::setSystemTimer(QTime *timer){
+    systemTimer = timer;
+}
+
+string SubsystemThread::getProgramTime(){
+    int timeElapsed = systemTimer->elapsed();
+    double time = static_cast<double>(timeElapsed)/1000;
+    ostringstream streamObj;
+    streamObj << std::fixed;
+    streamObj << std::setprecision(3);
+    streamObj << time;
+    return streamObj.str();
+}
+
 /**
  * @brief SubsystemThread::setDB - sets database object for class
  * @param db
@@ -65,14 +79,14 @@ void SubsystemThread::logData(meta * currSensor){
     for (uint i = 0; i < sensorMeta.size(); i++){
 //        cout << "Checking sensor: " << sensorMeta.at(i)->sensorName << endl;
         if (sensorMeta.at(i) == currSensor){
-            rows.push_back(get_curr_time());
+            rows.push_back(getProgramTime());
             rows.push_back(currSensor->sensorName);
             rows.push_back(currSensor->sensorName);
             rows.push_back(to_string(currSensor->val));
             dbase->insert_row(rawTable,cols,rows);
 
             rows.clear();
-            rows.push_back(get_curr_time());
+            rows.push_back(getProgramTime());
             rows.push_back(to_string(currSensor->sensorIndex));
             rows.push_back(currSensor->sensorName);
             rows.push_back(to_string(currSensor->calVal));
@@ -168,7 +182,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
             }
         }
         error=true;
-        msg = get_curr_time() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
+        msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         emit initiateRxn(sensor->maxRxnCode);
         logMsg(msg);
@@ -181,7 +195,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
             }
         }
         error=true;
-        msg = get_curr_time() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
+        msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         emit initiateRxn(sensor->minRxnCode);
         logMsg(msg);
@@ -250,7 +264,7 @@ void SubsystemThread::logMsg(string msg){
     cols.push_back("time");
     cols.push_back("reactionId");
     cols.push_back("message");
-    rows.push_back(get_curr_time());
+    rows.push_back(getProgramTime());
     rows.push_back("console");
     rows.push_back(msg);
     dbase->insert_row("system_log",cols,rows);

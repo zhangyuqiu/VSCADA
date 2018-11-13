@@ -562,6 +562,8 @@ bool Config::read_config_file_data(){
     }
     dbScript.close();
 
+    system("rm system.db");
+
     //run script
     dbase = new DB_Engine();
     dbase->runScript("script.sql");
@@ -592,6 +594,16 @@ bool Config::read_config_file_data(){
         dbase->insert_row("sensors",cols,rows);
     }
 
+    //****************************************//
+    //*****launch internal worker modules*****//
+    //****************************************//
+    usb7204 = new usb7402_interface(usbSensors,subsystems);
+    gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
+    canInterface = new canbus_interface();
+    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
+                               FSMs,systemMode,controlSpecs,storedSensors,allResponses);
+
+
     //********************************//
     //*****initialize system info*****//
     //********************************//
@@ -602,16 +614,6 @@ bool Config::read_config_file_data(){
     rows.push_back(get_curr_time());
     rows.push_back("0");
     dbase->insert_row("system_info",cols,rows);
-
-
-    //****************************************//
-    //*****launch internal worker modules*****//
-    //****************************************//
-    usb7204 = new usb7402_interface(usbSensors,subsystems);
-    gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface();
-    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
-                               FSMs,systemMode,controlSpecs,storedSensors,allResponses);
 
 
     //**********************************//

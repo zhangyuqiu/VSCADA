@@ -37,10 +37,12 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     gpioInterface = gpio;
     sensorVector = sensors;
     controlSpecs = ctrlSpecs;
-
+    systemTimer = new QTime;
+    startSystemTimer();
     //signal-slot connections
     for (uint i = 0 ; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
+        subsystems.at(i)->setSystemTimer(systemTimer);
     }
     connect(this, SIGNAL(pushGPIOData(int,int)), gpioInterface,SLOT(GPIOWrite(int,int)));
     connect(this, SIGNAL(deactivateState(system_state *)), this,SLOT(deactivateLog(system_state *)));
@@ -51,6 +53,23 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
 
 DataControl::~DataControl(){
 
+}
+
+/**
+ * @brief DataControl::startSystemTimer : starts internal clock
+ */
+void DataControl::startSystemTimer(){
+    systemTimer->start();
+}
+
+string DataControl::getProgramTime(){
+    int timeElapsed = systemTimer->elapsed();
+    double time = static_cast<double>(timeElapsed)/1000;
+    ostringstream streamObj;
+    streamObj << std::fixed;
+    streamObj << std::setprecision(3);
+    streamObj << time;
+    return streamObj.str();
 }
 
 /**
@@ -171,7 +190,7 @@ int DataControl::change_system_state(system_state * newState){
     cols.push_back("state");
     cols.push_back("message");
     vector<string> rows;
-    rows.push_back(get_curr_time());
+    rows.push_back(getProgramTime());
     rows.push_back(newState->name);
     rows.push_back("Entered State");
 
@@ -200,7 +219,7 @@ void DataControl::deactivateLog(system_state *prevstate){
     cols.push_back("state");
     cols.push_back("message");
     vector<string> rows;
-    rows.push_back(get_curr_time());
+    rows.push_back(getProgramTime());
     rows.push_back(prevstate->name);
     rows.push_back("Exit State");
     dbase->insert_row("system_states",cols,rows);
@@ -217,7 +236,7 @@ void DataControl::executeRxn(int responseIndex){
     cols.push_back("time");
     cols.push_back("reactionId");
     cols.push_back("message");
-    rows.push_back(get_curr_time());
+    rows.push_back(getProgramTime());
     rows.push_back(to_string(responseIndex));
 
     for (uint i = 0; i < responseVector.size(); i++){
@@ -248,7 +267,7 @@ void DataControl::logMsg(string msg){
     cols.push_back("time");
     cols.push_back("responseid");
     cols.push_back("message");
-    rows.push_back(get_curr_time());
+    rows.push_back(getProgramTime());
     rows.push_back("console");
     rows.push_back(msg);
     dbase->insert_row("system_log",cols,rows);

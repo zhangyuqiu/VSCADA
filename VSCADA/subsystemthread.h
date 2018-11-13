@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <QTimer>
 #include <QQueue>
+#include <QTime>
 #include <iomanip>
 #include "typedefs.h"
 #include "db_engine.h"
@@ -32,11 +33,14 @@ public:
     void setDB(DB_Engine * db);                     //sets database object
     void set_rate(int newRate);                     //sets rate at which data is checked
     void logMsg(string msg);                        //enqueue message for display
+    string getProgramTime();
     vector<meta *> get_metadata();                  //retrieves a configured list of sensors
     void setMonitor(DataMonitor * mtr);             //sets monitor object
     void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
     void calibrateData(meta * currSensor);
     void checkLogic(meta * currSensor);
+    void setSystemTimer(QTime * timer);
+
     vector<meta *> get_mainMeta();
 
     QTimer * timer;                                 //timer to implement sampling frequency
@@ -45,6 +49,7 @@ public:
 
     QTimer * checkTmr;                              //timer placeholder for checking update frequencies
     QLineEdit * lineEdit;                           //lineEdif placeholder for sensor-specific line edits
+    QTime * systemTimer;
 
     int checkRate = 0;                              //rate for checking for sensor updates
     string subsystemId;                             //identifies subsystem by name

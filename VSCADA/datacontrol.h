@@ -36,6 +36,8 @@ public:
     void setMode(int md);
     string get_curr_time();
     void logMsg(string msg);
+    void startSystemTimer();
+    string getProgramTime();
     void saveSession(string name);
     int change_sampling_rate(int rate);
     vector<controlSpec *> get_control_specs();
@@ -50,13 +52,13 @@ public:
     usb7402_interface * usb7204;
     vector<statemachine *> FSMs;
     vector<meta *> sensorVector;
+    QTime * systemTimer;
     vector<system_state *> states;
     gpio_interface * gpioInterface;
     canbus_interface * canInterface;
     vector<response> responseVector;
     vector<controlSpec *> controlSpecs;
     vector<SubsystemThread *> subsystems;
-
     // overall system mode
     int systemMode;
     string modeName;

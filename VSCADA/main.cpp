@@ -34,8 +34,8 @@ int main(int argc, char *argv[])
     dashboard * d= new dashboard;
     postProcess * p = new postProcess;
     //d->setWindowState((w->windowState()^Qt::WindowFullScreen));
-    p->setWindowState((w->windowState()^Qt::WindowFullScreen));
-    p->show();
+    w->setWindowState((w->windowState()^Qt::WindowFullScreen));
+    w->show();
 
     return a.exec();
 }
