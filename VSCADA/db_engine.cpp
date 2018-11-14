@@ -95,7 +95,7 @@ int DB_Engine::number_of_rows(string table){
     int count = 0;
 
     fflush(stdout);
-    string sql = "SELECT Count(*) FROM "+table;
+    string sql = "SELECT Count FROM "+table;
 #ifdef DEBUG
     cout << sql << endl;
 #endif
@@ -111,7 +111,7 @@ int DB_Engine::max_rowid(string table){
     //char * zErrMsg;
     int count = 0;
 
-    string sql = "SELECT max(rowid) FROM "+table;
+    string sql = "SELECT marowid) FROM "+table;
 #ifdef DEBUG
     cout << sql << endl;
 #endif
@@ -345,4 +345,35 @@ int DB_Engine::clear_table(string table){
     sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     sqlite3_close(db);
     return 1;
+}
+
+void DB_Engine::setFile(string name){
+    this->db_file=name;
+}
+
+vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, QString target, QString name){
+    QString currentBase = QString::fromStdString(db_file);
+    QSqlDatabase mydb;
+    mydb=QSqlDatabase::addDatabase("QSQLITE");
+    mydb.setDatabaseName(currentBase);//path of data base
+    mydb.open();
+
+    // currentTable ="GLV_caldata";
+    //QString selectName = "SELECT * FROM "+currentTable;
+    QSqlQuery* qry =new QSqlQuery(mydb);
+//    qry->prepare(selectName);
+//    qry->exec();
+
+    vector<QString> data;
+    QString selectName="SELECT "+read+" FROM "+currentTable+" WHERE "+target+"='"+name+"'";
+    qry->prepare(selectName);
+    qry->exec();
+    while(qry->next()){
+          QString num =qry->value(0).toString();
+          data.push_back(num);
+
+        }
+
+    mydb.close();
+    return data;
 }

@@ -23,6 +23,7 @@ postProcess::postProcess(QWidget *parent) :
     unitHeight=height/20;//56
     maxSensorRow=0;
     raw=false;
+    db = new DB_Engine;
 
 
     QScrollArea *scrollArea = new QScrollArea();
@@ -72,12 +73,13 @@ void postProcess::update(){
           dataTable = new QTableView();
           dataTable->setFixedHeight(unitHeight*6);
           dataTable->setFixedWidth(unitWidth*7);
-          mainLayout->addWidget(dataTable,1,1);
+          mainLayout->addWidget(dataTable,2,1);
 
           message = new QListWidget();
           message->setFixedHeight(unitHeight*6);
           message->setFixedWidth(unitWidth*7);
-          mainLayout->addWidget(message,1,2);
+          mainLayout->addWidget(message,2,0);
+
 
           dbBox = new QComboBox;
           dbBox->setEditable (true);
@@ -135,9 +137,12 @@ void postProcess::addSensor(QStandardItem *poItem)
 {
 
     QString text=poItem->text();
-    label = new QLabel;
-    label->setText(text);
-    mainLayout->addWidget(label,0,1);
+    if(std::find(selected.begin(), selected.end(), text) != selected.end())
+    {
+     selected.erase(std::remove(selected.begin(), selected.end(), text), selected.end());
+    } else{
+    selected.push_back(text);
+    }
 
 }
 
@@ -157,15 +162,94 @@ void postProcess::loadTable(){
     modal->setQuery(*qry);
     dataTable->setModel(modal);
 
-    selectName = "SELECT value FROM "+currentTable;
-    qry->prepare(selectName);
-    qry->exec();
-    while(qry->next()){
-          QString num =qry->value(0).toString();
-          message->addItem(num);
+    QString name;
+    string thisBase = currentBase.toStdString();
+    db->setFile(thisBase);
+
+    int rowNum=2;
+    int columnNum=0;
+
+    for(int i=0; i<selected.size();i++){
+        columnNum=columnNum+2;
+        name=selected.at(i);
+        vector<QString>  data=db->getTargetColumn(currentTable,"value","sensorname",name);
+        for(int j=0; j<data.size();j++){
+            if((j+3)>rowNum){
+        rowNum++;
+            }
         }
 
-    mydb.close();
+    }
+//        name=selected.at(i);
+//    string thisBase = currentBase.toStdString();
+//   string thisTable = currentTable.toStdString();
+//    string thisName = name.toStdString();
+//    db->setFile(thisBase);
+//    vector<QString>  data=db->getTargetColumn(currentTable,"value","sensorname",name);
+//    message->addItem(name);
+//    for(int i=0; i<data.size();i++){
+//                QString display=data.at(i);
+//                message->addItem(display);
+
+//    }
+//    }
+
+    //table
+
+
+
+//   int columnNum =2*(selectName.size());
+
+ displayTable = new QTableWidget();
+ displayTable->setRowCount(rowNum);
+  displayTable->setColumnCount(columnNum);
+  displayTable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+//   QTableWidgetItem* sl = new QTableWidgetItem(selected.at(0));
+//   displayTable->setItem(0, 0, sl);
+//   displayTable->setSpan(0, 0, 2, 1);
+  int row=0;
+  int column=0;
+
+
+ for(int i=0; i<selected.size();i++){
+
+     name=selected.at(i);
+
+ vector<QString>  data=db->getTargetColumn(currentTable,"value","sensorname",name);
+ vector<QString>  time=db->getTargetColumn(currentTable,"time","sensorname",name);
+
+
+
+ QTableWidgetItem* unit = new QTableWidgetItem(selected.at(i));
+ displayTable->setItem(row,column,unit);
+ displayTable->setSpan(row,column,1,2);
+ row++;
+
+ QTableWidgetItem* timeDisplay = new QTableWidgetItem("Time");
+ displayTable->setItem(row,column,timeDisplay);
+
+ QTableWidgetItem* valueDisplay = new QTableWidgetItem("Value");
+ displayTable->setItem(row,column+1,valueDisplay);
+
+
+for(int i=0; i<data.size();i++){
+    row++;
+    QTableWidgetItem* timeStamp = new QTableWidgetItem(time.at(i));
+    displayTable->setItem(row,column,timeStamp);
+
+    QTableWidgetItem* item = new QTableWidgetItem(data.at(i));
+    displayTable->setItem(row,column+1,item);
+
+
+ }
+
+  column=column+2;
+  row=0;
+}
+
+ displayTable->setFixedHeight(unitHeight*6);
+ displayTable->setFixedWidth(unitWidth*7);
+ mainLayout->addWidget(displayTable,1,1);
 
 }
 

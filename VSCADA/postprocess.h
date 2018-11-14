@@ -44,6 +44,9 @@ public:
     QString currentBase;
     QTableView * dataTable;
     QSqlDatabase mydb;
+    QTableWidget* displayTable;
+    DB_Engine * db;
+    vector<QString> selected;
     bool raw;
     int unitWidth;
     int unitHeight;
