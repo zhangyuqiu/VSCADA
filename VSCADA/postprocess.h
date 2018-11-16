@@ -47,6 +47,7 @@ public:
     QTableWidget* displayTable;
     DB_Engine * db;
     vector<QString> selected;
+    QCustomPlot * plot;
     bool raw;
     int unitWidth;
     int unitHeight;

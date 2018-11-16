@@ -149,6 +149,16 @@ void postProcess::addSensor(QStandardItem *poItem)
 void postProcess::loadTable(){
     currentBase = dbBox->currentText();
 
+    plot = new QCustomPlot();
+
+    plot->setFixedHeight(unitHeight*6);
+    plot->setFixedWidth(unitWidth*7);
+
+    plot->yAxis->setRange(-20, -(40), Qt::AlignRight);
+     plot->xAxis->setRange(-20, -(40), Qt::AlignRight);
+    mainLayout->addWidget(plot,3,0);
+
+
     QSqlQueryModel *modal=new QSqlQueryModel();
     mydb=QSqlDatabase::addDatabase("QSQLITE");
     mydb.setDatabaseName(currentBase);//path of data base
@@ -231,25 +241,53 @@ void postProcess::loadTable(){
  QTableWidgetItem* valueDisplay = new QTableWidgetItem("Value");
  displayTable->setItem(row,column+1,valueDisplay);
 
+ QVector<double> gx;
+ QVector<double> gy;
 
-for(int i=0; i<data.size();i++){
+
+for(int j=0; j<data.size();j++){
     row++;
-    QTableWidgetItem* timeStamp = new QTableWidgetItem(time.at(i));
+    QTableWidgetItem* timeStamp = new QTableWidgetItem(time.at(j));
     displayTable->setItem(row,column,timeStamp);
 
-    QTableWidgetItem* item = new QTableWidgetItem(data.at(i));
+    QTableWidgetItem* item = new QTableWidgetItem(data.at(j));
     displayTable->setItem(row,column+1,item);
+
+    double y= data.at(j).QString::toDouble();
+
+    gx.append(j);
+    gy.append(y);
+
 
 
  }
 
   column=column+2;
   row=0;
+  plot->addGraph();
+  int a=rand() % 253 + 1;
+  int b=rand() % 253 + 1;
+  int c=rand() % 253 + 1;
+
+  plot->graph(i)->setPen(QPen(QColor(a,b,c)));
+ plot->graph(i)->setScatterStyle(QCPScatterStyle::ssCircle);
+ plot->graph(i)->setLineStyle(QCPGraph::lsLine);
+  plot->graph(i)->setData(gx,gy);
+
 }
+ plot->legend->setVisible(true);
+// plot->legend->setFont(legendFont);
+//plot->legend->setSelectedFont(legendFont);
+//plot->legend->setSelectableParts(QCPLegend::spItems);
+ plot->replot();
+ plot->update();
 
  displayTable->setFixedHeight(unitHeight*6);
  displayTable->setFixedWidth(unitWidth*7);
  mainLayout->addWidget(displayTable,1,1);
+
+
+
 
 }
 
