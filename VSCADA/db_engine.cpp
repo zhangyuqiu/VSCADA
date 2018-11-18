@@ -358,13 +358,21 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
     mydb.setDatabaseName(currentBase);//path of data base
     mydb.open();
 
-    // currentTable ="GLV_caldata";
-    //QString selectName = "SELECT * FROM "+currentTable;
     QSqlQuery* qry =new QSqlQuery(mydb);
-//    qry->prepare(selectName);
-//    qry->exec();
-
     vector<QString> data;
+    if(0== target.compare(" ")){
+
+            QString selectName="SELECT "+read+" FROM "+currentTable;
+            qry->prepare(selectName);
+            qry->exec();
+            while(qry->next()){
+                  QString num =qry->value(0).toString();
+                  data.push_back(num);
+
+                }
+
+}else{
+
     QString selectName="SELECT "+read+" FROM "+currentTable+" WHERE "+target+"='"+name+"'";
     qry->prepare(selectName);
     qry->exec();
@@ -373,6 +381,7 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
           data.push_back(num);
 
         }
+}
 
     mydb.close();
     return data;
