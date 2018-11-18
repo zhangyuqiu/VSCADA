@@ -95,7 +95,7 @@ int DB_Engine::number_of_rows(string table){
     int count = 0;
 
     fflush(stdout);
-    string sql = "SELECT Count(*) FROM "+table;
+    string sql = "SELECT Count FROM "+table;
 #ifdef DEBUG
     cout << sql << endl;
 #endif
@@ -111,7 +111,7 @@ int DB_Engine::max_rowid(string table){
     //char * zErrMsg;
     int count = 0;
 
-    string sql = "SELECT max(rowid) FROM "+table;
+    string sql = "SELECT marowid) FROM "+table;
 #ifdef DEBUG
     cout << sql << endl;
 #endif

@@ -37,6 +37,8 @@ int main(int argc, char *argv[])
     w->setWindowState((w->windowState()^Qt::WindowFullScreen));
 //    w->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
     w->show();
+//    p->setWindowState((w->windowState()^Qt::WindowFullScreen));
+//    p->show();
 
     return a.exec();
 }

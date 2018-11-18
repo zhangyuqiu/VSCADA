@@ -34,6 +34,8 @@ public:
     QString ** systemName;
     Config * conf;
     vector<QString> tableName;
+    vector<QString> sensorname;
+    vector<QString> subsystem;
     QListView * list;
     QStandardItemModel*  poModel;
     int maxSensorRow;
@@ -44,6 +46,10 @@ public:
     QString currentBase;
     QTableView * dataTable;
     QSqlDatabase mydb;
+    QTableWidget* displayTable;
+    DB_Engine * db;
+    vector<QString> selected;
+    QCustomPlot * plot;
     bool raw;
     int unitWidth;
     int unitHeight;
@@ -55,6 +61,7 @@ private slots:
     void getSensorList();
     void update();
     void loadTable();
+    void reload(int no);
 
 private:
     Ui::postProcess *ui;
