@@ -43,6 +43,7 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
+//        connect(subsystems.at(i), SIGNAL(pushGPIOData(response)), this, SLOT(writeGPIOData(response)));
     }
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
 }

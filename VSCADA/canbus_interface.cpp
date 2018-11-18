@@ -34,7 +34,7 @@ bool canbus_interface::canconnect() {
             return true;
         } else {
             errmsg = can_bus->errorString();
-            qDebug() << "Error connectiong device." << endl;
+            qDebug() << "Error connecting device." << endl;
             qDebug() << errmsg << endl;
             return false;
         }

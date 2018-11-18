@@ -15,6 +15,7 @@
 #include "canbus_interface.h"
 #include "subsystemthread.h"
 #include "detailpage.h"
+#include "postprocess.h"
 
 
 namespace Ui {
@@ -33,13 +34,10 @@ public:
     int active_dialog(string msg);
     int passive_dialog(string msg);
     string info_dialog(string msg);
-    void addPoint(int x, int y);
+    void addPoint(double x, double y);
     void exit();
 
-    vector<meta> GLV_meta;
-    vector<meta> TSI_meta;
-    vector<meta> TSV_meta;
-    vector<meta> COOLING_meta;
+    postProcess * postProcessWindow;
 
     vector<QLineEdit *> GLVEdits;
     vector<QLineEdit *> TSIEdits;
@@ -55,16 +53,21 @@ public:
     vector<controlSpec *> editCtrls;
 
     vector<QComboBox *> systemBox;
-    vector<QPushButton *> systemButton;
+    vector<QPushButton *> healthButtons;
+    vector<QPushButton *> detailButtons;
     vector<QPushButton *> stateButtons;
     vector<QPushButton *> FSMButtons;
+    vector<QLineEdit *> edits;
+    vector<QTimer *> editTimers;
+
     QString ** systemName;
 
 
-    QGridLayout * mainLayout;
+    QVBoxLayout * mainLayout;
     QWidget * central;
 
-
+    QGridLayout * bottomLayout = new QGridLayout;
+    QComboBox * plotComboBox = new QComboBox;
     QLabel * currLabel;
     QPushButton * stateButton;
     QPushButton * plotButton;
@@ -80,10 +83,14 @@ public:
     QCustomPlot * plot;
     QLabel * ctrlLabel;
 
+    QLineEdit * lineEdit;
+    QTimer * checkTmr;
 
     int currentSystem;
     int currentSubSystem;
+    bool initialized = false;
 
+    QTabWidget * tabs;
 
     QTimer * timer;
 
@@ -93,6 +100,8 @@ public:
     QString fontSize;
     int xinit;
     int yinit;
+    double graphMax =20;
+    double graphMin = 0;
     int maxSensorRow;
     bool detail;
 
@@ -104,11 +113,12 @@ public:
 
 signals:
     void sendControlValue(int data, controlSpec * spec);
+    void openDetailPage(SubsystemThread * thread);
 
 private slots:
-    void plotGraph();
+    void plotGraph(QString sensorName);
     void update();
-    void openDetailWindow();
+    void openDetailWindow(SubsystemThread *thread);
     void closeDetailPage();
     void updateVals();
     void updateGraph();
@@ -123,6 +133,12 @@ private slots:
     void ctrlButtonReleased();
     void editUpdated();
     void shutdownSystem();
+    void detailButtonPushed();
+    void closeTab(int tabId);
+    void updateTab(int tabId);
+    void updateEdits(meta * sensor);
+    void changeEditColor(string color, meta *sensor);
+    void checkTimeout();
 
 private:
     Ui::MainWindow *ui;

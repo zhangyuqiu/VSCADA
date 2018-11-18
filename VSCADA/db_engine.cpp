@@ -346,3 +346,43 @@ int DB_Engine::clear_table(string table){
     sqlite3_close(db);
     return 1;
 }
+
+void DB_Engine::setFile(string name){
+    this->db_file=name;
+}
+
+vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, QString target, QString name){
+    QString currentBase = QString::fromStdString(db_file);
+    QSqlDatabase mydb;
+    mydb=QSqlDatabase::addDatabase("QSQLITE");
+    mydb.setDatabaseName(currentBase);//path of data base
+    mydb.open();
+
+    QSqlQuery* qry =new QSqlQuery(mydb);
+    vector<QString> data;
+    if(0== target.compare(" ")){
+
+            QString selectName="SELECT "+read+" FROM "+currentTable;
+            qry->prepare(selectName);
+            qry->exec();
+            while(qry->next()){
+                  QString num =qry->value(0).toString();
+                  data.push_back(num);
+
+                }
+
+}else{
+
+    QString selectName="SELECT "+read+" FROM "+currentTable+" WHERE "+target+"='"+name+"'";
+    qry->prepare(selectName);
+    qry->exec();
+    while(qry->next()){
+          QString num =qry->value(0).toString();
+          data.push_back(num);
+
+        }
+}
+
+    mydb.close();
+    return data;
+}

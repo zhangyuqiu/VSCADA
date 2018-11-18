@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-//    QApplication::setStyle(QStyleFactory::create("fusion"));
+    QApplication::setStyle(QStyleFactory::create("fusion"));
 
     QPalette palette;
 //    palette.setColor(QPalette::Window, QColor(200,60,110));
@@ -32,9 +32,10 @@ int main(int argc, char *argv[])
 
     MainWindow * w = new MainWindow;
     dashboard * d= new dashboard;
-    postProcess * p = new postProcess;
+    //postProcess * p = new postProcess;
     //d->setWindowState((w->windowState()^Qt::WindowFullScreen));
     w->setWindowState((w->windowState()^Qt::WindowFullScreen));
+//    w->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
     w->show();
 
     return a.exec();

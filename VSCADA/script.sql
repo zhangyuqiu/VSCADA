@@ -41,6 +41,12 @@ sensorindex char not null,
 sensorname char not null,
 value char not null
 );
+create table if not exists MOTORCONTROLLER_rawdata(
+time char not null,
+sensorindex char not null,
+sensorname char not null,
+value char not null
+);
 create table if not exists TSV_caldata(
 time char not null,
 sensorindex char not null,
@@ -60,6 +66,12 @@ sensorname char not null,
 value char not null
 );
 create table if not exists GLV_caldata(
+time char not null,
+sensorindex char not null,
+sensorname char not null,
+value char not null
+);
+create table if not exists MOTORCONTROLLER_caldata(
 time char not null,
 sensorindex char not null,
 sensorname char not null,

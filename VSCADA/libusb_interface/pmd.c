@@ -86,22 +86,22 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
   // discover devices
   cnt = libusb_get_device_list(NULL, &list);
   if (cnt < 0) {
-    perror("usb_device_find_USB_MCC: No USB devices found on bus.");
-    return (void *) cnt;
+    printf("usb_device_find_USB_MCC: No USB devices found on bus.");
+    return (libusb_device_handle *) cnt;
   }
 
   for (i = 0; i < cnt; i++) {
     device = list[i];
     err = libusb_get_device_descriptor(device, &desc);
     if (err < 0) {
-      perror("usb_device_find_USB_MCC: Can not get USB device descriptor");
+      printf("usb_device_find_USB_MCC: Can not get USB device descriptor");
       goto out;
     }
     if (desc.idVendor == vendorId && desc.idProduct == productId) {
       found = device;
       err = libusb_open(found, &udev);
       if (err < 0) {
-	perror("usb_device_find_USB_MCC: libusb_open failed.");
+    printf("usb_device_find_USB_MCC: libusb_open failed.");
 	udev = NULL;
 	continue;
       }
@@ -130,7 +130,7 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
       if (serialID != NULL) {
 	err = libusb_get_string_descriptor_ascii(udev, desc.iSerialNumber, (unsigned char *) serial, sizeof(serial));
 	if (err < 0) {
-	  perror("usb_device_find_USB_MCC: Error reading serial number for device.");
+      printf("usb_device_find_USB_MCC: Error reading serial number for device.");
 	  libusb_release_interface(udev, 0);
 	  libusb_close(udev);
 	  udev = NULL;
@@ -160,7 +160,7 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
     if (cfg != 0) {
       err = libusb_set_configuration(udev, 1);
       if (err < 0) {
-	perror("usb_device_find_USB_MCC: error in setting configuration.");
+    printf("usb_device_find_USB_MCC: error in setting configuration.");
       }
     }
   }
@@ -170,7 +170,7 @@ out:
   libusb_free_device_list(list,1);
   libusb_close(udev);
   libusb_exit(NULL);
-  return (void *) -1;
+  return (libusb_device_handle *) -1;
 }
 
 int getUsbSerialNumber(libusb_device_handle *udev, unsigned char serial[])

@@ -16,19 +16,19 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<respo
     logicVector = lVector;
     mainSensorVector = mainMeta;
     init_data();
-    for(uint i = 0; i < sensors.size(); i++){
-        lineEdit = new QLineEdit;
-        checkTmr = new QTimer;
-        connect(checkTmr, SIGNAL(timeout()), checkTmr, SLOT(stop()));
-        connect(checkTmr, SIGNAL(timeout()), this, SLOT(checkTimeout()));
-        checkTmr->start(sensors.at(i)->checkRate);
-        edits.push_back(lineEdit);
-        lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
-        lineEdit->setAlignment(Qt::AlignCenter);
-        lineEdit->setDisabled(1);
-        editTimers.push_back(checkTmr);
-        updateEdits(sensors.at(i));
-    }
+//    for(uint i = 0; i < sensors.size(); i++){
+//        lineEdit = new QLineEdit;
+//        checkTmr = new QTimer;
+//        connect(checkTmr, SIGNAL(timeout()), checkTmr, SLOT(stop()));
+//        connect(checkTmr, SIGNAL(timeout()), this, SLOT(checkTimeout()));
+//        checkTmr->start(sensors.at(i)->checkRate);
+//        edits.push_back(lineEdit);
+//        lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
+//        lineEdit->setAlignment(Qt::AlignCenter);
+//        lineEdit->setDisabled(1);
+//        editTimers.push_back(checkTmr);
+//        updateEdits(sensors.at(i));
+//    }
 }
 
 /**
@@ -132,34 +132,6 @@ void SubsystemThread::setMonitor(DataMonitor * mtr){
 }
 
 /**
- * @brief SubsystemThread::updateEdits - updates text edit fields
- */
-void SubsystemThread::updateEdits(meta * sensor){
-    for(uint i = 0; i < edits.size(); i++){
-        if(sensorMeta.at(i) == sensor){
-            double num = sensor->calVal;
-            ostringstream streamObj;
-            streamObj << fixed;
-            streamObj << setprecision(2);
-            streamObj << num;
-            string val = streamObj.str();
-            editTimers.at(i)->start(sensor->checkRate);
-            string field = val + " " + sensor->unit;
-            edits.at(i)->setText(QString::fromStdString(field));
-        }
-    }
-}
-
-/**
- * @brief SubsystemThread::checkTimeout - checks whether any lineEdit hasn't received updates
- */
-void SubsystemThread::checkTimeout(){
-    for(uint i = 0; i < edits.size(); i++){
-        if (!editTimers.at(i)->isActive()) edits.at(i)->setText("--");
-    }
-}
-
-/**
  * @brief SubsystemThread::get_mainMeta : retrieves main subsystem sensors
  * @return
  */
@@ -175,37 +147,21 @@ void SubsystemThread::checkThresholds(meta * sensor){
     error = false;
     string msg;
     if (sensor->calVal > sensor->maximum){
-        for(uint i = 0; i < sensorMeta.size(); i++){
-            if (sensorMeta.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("color: #FF0000");
-                break;
-            }
-        }
+        emit updateEditColor("red",sensor);
         error=true;
         msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         emit initiateRxn(sensor->maxRxnCode);
         logMsg(msg);
-
     } else if (sensor->calVal < sensor->minimum){
-        for(uint i = 0; i < sensorMeta.size(); i++){
-            if (sensorMeta.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("color: #1E90FF");
-                break;
-            }
-        }
+        emit updateEditColor("blue",sensor);
         error=true;
         msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
         emit pushErrMsg(msg);
         emit initiateRxn(sensor->minRxnCode);
         logMsg(msg);
     } else {
-        for(uint i = 0; i < sensorMeta.size(); i++){
-            if (sensorMeta.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("color: #FFFF00");
-                break;
-            }
-        }
+        emit updateEditColor("yellow",sensor);
         emit initiateRxn(sensor->normRxnCode);
     }
 }
@@ -227,7 +183,7 @@ void SubsystemThread::receiveData(meta * currSensor){
         if (sensorMeta.at(i) == currSensor){
             calibrateData(currSensor);
             checkThresholds(currSensor);
-            updateEdits(currSensor);
+            emit updateDisplay(currSensor);
             checkLogic(currSensor);
             logData(currSensor);
             emit valueChanged();

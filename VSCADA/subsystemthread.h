@@ -83,9 +83,9 @@ public slots:
     void receiveData(meta * currSensor);
     void logData(meta * currSensor);                            //records sensor data in database
     void StartInternalThread();                                 //starts subsystem thread
-    void updateEdits(meta *sensor);                             //updates LineEdit displays
+//    void updateEdits(meta *sensor);                             //updates LineEdit displays
     void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds
-    void checkTimeout();                                        //check whether we haven't received some data
+//    void checkTimeout();                                        //check whether we haven't received some data
 
 signals:                           //execute response to CAN
     void pushGPIOData(response rsp);                            //execute response to GPIO
@@ -93,6 +93,8 @@ signals:                           //execute response to CAN
     void pushErrMsg(string msg);
     void valueChanged();
     void initiateRxn(int rxnCode);                               //execute configured reaction
+    void updateDisplay(meta * sensor);
+    void updateEditColor(string color, meta *sensor);
 };
 
 #endif // SUBSYSTEMTHREAD_H

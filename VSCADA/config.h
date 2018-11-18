@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
+#include <string>
 #include "typedefs.h"
 #include "datacontrol.h"
 #include "db_engine.h"
@@ -30,6 +32,7 @@ public:
     string get_curr_time();
     bool read_config_file_data();
     bool isInteger(const string & s);
+    string removeSpaces(string &str);
 
     //system mode : CAR or DYNO
     int systemMode;
@@ -47,6 +50,7 @@ public:
     vector<meta *> gpioSensors;
     vector<string> configErrors;
     vector<meta *> storedSensors;
+    vector<meta *> mainSensors;
 
     vector<statemachine *> FSMs;
     vector<system_state *> sysStates;

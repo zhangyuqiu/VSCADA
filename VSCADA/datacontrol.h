@@ -77,5 +77,6 @@ signals:
     void sendCANData(int address, uint64_t data);
     void deactivateState(system_state * prevstate);
     void sendToUSB7204(uint8_t channel, float voltage, bool*);
+    void updateEdits(meta *);
 };
 #endif // DATACONTROL_H

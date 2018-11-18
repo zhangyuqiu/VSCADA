@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <QString>
+#include<QtSql>
 
 using namespace std;
 
@@ -32,6 +34,8 @@ public:
     vector<vector<string> > retrieve_all_items(string table, vector<string> cols);
     vector<string> search_part_word(string table, vector<string> cols, string column, string thread, int row_num);
     int update_value(string table, string column, string col_id, string id, string new_value);
+    void setFile(string name);
+    vector<QString> getTargetColumn(QString table, QString column, QString condit_col, QString condition);
 
     // global items
     string db_file = "./system.db";

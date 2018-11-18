@@ -313,4 +313,24 @@
 			</sensor>
 		</sensors>
 	</subsystem>
+	<subsystem>
+		<name>MOTOR CONTROLLER</name>
+		<maxrate>500</maxrate>
+		<minrate>1000</minrate>
+		<sensors>
+			<sensor>
+				<id>8</id>
+				<name>Strain Gauge</name>
+				<checkrate>5000</checkrate>
+				<main>1</main>
+				<minimum>0</minimum>
+				<maximum>2</maximum>
+				<unit>Lbs</unit>
+				<calmultiplier>1</calmultiplier>
+				<calconstant>1.43</calconstant>
+				<usbchannel>1</usbchannel>
+
+			</sensor>
+		</sensors>
+	</subsystem>
 </system>

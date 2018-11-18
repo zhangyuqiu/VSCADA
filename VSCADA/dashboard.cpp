@@ -44,10 +44,6 @@ dashboard::dashboard(QWidget *parent) :
 
     this->setCentralWidget(scrollArea);
 
-
-
-
-
     battery = new QProgressBar();
     battery->setTextVisible(true);
     battery->setFixedHeight(14*unitHeight);

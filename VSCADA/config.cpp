@@ -424,7 +424,7 @@ bool Config::read_config_file_data(){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->usbChannel = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
-//                            usbSensors.push_back(storedSensor);
+                            usbSensors.push_back(storedSensor);
                         }else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
@@ -437,6 +437,7 @@ bool Config::read_config_file_data(){
                     allSensors.push_back(thisSensor);
                     if (storedSensor->main == 1){
                         mainMeta.push_back(storedSensor);
+                        mainSensors.push_back(storedSensor);
                     }
                 }
 
@@ -542,7 +543,8 @@ bool Config::read_config_file_data(){
 
     //create subsystem tables
     for (uint i = 0; i < subsystems.size(); i++){
-        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_rawdata(";
+        string subsystemName = removeSpaces(subsystems.at(i)->subsystemId);
+        string scriptTableArg = "create table if not exists " + subsystemName + "_rawdata(";
         dbScript << scriptTableArg << endl;
         dbScript << "time char not null," << endl;
         dbScript << "sensorindex char not null," << endl;
@@ -552,7 +554,8 @@ bool Config::read_config_file_data(){
     }
 
     for (uint i = 0; i < subsystems.size(); i++){
-        string scriptTableArg = "create table if not exists " + subsystems.at(i)->subsystemId + "_caldata(";
+        string subsystemName = removeSpaces(subsystems.at(i)->subsystemId);
+        string scriptTableArg = "create table if not exists " + subsystemName + "_caldata(";
         dbScript << scriptTableArg << endl;
         dbScript << "time char not null," << endl;
         dbScript << "sensorindex char not null," << endl;
@@ -625,8 +628,10 @@ bool Config::read_config_file_data(){
         thread->setDB(dbase);
         subsystems.at(i)->start();
     }
+
     gpioInterface->startGPIOCheck();
     if (usb7204->isActive) usb7204->startUSBCheck();
+    cout << "Returning from config" << endl;
     return true;
 
     } catch (...) {
@@ -649,7 +654,7 @@ bool Config::isInteger(const string & s){
 }
 
 /**
- * @brief SubsystemThread::get_curr_time - retrieves current operation system time
+ * @brief Config::get_curr_time - retrieves current operation system time
  * @return
  */
 string Config::get_curr_time(){
@@ -659,3 +664,17 @@ string Config::get_curr_time(){
     strftime(buf, sizeof(buf),"%D_%T",&now);
     return buf;
 }
+
+/**
+ * @brief Function to remove all spaces from a given string
+ */
+string Config::removeSpaces(string &str)
+    {
+        int size = str.length();
+        for(int j = 0; j<=size; j++){
+            for(int i = 0; i <=j; i++){
+                if(str[i] == ' ') str.erase(str.begin() + i);
+            }
+        }
+        return str;
+    }

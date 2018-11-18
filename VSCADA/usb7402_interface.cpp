@@ -68,7 +68,7 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
-        connect(subsystems.at(i), SIGNAL(pushGPIOData(response)), this, SLOT(writeGPIOData(response)));
+//        connect(subsystems.at(i), SIGNAL(pushGPIOData(response)), this, SLOT(writeGPIOData(response)));
     }
 }
 
@@ -111,6 +111,7 @@ void usb7402_interface::setSamplingRate(int newRate){
  * @return
  */
 void usb7402_interface::startUSBCheck(){
+    cout << "Starting USB Checking" << endl;
     timer->start(samplingRate);
 }
 
@@ -143,9 +144,12 @@ double usb7402_interface::readChannel(uint8_t channel){
  * @brief usb7402_interface::usbCheckTasks : tasks to check whether sensor values have changed
  */
 void usb7402_interface::usbCheckTasks(){
+    cout << "USB tasks running" << endl;
+    cout << "Sensor Vector size: " << sensorVector.size() << endl;
     for (uint i = 0; i < sensorVector.size(); i++){
         meta * currSensor = sensorVector.at(i);
         double val = readChannel(static_cast<uint8_t>(currSensor->usbChannel));
+        cout << "Value read: " << val << endl;
         if (abs(currSensor->val - val) > 0.001){
             currSensor->val = val;
             emit sensorValueChanged(currSensor);

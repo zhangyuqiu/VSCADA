@@ -49,6 +49,7 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     connect(this, SIGNAL(sendToUSB7204(uint8_t, float, bool*)), usb7204, SLOT(writeUSBData(uint8_t, float, bool*)));
     connect(this, SIGNAL(sendCANData(int, uint64_t)), canInterface, SLOT(sendData(int, uint64_t)));
     connect(canInterface, SIGNAL(process_can_data(uint32_t,uint64_t)), this, SLOT(receive_can_data(uint32_t,uint64_t)));
+    cout << "DATA CONTROL CONFIGURED" << endl;
 }
 
 DataControl::~DataControl(){
@@ -137,7 +138,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
                         subsystems.at(j)->checkThresholds(currSensor);
-                        subsystems.at(j)->updateEdits(currSensor);
+                        emit updateEdits(currSensor);
                         break;
                     }
                 }
