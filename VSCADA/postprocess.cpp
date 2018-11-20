@@ -78,7 +78,7 @@ void postProcess::update(){
 //          dataTable = new QTableView();
 //          dataTable->setFixedHeight(unitHeight*6);
 //          dataTable->setFixedWidth(unitWidth*7);
-//          mainLayout->addWidget(dataTable,1,2);
+//          mainLayout->addWidget(dataTable,0,2);
 
 //          message = new QListWidget();
 //          message->setFixedHeight(unitHeight*6);
@@ -108,16 +108,16 @@ void postProcess::update(){
              }
              mainLayout->addWidget(dbBox,0,0);
 
-       exitButton =new QPushButton();
-       exitButton->setText("EXIT");
-       QPalette palexit = exitButton->palette();
-       palexit.setColor(QPalette::Button, QColor(0,0,255));
-       exitButton->setPalette(palexit);
-       exitButton->setAutoFillBackground(true);
-//       exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
-       exitButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-       exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-       mainLayout->addWidget(exitButton,0,2,Qt::AlignCenter);
+//       exitButton =new QPushButton();
+//       exitButton->setText("EXIT");
+//       QPalette palexit = exitButton->palette();
+//       palexit.setColor(QPalette::Button, QColor(0,0,255));
+//       exitButton->setPalette(palexit);
+//       exitButton->setAutoFillBackground(true);
+////       exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
+//       exitButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+//       exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+//       mainLayout->addWidget(exitButton,0,2,Qt::AlignCenter);
 
 //       loadButton =new QPushButton();
 //       loadButton->setText("Load");
@@ -130,10 +130,11 @@ void postProcess::update(){
 //       loadButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
 //       mainLayout->addWidget(loadButton,0,1,Qt::AlignCenter);
 
-       QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
+//       QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
 //       QObject::connect(loadButton, SIGNAL (clicked()), this , SLOT(loadTable()));
 
-
+             startLabel = new QLabel();
+             mainLayout->addWidget(startLabel,0,1,Qt::AlignLeft);
 
 
        connect(dbBox, SIGNAL(currentIndexChanged(int)),this,SLOT(reload(int)));
@@ -176,15 +177,29 @@ void postProcess::loadTable(){
      plot->xAxis->setRange(-20, -(40), Qt::AlignRight);
     mainLayout->addWidget(plot,2,0,2,2);
 
+    vector<QString> tempstart =db->getTargetColumn("system_info","starttime"," "," ");
+    vector<QString> tempend=db->getTargetColumn("system_info","endtime"," "," ");
+
+    startTime=tempstart.at(0);
+    endTime =tempend.at(0);
+
+
+    QString  labelFont = QString::number(stringSize*1.5);
+    //startLabel = new QLabel();
+    startLabel->setText("Start Time at: "+startTime+";        End Time at: "+endTime+";");
+    startLabel->setStyleSheet("font:"+labelFont+"pt;");
+    startLabel->setFixedWidth(unitWidth*10);
+    //mainLayout->addWidget(startLabel,0,1,Qt::AlignLeft);
+
 
 //    QSqlQueryModel *modal=new QSqlQueryModel();
 //    mydb=QSqlDatabase::addDatabase("QSQLITE");
 //    mydb.setDatabaseName(currentBase);//path of data base
 //    mydb.open();
 
-//    QString currentTable ="GLV_caldata";
+//    //QString currentTable ="GLV_caldata";
 
-//    QString selectName = "SELECT * FROM TSI_rawdata";
+//    QString selectName = "SELECT * FROM system_info";
 //    //QString selectName = "SELECT * FROM sensors";
 //    QSqlQuery* qry =new QSqlQuery(mydb);
 //    qry->prepare(selectName);
