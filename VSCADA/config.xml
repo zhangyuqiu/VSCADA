@@ -261,12 +261,14 @@
 		<sensors>
 			<sensor>
 				<id>4</id>
-				<name>GLVTemp</name>
-				<primaddress>600</primaddress>
-				<auxaddress>56</auxaddress>
-				<offset>8</offset>
+				<name>GLVCurrent</name>
+				<i2caddress>1</i2caddress>
+				<i2creadpointer>4</i2creadpointer>
+				<i2creadconfig>17927</i2creadconfig>
+				<i2cdatafield>16</i2cdatafield>
+				<i2creaddelayus>140</i2creaddelayus>
 				<checkrate>3000</checkrate>
-				<main>1</main>
+				<main>0</main>
 				<unit>Celcius</unit>
 				<minimum>10</minimum>
 				<maximum>30</maximum>
@@ -300,17 +302,52 @@
 			</sensor>
 			<sensor>
 				<id>7</id>
-				<name>GLVI2C</name>
-				<i2caddress>5</i2caddress>
+				<name>GLVTemp</name>
+				<i2caddress>0</i2caddress>
+				<i2creadpointer>64</i2creadpointer>
+				<i2creadconfig>262400</i2creadconfig>
+				<i2cdatafield>12</i2cdatafield>
+				<i2creaddelayus>100</i2creaddelayus>
 				<checkrate>5000</checkrate>
-				<main>0</main>
-				<unit>V</unit>
+				<main>1</main>
+				<unit>C</unit>
 				<minimum>20</minimum>
 				<maximum>50</maximum>
 				<minresponse>4</minresponse>
 				<maxresponse>5</maxresponse>
 				<calmultiplier>9.4</calmultiplier>
 			</sensor>
+			<sensor>
+				<id>9</id>
+				<name>GLVBusVoltage</name>
+				<i2caddress>1</i2caddress>
+				<i2creadpointer>2</i2creadpointer>
+				<i2creadconfig>17927</i2creadconfig>
+				<i2cdatafield>16</i2cdatafield>
+				<i2creaddelayus>140</i2creaddelayus>
+				<checkrate>5000</checkrate>
+				<main>0</main>
+				<unit>V</unit>
+				<minimum>0.5</minimum>
+				<maximum>5</maximum>
+				<calmultiplier>1</calmultiplier>
+			</sensor>
+			<sensor>
+                                <id>10</id>
+                                <name>GLVPower</name>
+                                <i2caddress>1</i2caddress>
+                                <i2creadpointer>3</i2creadpointer>
+                                <i2creadconfig>17927</i2creadconfig>
+                                <i2cdatafield>16</i2cdatafield>
+                                <i2creaddelayus>140</i2creaddelayus>
+                                <checkrate>5000</checkrate>
+                                <main>0</main>
+                                <unit>W</unit>
+                                <minimum>0.1</minimum>
+                                <maximum>3</maximum>
+                                <calmultiplier>1</calmultiplier>
+                        </sensor>
+
 		</sensors>
 	</subsystem>
 	<subsystem>

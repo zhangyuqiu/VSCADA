@@ -247,6 +247,7 @@ bool Config::read_config_file_data(){
                 else configErrors.push_back("CONFIG ERROR: state value not an integer");
             }
         }
+        thisState->active = false;
         sysStates.push_back(thisState);
     }
 
@@ -358,10 +359,15 @@ bool Config::read_config_file_data(){
                     storedSensor->primAddress = -1;
                     storedSensor->auxAddress = -1;
                     storedSensor->offset = -1;
-                    storedSensor->i2cAddress = -1;
                     storedSensor->gpioPin = -1;
                     storedSensor->calMultiplier = 1;
                     storedSensor->calConst = 0;
+                    storedSensor->i2cAddress = -1;
+                    storedSensor->i2cFileDescriptor = -1;
+                    storedSensor->i2cReadPointer = 0;
+                    storedSensor->i2cReadConfig = 0;
+                    storedSensor->i2cReadDelay = 0;
+                    storedSensor->i2cDataField = 16;
                     storedSensor->subsystem = subSystemId;
                     QDomNode sensor = sensorsList.at(k);
                     QDomNodeList attributeList = sensor.childNodes();
@@ -430,6 +436,22 @@ bool Config::read_config_file_data(){
                                 storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor i2c address not an integer");
                             i2cSensors.push_back(storedSensor);
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2creadpointer") == 0){
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->i2cReadPointer = static_cast<uint8_t>(stoul(attributeList.at(m).firstChild().nodeValue().toStdString()));
+                            else configErrors.push_back("CONFIG ERROR: sensor i2c pointer set not an integer");
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2creadconfig") == 0){
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->i2cReadConfig = static_cast<uint32_t>(stoul(attributeList.at(m).firstChild().nodeValue().toStdString()));
+                            else configErrors.push_back("CONFIG ERROR: sensor i2c configuration stream not an integer");
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2cdatafield") == 0){
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->i2cDataField = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor i2c data field size not an integer");
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2creaddelay") == 0){
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->i2cReadDelay = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor i2c read delay not an integer");
                         }
                     }
                     storedSensors.push_back(storedSensor);

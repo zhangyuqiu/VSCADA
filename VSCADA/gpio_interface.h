@@ -53,6 +53,7 @@ public:
     vector<meta *> i2cSensors;
     vector<meta *> gpioSensors;
     vector<int> i2cSlaveAddresses;
+    vector<int> i2cFileDescriptors;
     vector<response> responseVector;
     vector<SubsystemThread *> subsystems;
 

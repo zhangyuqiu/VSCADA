@@ -1,0 +1,16 @@
+SCADA CONNECTORS ON GLV BOX/PANEL
+
+- USB port mount (for SD card storage)
+https://www.amazon.com/TNP-USB-Flush-Mount-Cable/dp/B079FR1HR9/ref=sr_1_2_sspa?ie=UTF8&qid=1542660385&sr=8-2-spons&keywords=single+usb+panel+mount&psc=1
+
+- HDMI and USB port panel mount (for dashboard power and video)
+https://www.amazon.com/ShineKee-Mount-Extension-Motorcycle-Dashboard/dp/B077T853NZ/ref=sr_1_1_sspa?ie=UTF8&qid=1542660189&sr=8-1-spons&keywords=hdmi+panel+mount&psc=1
+
+
+SCADA CONNECTORS FOR DASHBOARD SCREEN (from GLV Panel)
+
+- 10ft USB to microUSB for dashboard screen power
+https://www.amazon.com/iXCC-Durable-Charge-Android-Windows/dp/B00DYWC0BI/ref=sr_1_6?ie=UTF8&qid=1542660934&sr=8-6&keywords=10+ft+usb+to+micro+usb
+
+- 10ft HDMI display cable for dashboard screen
+https://www.amazon.com/AmazonBasics-High-Speed-HDMI-Cable-1-Pack/dp/B014I8T0YQ/ref=sr_1_4?ie=UTF8&qid=1542661045&sr=8-4&keywords=10+ft+hdmi+to+hdmi+cable

@@ -66,6 +66,31 @@ gpio_interface::~gpio_interface(){
     }
 }
 
+///**
+// * @brief gpio_interface::i2cInit : initializes I2C
+// * @param address
+// * @return
+// */
+//int gpio_interface::i2cInit(int address){
+//        printf("Initializing seesaw...\n");
+//        int file_i2c;
+//        char *filename = (char*)"/dev/i2c-1";
+//        if ((file_i2c = open(filename, O_RDWR)) < 0)
+//        {
+//                printf("Failed to open the i2c bus");
+//                return -1;
+//        }
+
+//        if (ioctl(file_i2c, I2C_SLAVE, address) < 0)
+//        {
+//                printf("Failed to acquire bus access and/or talk to slave.\n");
+//                return -1;
+//        }
+//        i2cFileDescriptors.push_back(file_i2c);
+//        return file_i2c;
+//}
+
+
 /**
  * @brief GPIOExport - enables GPIO pin for read/write
  * @param pin

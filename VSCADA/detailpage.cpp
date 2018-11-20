@@ -93,7 +93,7 @@ void detailPage::update(){
 
     if(subMeta.size() > 0){
         for (uint j = 0; j < subMeta.size(); j++){
-            if (fieldColCount == 11){
+            if (fieldColCount >= 12){
                 fieldRowCount ++;
                 fieldColCount = 0;
             }
