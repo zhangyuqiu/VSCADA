@@ -118,7 +118,7 @@ void MainWindow::update(){
     }
 
     QGridLayout * subsystemSectionLayout = new QGridLayout;
-
+    cout << "NUMBER OF SUBSYSTEMS TO BE DRAWN: " << subs.size() << endl;
     for (uint i = 0; i < subs.size(); i++){
 
         SubsystemThread * currSub = subs.at(i);

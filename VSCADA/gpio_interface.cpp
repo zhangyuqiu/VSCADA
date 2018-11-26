@@ -25,13 +25,27 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
 
     for (uint i = 0; i < i2cSensors.size(); i++){
         meta * currSensor = i2cSensors.at(i);
+        int fd;
         const char * filename = "/dev/i2c-1";
-        if ((currSensor->i2cFileDescriptor = open(filename, O_RDONLY)) < 0)
+        if ((fd = open(filename, O_RDWR)) < 0)
         {
             printf("Failed to open the i2c bus\n");
-        } else if (ioctl(currSensor->i2cFileDescriptor, I2C_SLAVE, currSensor->i2cAddress) < 0)
+        } else if (ioctl(fd, I2C_SLAVE, currSensor->i2cAddress) < 0)
         {
             printf("Failed to acquire bus access and/or talk to slave.\n");
+        }
+
+        //write configuration stream
+        char configAddress[1] = {0};
+        configAddress[0] = static_cast<char>(currSensor->i2cConfigPointer);
+        if (write(fd, configAddress,1) != 1){
+            std::cout << "Writing i2c config address pointer for " << currSensor->sensorName << " failed" << endl;
+        }
+        char buffer[2] = {0};
+        buffer[0] = static_cast<char>(currSensor->i2cConfigData);
+        buffer[1] = static_cast<char>(currSensor->i2cConfigData >> 8);
+        if (write(fd, buffer,2) != 2){
+            std::cout << "Writing i2c config stream for " << currSensor->sensorName << " failed" << endl;
         }
     }
 
@@ -256,13 +270,8 @@ void gpio_interface::stopGPIOCheck(){
  */
 int gpio_interface::i2cRead(meta * sensor){
     int fd;
-    //check i2c file descriptor
-    if (sensor->i2cFileDescriptor < 0){
-        //return -1;
-    }
-
     const char * filename = "/dev/i2c-1";
-    if ((fd = open(filename, O_RDONLY)) < 0)
+    if ((fd = open(filename, O_RDWR)) < 0)
     {
         printf("Failed to open the i2c bus\n");
     } else if (ioctl(fd, I2C_SLAVE, sensor->i2cAddress) < 0)
@@ -270,34 +279,21 @@ int gpio_interface::i2cRead(meta * sensor){
         printf("Failed to acquire bus access and/or talk to slave.\n");
     }
 
-    //write configuration stream
-    char buffer[4] = {0};
-    buffer[0] = static_cast<char>(sensor->i2cReadConfig);
-    buffer[1] = static_cast<char>(sensor->i2cReadConfig >> 8);
-    buffer[2] = static_cast<char>(sensor->i2cReadConfig >> 16);
-    buffer[3] = static_cast<char>(sensor->i2cReadConfig >> 24);
-
-    for (int i = 0; i < 4; i++){
-        std::cout << "BUFFER " << i << " : " << static_cast<int>(buffer[i]) << endl;
-    }
-
-    if (write(fd, buffer,4) != 4){
-        std::cout << "Writing i2c config stream for " << sensor->sensorName << " failed" << endl;
-        //return -1;
-    }
-
-    char readPtr = static_cast<char>(sensor->i2cReadPointer);
     //write read pointer/register
-    if (write(fd,&readPtr,1) != 1){
+    char pointerBuf[1] = {0};
+    pointerBuf[0] = static_cast<char>(sensor->i2cReadPointer);
+    if (write(fd,pointerBuf,1) != 1){
         std::cout << "Writing i2c pointer for " << sensor->sensorName << " failed" << endl;
-        //return -1;
+        return -1;
     }
+
+    usleep(sensor->i2cReadDelay);
 
     //read from i2c device
     char readBuf[2] = {0};
     if (read(fd, readBuf, 2) != 2){
         std::cout << "i2c read for " << sensor->sensorName << " failed" << endl;
-        //return -1;
+        return -1;
     } else {
         uint16_t result = static_cast<uint16_t>(readBuf[1]);
         result = static_cast<uint16_t>(result << 8);

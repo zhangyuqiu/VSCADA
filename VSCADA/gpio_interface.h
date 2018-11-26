@@ -2,14 +2,14 @@
 #define GPIO_INTERFACE_H
 #include <QObject>
 #include <QTimer>
-#include <sys/stat.h>
-#include <sys/types.h>
+//#include <sys/stat.h>
+//#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <errno.h>
 #include "typedefs.h"
 #include "subsystemthread.h"
 #include <sys/ioctl.h>			//Needed for I2C port

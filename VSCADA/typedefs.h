@@ -32,9 +32,9 @@ typedef struct{
     int minRxnCode;
     int auxAddress;
     int i2cAddress;
-    int i2cFileDescriptor;
+    uint8_t i2cConfigPointer;
     uint8_t i2cReadPointer;
-    uint32_t i2cReadConfig;
+    uint16_t i2cConfigData;
     int i2cReadDelay;
     int i2cDataField;
     int usbChannel;
