@@ -65,7 +65,6 @@ void canbus_interface::recieve_frame() {
  * @param data : data to be sent
  */
 void canbus_interface::sendData(int addr, uint64_t data){
-    qDebug() << "actively wirting" << endl;
     QByteArray byteArr;
     char * charData = static_cast<char*>(static_cast<void*>(&data));
     for(int i = sizeof(data)-1; i >= 0; i--){
@@ -77,6 +76,3 @@ void canbus_interface::sendData(int addr, uint64_t data){
     outFrame->setPayload(byteArr);
     can_bus->writeFrame(*outFrame);
 }
-
-
-

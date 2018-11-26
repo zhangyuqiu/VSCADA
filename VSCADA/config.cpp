@@ -323,6 +323,8 @@ bool Config::read_config_file_data(){
         string subSystemId;
         vector<meta *> sensors;
         vector<meta *> mainMeta;
+        bootloader bootItem;
+
         cout << endl << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
         cout << "subsystem ID: " << subSystemId << endl;
         cout << "subsystem min: " << minrate << endl;
@@ -340,7 +342,21 @@ bool Config::read_config_file_data(){
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("maxrate") == 0){
                 if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
                     maxrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: subsystem min rate not an integer");
+                else configErrors.push_back("CONFIG ERROR: subsystem max rate not an integer");
+            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootaddress") == 0){
+                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    bootItem.canAddress = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: subsystem boot CAN address not an integer");
+            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootvalue") == 0){
+                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    bootItem.trigger = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: subsystem boot value not an integer");
+            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootmessage") == 0){
+                bootItem.displayMsg = subsystemXteristics.at(j).firstChild().nodeValue().toStdString();
+            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootconfig") == 0){
+                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
+                    bootItem.configMsg.push_back(stoull(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()));
+                else configErrors.push_back("CONFIG ERROR: subsystem boot config message not an integer");
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("sensors") == 0){
                 QDomNodeList sensorsList = subsystemXteristics.at(j).childNodes();
                 for (int k = 0; k < sensorsList.size(); k++){
@@ -452,6 +468,19 @@ bool Config::read_config_file_data(){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->i2cReadDelay = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor i2c read delay not an integer");
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("calpoly") == 0){
+                            QDomNode polyItem = attributeList.at(m);
+                            QDomNodeList polyItemList = polyItem.childNodes();
+                            int polyCount = 0;
+                            for (int n = 0; n < polyItemList.size(); n++){
+                                poly item;
+                                if (polyItemList.at(n).nodeName().toStdString().compare("coef") == 0){
+                                    item.exponent = polyCount;
+                                    item.coefficient = stod(polyItemList.at(n).firstChild().nodeValue().toStdString());
+                                    polyCount++;
+                                }
+                                storedSensor->calPolynomial.push_back(item);
+                            }
                         }
                     }
                     storedSensors.push_back(storedSensor);
@@ -466,6 +495,7 @@ bool Config::read_config_file_data(){
             }
         }
 
+        bootConfigs.push_back(bootItem);
         //launch a subsystem thread
 
         SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,mainMeta);
@@ -626,7 +656,7 @@ bool Config::read_config_file_data(){
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
     canInterface = new canbus_interface();
     dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
-                               FSMs,systemMode,controlSpecs,storedSensors,allResponses);
+                               FSMs,systemMode,controlSpecs,storedSensors,allResponses,bootConfigs);
 
 
     //********************************//

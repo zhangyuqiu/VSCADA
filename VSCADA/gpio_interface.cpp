@@ -18,8 +18,6 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
     for (uint i = 0; i < gpioSensors.size(); i++){
         meta * currSensor = gpioSensors.at(i);
         if (currSensor->gpioPin >= 0){
-            pinData.push_back(0);
-            activePins.push_back(currSensor->gpioPin);
             GPIOExport(currSensor->gpioPin);
             GPIODirection(currSensor->gpioPin,IN);
         }
@@ -27,9 +25,13 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
 
     for (uint i = 0; i < i2cSensors.size(); i++){
         meta * currSensor = i2cSensors.at(i);
-        if (currSensor->i2cAddress >= 0){
-            i2cData.push_back(0);
-            i2cSlaveAddresses.push_back(currSensor->i2cAddress);
+        const char * filename = "/dev/i2c-1";
+        if ((currSensor->i2cFileDescriptor = open(filename, O_RDONLY)) < 0)
+        {
+            printf("Failed to open the i2c bus\n");
+        } else if (ioctl(currSensor->i2cFileDescriptor, I2C_SLAVE, currSensor->i2cAddress) < 0)
+        {
+            printf("Failed to acquire bus access and/or talk to slave.\n");
         }
     }
 
@@ -43,7 +45,6 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
-//        connect(subsystems.at(i), SIGNAL(pushGPIOData(response)), this, SLOT(writeGPIOData(response)));
     }
     connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
 }
@@ -65,31 +66,6 @@ gpio_interface::~gpio_interface(){
         }
     }
 }
-
-///**
-// * @brief gpio_interface::i2cInit : initializes I2C
-// * @param address
-// * @return
-// */
-//int gpio_interface::i2cInit(int address){
-//        printf("Initializing seesaw...\n");
-//        int file_i2c;
-//        char *filename = (char*)"/dev/i2c-1";
-//        if ((file_i2c = open(filename, O_RDWR)) < 0)
-//        {
-//                printf("Failed to open the i2c bus");
-//                return -1;
-//        }
-
-//        if (ioctl(file_i2c, I2C_SLAVE, address) < 0)
-//        {
-//                printf("Failed to acquire bus access and/or talk to slave.\n");
-//                return -1;
-//        }
-//        i2cFileDescriptors.push_back(file_i2c);
-//        return file_i2c;
-//}
-
 
 /**
  * @brief GPIOExport - enables GPIO pin for read/write
@@ -173,16 +149,16 @@ int gpio_interface::GPIODirection(int pin, int dir)
 /**
  * @brief GPIORead - reads GPIO pin
  * @param pin
- * @return
+ * @return 0 upon success, -1 otherwise
  */
-int gpio_interface::GPIORead(int pin)
+int gpio_interface::GPIORead(meta * sensor)
 {
     #define VALUE_MAX 30
     char path[VALUE_MAX];
     char value_str[3];
     int fd;
 
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value", pin);
+    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value", sensor->gpioPin);
     fd = open(path, O_RDONLY);
     if (-1 == fd) {
         fprintf(stderr, "Failed to open gpio value for reading!\n");
@@ -195,8 +171,8 @@ int gpio_interface::GPIORead(int pin)
     }
 
     close(fd);
-
-    return(atoi(value_str));
+    sensor->val = atoi(value_str);
+    return 0;
 }
 
 /**
@@ -229,20 +205,19 @@ void gpio_interface::GPIOWrite(int pin, int value)
  * @brief gpio_interface::gpioCheckTasks : collect configured GPIO data
  */
 void gpio_interface::gpioCheckTasks(){
-    for (uint i = 0; i < activePins.size(); i++){
-        int currVal = GPIORead(activePins.at(i));
-        if (currVal != pinData.at(i)){
-            pinData.at(i) = currVal;
-            gpioSensors.at(i)->val = currVal;
+    for (uint i = 0; i < gpioSensors.size(); i++){
+        if (GPIORead(gpioSensors.at(i)) == 0){
             emit sensorValueChanged(gpioSensors.at(i));
+        } else {
+            std::cout << "Sensor read for gpio sensor " << i2cSensors.at(i)->sensorName << " failed" << endl;
         }
     }
-    for (uint i = 0; i < i2cSlaveAddresses.size(); i++){
-        int currVal = i2cRead(i2cSlaveAddresses.at(i));
-        if (currVal != i2cData.at(i)){
-            i2cData.at(i) = currVal;
-            i2cSensors.at(i)->val = currVal;
+
+    for (uint i = 0; i < i2cSensors.size(); i++){
+        if (i2cRead(i2cSensors.at(i)) == 0){
             emit sensorValueChanged(i2cSensors.at(i));
+        } else {
+            std::cout << "Sensor read for i2c sensor " << i2cSensors.at(i)->sensorName << " failed" << endl;
         }
     }
 }
@@ -273,42 +248,49 @@ void gpio_interface::stopGPIOCheck(){
 
 /**
  * @brief gpio_interface::i2cRead : reads the I2C bus on the specified address
- * @param address : I2C slave address
+ * @param sensor : I2C sensor
  * @return : 0 on success, -1 otherwise
  */
-int gpio_interface::i2cRead(int address){
-    int file_i2c;
-    long length = 4; //number of bytes to read
-    unsigned char buffer[60] = {0};
-
-    //----- OPEN THE I2C BUS -----//
-    const char * filename = "/dev/i2c-1";
-    if ((file_i2c = open(filename, O_RDONLY)) < 0)
-    {
-        printf("Failed to open the i2c bus\n");
+int gpio_interface::i2cRead(meta * sensor){
+    //check i2c file descriptor
+    if (sensor->i2cFileDescriptor < 0){
         return -1;
     }
 
-    if (ioctl(file_i2c, I2C_SLAVE, address) < 0)
-    {
-        printf("Failed to acquire bus access and/or talk to slave.\n");
+    //write configuration stream
+    char buffer[4] = {0};
+    buffer[0] = static_cast<char>(sensor->i2cReadConfig);
+    buffer[1] = static_cast<char>(sensor->i2cReadConfig >> 8);
+    buffer[2] = static_cast<char>(sensor->i2cReadConfig >> 16);
+    buffer[3] = static_cast<char>(sensor->i2cReadConfig >> 24);
+    if (write(sensor->i2cFileDescriptor, buffer,4) != 4){
+        std::cout << "Writing i2c config stream for " << sensor->sensorName << " failed" << endl;
         return -1;
     }
 
-
-    //----- READ BYTES -----//
-    //read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
-    if (read(file_i2c, buffer, static_cast<unsigned long>(length)) != length)
-    {
-        //ERROR HANDLING: i2c transaction failed
-        printf("Failed to read from the i2c bus.\n");
+    //write read pointer/register
+    if (write(sensor->i2cFileDescriptor,&sensor->i2cReadPointer,1) != 1){
+        std::cout << "Writing i2c pointer for " << sensor->sensorName << " failed" << endl;
         return -1;
     }
-    else
-    {
-        printf("Data read: %s\n", buffer);
+
+    //read from i2c device
+    char readBuf[2] = {0};
+    if (read(sensor->i2cFileDescriptor, readBuf, 2) != 2){
+        std::cout << "i2c read for " << sensor->sensorName << " failed" << endl;
+        return -1;
+    } else {
+        uint16_t result = static_cast<uint16_t>(readBuf[1]);
+        result = static_cast<uint16_t>(result << 8);
+        result = static_cast<uint16_t>(result | readBuf[0]);
+        if (sensor->i2cDataField < 16){
+            result = static_cast<uint16_t>(result << sensor->i2cDataField);
+            result = static_cast<uint16_t>(result >> sensor->i2cDataField);
+        }
+        sensor->val = static_cast<double>(result);
+        return 0;
     }
-    return static_cast<int>(*buffer);
+    return -1;
 }
 
 /**

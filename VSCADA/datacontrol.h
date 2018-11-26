@@ -30,7 +30,7 @@ public:
     // Member function declarations
     DataControl(gpio_interface *gpio, canbus_interface *can, usb7402_interface * usb, DB_Engine * db,
                 vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs,
-                int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp);
+                int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp, vector<bootloader> bootArgs);
     ~DataControl();
 
     void setMode(int md);
@@ -39,6 +39,7 @@ public:
     void startSystemTimer();
     string getProgramTime();
     void saveSession(string name);
+    void sendBootConfig(bootloader bl);
     int change_sampling_rate(int rate);
     vector<controlSpec *> get_control_specs();
     void init_meta_vector(vector<meta> vctr);
@@ -59,6 +60,7 @@ public:
     vector<response> responseVector;
     vector<controlSpec *> controlSpecs;
     vector<SubsystemThread *> subsystems;
+    vector<bootloader> bootConfigs;
     // overall system mode
     int systemMode;
     string modeName;

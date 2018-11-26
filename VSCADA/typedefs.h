@@ -17,6 +17,11 @@
 #define COOLING 3
 
 typedef struct{
+    int exponent;
+    double coefficient;
+}poly;
+
+typedef struct{
     int main;
     double val;
     int offset;
@@ -40,6 +45,7 @@ typedef struct{
     int normRxnCode;
     int primAddress;
     double calMultiplier;
+    std::vector<poly> calPolynomial;
 
     std::string unit;
     std::string subsystem;
@@ -112,5 +118,12 @@ typedef struct{
     std::string name;
     std::vector<system_state *> states;
 }statemachine;
+
+typedef struct{
+    int canAddress;
+    int trigger;
+    std::string displayMsg;
+    std::vector<uint64_t> configMsg;
+} bootloader;
 
 #endif // TYPEDEFS_H

@@ -13,6 +13,7 @@
 #include <iomanip>
 #include "typedefs.h"
 #include "db_engine.h"
+#include "math.h"
 
 class DataMonitor;
 

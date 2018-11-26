@@ -16,7 +16,7 @@
  */
 DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_interface * usb, DB_Engine * db,
                          vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM,
-                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp){
+                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp, vector<bootloader> bootArgs){
 
     // set mode parameters
     systemMode = mode;
@@ -37,6 +37,7 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     gpioInterface = gpio;
     sensorVector = sensors;
     controlSpecs = ctrlSpecs;
+    bootConfigs = bootArgs;
     systemTimer = new QTime;
     startSystemTimer();
     //signal-slot connections
@@ -96,6 +97,14 @@ int DataControl::change_sampling_rate(int rate){
  * @param data : data transmitted
  */
 void DataControl::receive_can_data(uint32_t addr, uint64_t data){
+    //check whether address matches any boot arguments
+    for (uint i = 0; i < bootConfigs.size(); i++){
+        bootloader currBootLoader = bootConfigs.at(i);
+        if (currBootLoader.canAddress == static_cast<int>(addr) && currBootLoader.trigger == data){
+            sendBootConfig(currBootLoader);
+        }
+    }
+
     //check whether address matches any state machine address
     for (uint i = 0; i < FSMs.size(); i++){
         statemachine * currFSM = FSMs.at(i);
@@ -144,6 +153,21 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                 }
             }
         }
+    }
+}
+
+/**
+ * @brief DataControl::sendBootConfig : sends bootup data to specified address
+ * @param bl
+ */
+void DataControl::sendBootConfig(bootloader bl){
+    logMsg(bl.displayMsg);
+    for(uint i = 0; i < bl.configMsg.size(); i++){
+        stringstream s;
+        s << showbase << internal << setfill('0');
+        s << "Data " << std::hex << setw(16) << bl.configMsg.at(i) << " sent to address " << bl.canAddress;
+        logMsg(s.str());
+        emit sendCANData(bl.canAddress,bl.configMsg.at(i));
     }
 }
 

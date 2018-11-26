@@ -207,6 +207,12 @@
 				<minresponse>4</minresponse>
 				<maxresponse>5</maxresponse>
 				<calmultiplier>2.3</calmultiplier>
+				<calpoly>
+					<coef>0.9</coef>
+					<coef>2.3</coef>
+					<coef>2.312</coef>
+					<coef>1.2</coef>
+				</calpoly>
 			</sensor>
 		</sensors>
 	</subsystem>
@@ -214,6 +220,11 @@
 		<name>TSI</name>
 		<maxrate>1000</maxrate>
 		<minrate>2000</minrate>
+		<bootaddress>20</bootaddress>
+		<boottrigger>0</boottrigger>
+		<bootconfig>3409</bootconfig>
+		<bootconfig>4320</bootconfig>
+		<bootmessage>TSI powered up...</bootmessage>
 		<sensors>
 			<sensor>
 				<id>3</id>

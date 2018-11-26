@@ -16,19 +16,6 @@ SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<respo
     logicVector = lVector;
     mainSensorVector = mainMeta;
     init_data();
-//    for(uint i = 0; i < sensors.size(); i++){
-//        lineEdit = new QLineEdit;
-//        checkTmr = new QTimer;
-//        connect(checkTmr, SIGNAL(timeout()), checkTmr, SLOT(stop()));
-//        connect(checkTmr, SIGNAL(timeout()), this, SLOT(checkTimeout()));
-//        checkTmr->start(sensors.at(i)->checkRate);
-//        edits.push_back(lineEdit);
-//        lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
-//        lineEdit->setAlignment(Qt::AlignCenter);
-//        lineEdit->setDisabled(1);
-//        editTimers.push_back(checkTmr);
-//        updateEdits(sensors.at(i));
-//    }
 }
 
 /**
@@ -172,6 +159,14 @@ void SubsystemThread::checkThresholds(meta * sensor){
  */
 void SubsystemThread::calibrateData(meta * currSensor){
     currSensor->calData();
+    double data = 0;
+    vector<poly> pol = currSensor->calPolynomial;
+    if (pol.size() > 0){
+        for (uint i = 0; i < pol.size(); i++){
+            data += pol.at(i).coefficient*pow(currSensor->val,pol.at(i).exponent);
+        }
+        currSensor->calVal = data;
+    }
 }
 
 /**

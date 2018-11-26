@@ -63,6 +63,6 @@ public:
     gpio_interface * gpioInterface;
     canbus_interface * canInterface;
     vector<SubsystemThread *> subsystems;
-
+    vector<bootloader> bootConfigs;
 };
 #endif // CONFIG_H
