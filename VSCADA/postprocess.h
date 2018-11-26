@@ -36,11 +36,13 @@ public:
     vector<QString> tableName;
     vector<QString> sensorname;
     vector<QString> subsystem;
+    QString startTime;
+    QString endTime;
     QListView * list;
     QStandardItemModel*  poModel;
     int maxSensorRow;
     QListWidget * message;
-    QPushButton * exitButton;
+    //QPushButton * exitButton;
     QPushButton * loadButton;
     QComboBox * dbBox;
     QString currentBase;
@@ -50,6 +52,8 @@ public:
     DB_Engine * db;
     vector<QString> selected;
     QCustomPlot * plot;
+    QLabel * startLabel;
+
     bool raw;
     int unitWidth;
     int unitHeight;
