@@ -255,9 +255,19 @@ void gpio_interface::stopGPIOCheck(){
  * @return : 0 on success, -1 otherwise
  */
 int gpio_interface::i2cRead(meta * sensor){
+    int fd;
     //check i2c file descriptor
     if (sensor->i2cFileDescriptor < 0){
-        return -1;
+        //return -1;
+    }
+
+    const char * filename = "/dev/i2c-1";
+    if ((fd = open(filename, O_RDONLY)) < 0)
+    {
+        printf("Failed to open the i2c bus\n");
+    } else if (ioctl(fd, I2C_SLAVE, sensor->i2cAddress) < 0)
+    {
+        printf("Failed to acquire bus access and/or talk to slave.\n");
     }
 
     //write configuration stream
@@ -266,22 +276,28 @@ int gpio_interface::i2cRead(meta * sensor){
     buffer[1] = static_cast<char>(sensor->i2cReadConfig >> 8);
     buffer[2] = static_cast<char>(sensor->i2cReadConfig >> 16);
     buffer[3] = static_cast<char>(sensor->i2cReadConfig >> 24);
-    if (write(sensor->i2cFileDescriptor, buffer,4) != 4){
-        std::cout << "Writing i2c config stream for " << sensor->sensorName << " failed" << endl;
-        return -1;
+
+    for (int i = 0; i < 4; i++){
+        std::cout << "BUFFER " << i << " : " << static_cast<int>(buffer[i]) << endl;
     }
 
+    if (write(fd, buffer,4) != 4){
+        std::cout << "Writing i2c config stream for " << sensor->sensorName << " failed" << endl;
+        //return -1;
+    }
+
+    char readPtr = static_cast<char>(sensor->i2cReadPointer);
     //write read pointer/register
-    if (write(sensor->i2cFileDescriptor,&sensor->i2cReadPointer,1) != 1){
+    if (write(fd,&readPtr,1) != 1){
         std::cout << "Writing i2c pointer for " << sensor->sensorName << " failed" << endl;
-        return -1;
+        //return -1;
     }
 
     //read from i2c device
     char readBuf[2] = {0};
-    if (read(sensor->i2cFileDescriptor, readBuf, 2) != 2){
+    if (read(fd, readBuf, 2) != 2){
         std::cout << "i2c read for " << sensor->sensorName << " failed" << endl;
-        return -1;
+        //return -1;
     } else {
         uint16_t result = static_cast<uint16_t>(readBuf[1]);
         result = static_cast<uint16_t>(result << 8);

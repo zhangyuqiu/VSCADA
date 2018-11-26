@@ -208,10 +208,9 @@
 				<maxresponse>5</maxresponse>
 				<calmultiplier>2.3</calmultiplier>
 				<calpoly>
-					<coef>0.9</coef>
+					<coef>10</coef>
 					<coef>2.3</coef>
-					<coef>2.312</coef>
-					<coef>1.2</coef>
+					<coef>1.39</coef>
 				</calpoly>
 			</sensor>
 		</sensors>
