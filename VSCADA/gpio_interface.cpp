@@ -205,6 +205,7 @@ void gpio_interface::GPIOWrite(int pin, int value)
  * @brief gpio_interface::gpioCheckTasks : collect configured GPIO data
  */
 void gpio_interface::gpioCheckTasks(){
+    cout << "Break check 0" << endl;
     for (uint i = 0; i < gpioSensors.size(); i++){
         if (GPIORead(gpioSensors.at(i)) == 0){
             emit sensorValueChanged(gpioSensors.at(i));
@@ -213,6 +214,7 @@ void gpio_interface::gpioCheckTasks(){
         }
     }
 
+    cout << "Break check 1" << endl;
     for (uint i = 0; i < i2cSensors.size(); i++){
         if (i2cRead(i2cSensors.at(i)) == 0){
             emit sensorValueChanged(i2cSensors.at(i));
@@ -220,6 +222,7 @@ void gpio_interface::gpioCheckTasks(){
             std::cout << "Sensor read for i2c sensor " << i2cSensors.at(i)->sensorName << " failed" << endl;
         }
     }
+    cout << "Break check 2" << endl;
 }
 
 /**

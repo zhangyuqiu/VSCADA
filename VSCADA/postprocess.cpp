@@ -10,7 +10,7 @@ postProcess::postProcess(QWidget *parent) :
     central = new QWidget();
     mainLayout = new QGridLayout();
     conf = new Config();
-    conf->read_config_file_data();
+//    conf->read_config_file_data();
     displayTable = new QTableWidget();
     plot = new QCustomPlot();
 
@@ -37,7 +37,7 @@ postProcess::postProcess(QWidget *parent) :
     this->setCentralWidget(scrollArea);
 
     update();
-    loadTable();
+    //loadTable();
 
 
 

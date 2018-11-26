@@ -48,9 +48,6 @@ public:
     int samplingRate = 500;
 
     QTimer * timer;
-    vector<int> pinData;
-    vector<int> i2cData;
-    vector<int> activePins;
     vector<meta *> i2cSensors;
     vector<meta *> gpioSensors;
     vector<int> i2cSlaveAddresses;
