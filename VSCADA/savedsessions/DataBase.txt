@@ -8,3 +8,7 @@ test.db
 test2.db
 thissession.db
 
+
+
+
+not_important.db

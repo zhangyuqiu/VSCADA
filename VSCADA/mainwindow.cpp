@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    postProcessWindow = new postProcess;
+    //postProcessWindow = new postProcess;
 
     central = new QWidget();
     mainLayout = new QVBoxLayout();
@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString LabelFont = QString::number(stringSize);
     tabs->setStyleSheet("QTabBar::tab {font:"+LabelFont+"pt}");
     tabs->addTab(central,"General");
-    tabs->addTab(postProcessWindow->central, "PostProcessing");
+    //tabs->addTab(postProcessWindow->central, "PostProcessing");
     tabs->setFixedWidth(rect.width() - 18);
     tabs->setFixedHeight(rect.height() - 50);
     QString  font = QString::number(stringSize*1.5);

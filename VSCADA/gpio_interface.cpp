@@ -36,16 +36,15 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
         }
 
         //write configuration stream
-        char configAddress[1] = {0};
-        configAddress[0] = static_cast<char>(currSensor->i2cConfigPointer);
-        if (write(fd, configAddress,1) != 1){
-            std::cout << "Writing i2c config address pointer for " << currSensor->sensorName << " failed" << endl;
-        }
-        char buffer[2] = {0};
-        buffer[0] = static_cast<char>(currSensor->i2cConfigData);
-        buffer[1] = static_cast<char>(currSensor->i2cConfigData >> 8);
-        if (write(fd, buffer,2) != 2){
-            std::cout << "Writing i2c config stream for " << currSensor->sensorName << " failed" << endl;
+        for (int j = 0; j < currSensor->i2cConfigs.size(); j++){
+            uint32_t data = currSensor->i2cConfigs.at(j);
+            char configData[3] = {0};
+            configData[0] =  static_cast<char>(data >> 24);
+            configData[0] =  static_cast<char>(data >> 16);
+            configData[0] =  static_cast<char>(data >> 8);
+            if (write(fd, configData,3) != 3){
+                std::cout << "Writing i2c config address pointer for " << currSensor->sensorName << " failed" << endl;
+            }
         }
     }
 
@@ -219,7 +218,6 @@ void gpio_interface::GPIOWrite(int pin, int value)
  * @brief gpio_interface::gpioCheckTasks : collect configured GPIO data
  */
 void gpio_interface::gpioCheckTasks(){
-    cout << "Break check 0" << endl;
     for (uint i = 0; i < gpioSensors.size(); i++){
         if (GPIORead(gpioSensors.at(i)) == 0){
             emit sensorValueChanged(gpioSensors.at(i));
@@ -228,7 +226,6 @@ void gpio_interface::gpioCheckTasks(){
         }
     }
 
-    cout << "Break check 1" << endl;
     for (uint i = 0; i < i2cSensors.size(); i++){
         if (i2cRead(i2cSensors.at(i)) == 0){
             emit sensorValueChanged(i2cSensors.at(i));
@@ -236,7 +233,6 @@ void gpio_interface::gpioCheckTasks(){
             std::cout << "Sensor read for i2c sensor " << i2cSensors.at(i)->sensorName << " failed" << endl;
         }
     }
-    cout << "Break check 2" << endl;
 }
 
 /**

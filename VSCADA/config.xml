@@ -182,9 +182,9 @@
 				<main>1</main>
 				<minimum>34</minimum>
 				<maximum>70</maximum>
-				<minresponse>1</minresponse>
-				<normresponse>7</normresponse>
-				<maxresponse>1</maxresponse>
+				<minresponse>4</minresponse>
+				<normresponse>5</normresponse>
+				<maxresponse>4</maxresponse>
 				<calmultiplier>1</calmultiplier>
 			</sensor>
 		</sensors>
@@ -274,7 +274,7 @@
 				<name>GLVCurrent</name>
 				<i2caddress>1</i2caddress>
 				<i2creadpointer>4</i2creadpointer>
-				<i2creadconfig>17927</i2creadconfig>
+				<i2cconfigdata>17927</i2cconfigdata>
 				<i2cdatafield>16</i2cdatafield>
 				<i2creaddelayus>140</i2creaddelayus>
 				<checkrate>3000</checkrate>
@@ -315,9 +315,9 @@
 				<name>GLVTemp</name>
 				<i2caddress>0</i2caddress>
 				<i2creadpointer>64</i2creadpointer>
-				<i2creadconfig>262400</i2creadconfig>
+				<i2cconfigdata>262400</i2cconfigdata>
 				<i2cdatafield>12</i2cdatafield>
-				<i2creaddelayus>100</i2creaddelayus>
+				<i2creaddelayus>20</i2creaddelayus>
 				<checkrate>5000</checkrate>
 				<main>1</main>
 				<unit>C</unit>
@@ -332,7 +332,7 @@
 				<name>GLVBusVoltage</name>
 				<i2caddress>1</i2caddress>
 				<i2creadpointer>2</i2creadpointer>
-				<i2creadconfig>17927</i2creadconfig>
+				<i2cconfigdata>17927</i2cconfigdata>
 				<i2cdatafield>16</i2cdatafield>
 				<i2creaddelayus>140</i2creaddelayus>
 				<checkrate>5000</checkrate>
@@ -347,7 +347,7 @@
                                 <name>GLVPower</name>
                                 <i2caddress>1</i2caddress>
                                 <i2creadpointer>3</i2creadpointer>
-                                <i2creadconfig>17927</i2creadconfig>
+                                <i2cconfigdata>17927</i2cconfigdata>
                                 <i2cdatafield>16</i2cdatafield>
                                 <i2creaddelayus>140</i2creaddelayus>
                                 <checkrate>5000</checkrate>
