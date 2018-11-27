@@ -815,7 +815,7 @@ repeat:
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
         this->close();
     }
-    QFile file("DataBase.txt");
+    QFile file("../VSCADA/savedsessions/DataBase.txt");
      file.open(QIODevice::WriteOnly | QIODevice::Append);
      QTextStream out(&file);
      QString db = QString::fromStdString(name);

@@ -57,23 +57,42 @@ postProcess::~postProcess()
 
 void postProcess::update(){
 
-    list = new QListView();
-    list->setFixedHeight(unitHeight*6);
-    list->setFixedWidth(unitWidth*4);
-    list->setSelectionMode(QAbstractItemView::SingleSelection);
-    QString  listFont = QString::number(stringSize*1.4);
-    list->setStyleSheet("font:"+listFont+"pt;");
+    startLabel = new QLabel();
+    mainLayout->addWidget(startLabel,0,1,Qt::AlignLeft);
+
+
+
+    dbBox = new QComboBox;
+    dbBox->setEditable (true);
+    dbBox->setFixedWidth(static_cast<int>(unitWidth*4));
+    dbBox->setFixedHeight(static_cast<int>(unitHeight*1));
+    QString  boxFont = QString::number(stringSize*1.4);
+    dbBox->setStyleSheet("font:"+boxFont+"pt;");
+    QFile file("../VSCADA/savedsessions/DataBase.txt");
+    QTextStream stream(&file);
+    QString line;
+
+       if (file.open(QIODevice::ReadOnly))
+       {
+         QTextStream in(&file);
+         QString line1 = in.readLine();
+         while (!in.atEnd())
+         {
+            QString line = in.readLine();
+           dbBox->addItem (line);
+         }
+         file.close();
+       }
+       mainLayout->addWidget(dbBox,0,0);
 
 
 
        // Create list view item model
-     poModel =new QStandardItemModel(list);
+
 
          getSensorList();
 
-         list->setModel(poModel);
 
-          mainLayout->addWidget(list,1,0);
 
 //          dataTable = new QTableView();
 //          dataTable->setFixedHeight(unitHeight*6);
@@ -86,27 +105,7 @@ void postProcess::update(){
 //          mainLayout->addWidget(message,2,0);
 
 
-          dbBox = new QComboBox;
-          dbBox->setEditable (true);
-          dbBox->setFixedWidth(static_cast<int>(unitWidth*4));
-          dbBox->setFixedHeight(static_cast<int>(unitHeight*1));
-          QString  boxFont = QString::number(stringSize*1.4);
-          dbBox->setStyleSheet("font:"+boxFont+"pt;");
-          QFile file("DataBase.txt");
-          QTextStream stream(&file);
-          QString line;
 
-             if (file.open(QIODevice::ReadOnly))
-             {
-               QTextStream in(&file);
-               while (!in.atEnd())
-               {
-                  QString line = in.readLine();
-                 dbBox->addItem (line);
-               }
-               file.close();
-             }
-             mainLayout->addWidget(dbBox,0,0);
 
 //       exitButton =new QPushButton();
 //       exitButton->setText("EXIT");
@@ -133,12 +132,10 @@ void postProcess::update(){
 //       QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
 //       QObject::connect(loadButton, SIGNAL (clicked()), this , SLOT(loadTable()));
 
-             startLabel = new QLabel();
-             mainLayout->addWidget(startLabel,0,1,Qt::AlignLeft);
 
 
        connect(dbBox, SIGNAL(currentIndexChanged(int)),this,SLOT(reload(int)));
-       connect(poModel, SIGNAL(itemChanged(QStandardItem*)),this,SLOT(addSensor(QStandardItem*)));
+
 }
 
 void postProcess::addSensor(QStandardItem *poItem)
@@ -376,6 +373,19 @@ for(int j=0; j<data.size();j++){
 }
 
 void postProcess::getSensorList(){
+
+     currentBase = dbBox->currentText();
+     string thisBase = currentBase.toStdString();
+     db->setFile(thisBase);
+
+     list = new QListView();
+     list->setFixedHeight(unitHeight*6);
+     list->setFixedWidth(unitWidth*4);
+     list->setSelectionMode(QAbstractItemView::SingleSelection);
+     QString  listFont = QString::number(stringSize*1.4);
+     list->setStyleSheet("font:"+listFont+"pt;");
+
+    poModel =new QStandardItemModel(list);
     sensorname=db->getTargetColumn("sensors","sensorname"," "," ");
     subsystem=db->getTargetColumn("sensors","subsystem"," "," ");
     int itemCount=0;
@@ -402,6 +412,10 @@ void postProcess::getSensorList(){
          itemCount++;
 
     }
+
+    list->setModel(poModel);
+
+     mainLayout->addWidget(list,1,0);
 
 //    int itemCount=0;
 
@@ -453,15 +467,17 @@ void postProcess::getSensorList(){
 
 //        }
 //    }
-//    loadTable();
+     connect(poModel, SIGNAL(itemChanged(QStandardItem*)),this,SLOT(addSensor(QStandardItem*)));
 
+loadTable();
 }
 
 void postProcess::reload(int no){
 //    message->addItem("check");
 //    plot->clearGraphs();
 //    displayTable->clear();
-    loadTable();
+//    loadTable();
+    getSensorList();
 }
 
 

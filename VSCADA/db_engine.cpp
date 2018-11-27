@@ -355,7 +355,7 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
     QString currentBase = QString::fromStdString(db_file);
     QSqlDatabase mydb;
     mydb=QSqlDatabase::addDatabase("QSQLITE");
-    mydb.setDatabaseName(currentBase);//path of data base
+    mydb.setDatabaseName("../VSCADA/savedsessions/"+currentBase);//path of data base
     mydb.open();
 
     QSqlQuery* qry =new QSqlQuery(mydb);
