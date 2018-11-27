@@ -48,16 +48,17 @@ public:
     string initErr = "ERROR: USB-7204 device was not found on startup";
 
 protected:
-   virtual void usbCheckTasks();                      //runs collection tasks
+//   virtual void usbCheckTasks();                      //runs collection tasks
 
 private:
    /** Links the member function to ordinary space */
-   static void * InternalThreadEntryFunc(void * This) {((usb7402_interface *)This)->usbCheckTasks(); return NULL;}
+//   static void * InternalThreadEntryFunc(void * This) {((usb7402_interface *)This)->usbCheckTasks(); return NULL;}
 
-   pthread_t _thread;
+//   pthread_t _thread;
 
 public slots:
-   void StartInternalThread(){InternalThreadEntryFunc(this);}
+//   void StartInternalThread(){InternalThreadEntryFunc(this);}
+   void usbCheckTasks();
    void writeUSBData(uint8_t channel, float voltage, bool * success);
 
 signals:

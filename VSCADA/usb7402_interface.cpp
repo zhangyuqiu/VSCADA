@@ -64,11 +64,10 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
     }
 
     timer = new QTimer;
-    connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(usbCheckTasks()));
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
-//        connect(subsystems.at(i), SIGNAL(pushGPIOData(response)), this, SLOT(writeGPIOData(response)));
     }
 }
 

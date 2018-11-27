@@ -55,17 +55,11 @@ public:
     vector<response> responseVector;
     vector<SubsystemThread *> subsystems;
 
- protected:
-    virtual void gpioCheckTasks();
-
 private:
-    /** Links the member function to ordinary space */
-    static void * InternalThreadEntryFunc(void * This) {((gpio_interface *)This)->gpioCheckTasks(); return NULL;}
-
     pthread_t _thread;
 
 public slots:
-    void StartInternalThread(){InternalThreadEntryFunc(this);}
+    void gpioCheckTasks();
     void GPIOWrite(int pin, int value);
 
 signals:
