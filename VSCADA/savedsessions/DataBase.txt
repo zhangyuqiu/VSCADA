@@ -7,5 +7,4 @@ system.db
 test.db
 test2.db
 thissession.db
-gengz.db
-ggg.db
+
