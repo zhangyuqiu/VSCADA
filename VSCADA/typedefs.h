@@ -46,6 +46,7 @@ typedef struct{
     int normRxnCode;
     int primAddress;
     double calMultiplier;
+    int state;
     std::vector<poly> calPolynomial;
 
     std::string unit;

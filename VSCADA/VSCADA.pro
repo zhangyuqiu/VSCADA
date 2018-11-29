@@ -11,13 +11,12 @@ INCLUDEPATH += $$_PRO_FILE_PWD_
 
 LIBS += -l sqlite3
 LIBS += -pthread
-LIBS += -lusb-1.0
-#LIBS += -lhid -lsetupapi
-#LIBS += -l:libudev.so.1
-#LIBS += -l:libc.so.6
-#LIBS += -l:libusb-1.0.so.0
-#LIBS += -l:ld-linux.so.3
-#LIBS += -lstdc++
+#LIBS += -lusb-1.0
+LIBS += -l:libudev.so.1
+LIBS += -l:libc.so.6
+LIBS += -l:libusb-1.0.so.0
+LIBS += -l:ld-linux.so.3
+LIBS += -lstdc++
 
 SOURCES += \
         main.cpp \
@@ -37,7 +36,8 @@ SOURCES += \
     libusb_interface/usb-7204.c \
     usb7402_interface.cpp \
     libusb_interface/hidapi.c \
-    postprocess.cpp
+    postprocess.cpp \
+    worker.cpp
 
 HEADERS += \
     db_engine.h \
@@ -58,7 +58,8 @@ HEADERS += \
     libusb_interface/test-usb7204.h \
     usb7402_interface.h \
     libusb_interface/hidapi.h \
-    postprocess.h
+    postprocess.h \
+    worker.h
 
 FORMS += \
         mainwindow.ui \

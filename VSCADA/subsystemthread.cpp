@@ -63,25 +63,24 @@ void SubsystemThread::logData(meta * currSensor){
 //    cout << "Debug dbase write" << endl;
 //    cout << "Subsystem ID: " << subsystemId << endl;
 //    cout << "Size of sensor vector: " << sensorMeta.size() << endl;
-    for (uint i = 0; i < sensorMeta.size(); i++){
+//    for (uint i = 0; i < sensorMeta.size(); i++){
 //        cout << "Checking sensor: " << sensorMeta.at(i)->sensorName << endl;
-        if (sensorMeta.at(i) == currSensor){
-            rows.push_back(getProgramTime());
-            rows.push_back(currSensor->sensorName);
-            rows.push_back(currSensor->sensorName);
-            rows.push_back(to_string(currSensor->val));
-            dbase->insert_row(rawTable,cols,rows);
+//        if (sensorMeta.at(i) == currSensor){
+    rows.push_back(getProgramTime());
+    rows.push_back(currSensor->sensorName);
+    rows.push_back(currSensor->sensorName);
+    rows.push_back(to_string(currSensor->val));
+    dbase->insert_row(rawTable,cols,rows);
 
-            rows.clear();
-            rows.push_back(getProgramTime());
-            rows.push_back(to_string(currSensor->sensorIndex));
-            rows.push_back(currSensor->sensorName);
-            rows.push_back(to_string(currSensor->calVal));
-            dbase->insert_row(calTable,cols,rows);
-//            cout << "Returning" << endl;
-            return;
-        }
-    }
+    rows.clear();
+    rows.push_back(getProgramTime());
+    rows.push_back(to_string(currSensor->sensorIndex));
+    rows.push_back(currSensor->sensorName);
+    rows.push_back(to_string(currSensor->calVal));
+    dbase->insert_row(calTable,cols,rows);
+    return;
+//        }
+//    }
 //    cout << "Sensor Not Found. System Error" << currSensor->sensorName << endl;
 }
 
@@ -133,23 +132,32 @@ vector<meta *> SubsystemThread::get_mainMeta(){
 void SubsystemThread::checkThresholds(meta * sensor){
     error = false;
     string msg;
-    if (sensor->calVal > sensor->maximum){
-        emit updateEditColor("red",sensor);
-        error=true;
-        msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
-        emit pushErrMsg(msg);
-        emit initiateRxn(sensor->maxRxnCode);
-        logMsg(msg);
-    } else if (sensor->calVal < sensor->minimum){
-        emit updateEditColor("blue",sensor);
-        error=true;
-        msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->maximum);
-        emit pushErrMsg(msg);
-        emit initiateRxn(sensor->minRxnCode);
-        logMsg(msg);
+    if (sensor->calVal >= sensor->maximum){
+        if (sensor->state != 1){
+            sensor->state = 1;
+            emit updateEditColor("red",sensor);
+            error=true;
+            msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
+            emit pushErrMsg(msg);
+            emit initiateRxn(sensor->maxRxnCode);
+            logMsg(msg);
+        }
+    } else if (sensor->calVal <= sensor->minimum){
+        if (sensor->state != -1){
+            sensor->state = -1;
+            emit updateEditColor("blue",sensor);
+            error=true;
+            msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->minimum);
+            emit pushErrMsg(msg);
+            emit initiateRxn(sensor->minRxnCode);
+            logMsg(msg);
+        }
     } else {
-        emit updateEditColor("yellow",sensor);
-        emit initiateRxn(sensor->normRxnCode);
+        if (sensor->state != 0){
+            sensor->state = 0;
+            emit updateEditColor("yellow",sensor);
+            emit initiateRxn(sensor->normRxnCode);
+        }
     }
 }
 
@@ -179,12 +187,28 @@ void SubsystemThread::receiveData(meta * currSensor){
             calibrateData(currSensor);
             checkThresholds(currSensor);
             emit updateDisplay(currSensor);
-            checkLogic(currSensor);
+            //checkLogic(currSensor);
             logData(currSensor);
-            emit valueChanged();
+            emit valueChanged(currSensor);
         }
     }
 }
+
+//void SubsystemThread::processData(){
+//    if (!sensorQueue.isEmpty()){
+//        meta * currSensor = sensorQueue.dequeue();
+//        for (uint i = 0; i < sensorMeta.size(); i++){
+//            if (sensorMeta.at(i) == currSensor){
+//                calibrateData(currSensor);
+//                checkThresholds(currSensor);
+//                emit updateDisplay(currSensor);
+//                //checkLogic(currSensor);
+//                logData(currSensor);
+//                emit valueChanged(currSensor);
+//            }
+//        }
+//    }
+//}
 
 /**
  * @brief SubsystemThread::checkLogic : check configured logic
@@ -255,7 +279,30 @@ void SubsystemThread::WaitForInternalThreadToExit()
  * @brief SubsystemThread::subsystemCollectionTasks - performs tasks for data collection
  */
 void SubsystemThread::subsystemCollectionTasks(){
-
+    cout << "Starting tasks" << endl;
+    if (!sensorQueue.isEmpty()){
+        cout << "Queue not empty!" << endl;
+        meta * currSensor = sensorQueue.dequeue();
+//        cout << "sensor fetched" << endl;
+        for (uint i = 0; i < sensorMeta.size(); i++){
+            if (sensorMeta.at(i) == currSensor){
+                currSensor = sensorMeta.at(i);
+                calibrateData(currSensor);
+                currSensor = sensorMeta.at(i);
+                checkThresholds(currSensor);
+                currSensor = sensorMeta.at(i);
+                emit updateDisplay(currSensor);
+                //checkLogic(currSensor);
+                currSensor = sensorMeta.at(i);
+                logData(currSensor);
+                currSensor = sensorMeta.at(i);
+                emit valueChanged(currSensor);
+            }
+        }
+    }
+    cout << "unlocking mutex" << endl;
+    this->procSensorMutex.unlock();
+    return;
 }
 
 /**

@@ -33,6 +33,7 @@ public:
     void setSamplingRate(int newRate);
     double readChannel(uint8_t channel);
 
+    QThread thread;
     QTimer * timer;
     vector<meta *> sensorVector;
     vector<SubsystemThread *> subsystems;
@@ -58,12 +59,14 @@ private:
 
 public slots:
 //   void StartInternalThread(){InternalThreadEntryFunc(this);}
+   void startRead();
    void usbCheckTasks();
    void writeUSBData(uint8_t channel, float voltage, bool * success);
 
 signals:
    void sensorValueChanged(meta * sensor);
    void pushMessage(string msg);
+   void finished();
 };
 
 #endif // USB7402_INTERFACE_H

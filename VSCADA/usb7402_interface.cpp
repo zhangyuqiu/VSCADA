@@ -66,8 +66,10 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(usbCheckTasks()));
 
-    for (uint i = 0; i < subsystems.size(); i++){
-        connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
+    if (isActive){
+        for (uint i = 0; i < subsystems.size(); i++){
+            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
+        }
     }
 }
 
@@ -129,29 +131,29 @@ void usb7402_interface::stopUSBCheck(){
 double usb7402_interface::readChannel(uint8_t channel){
     int flag = fcntl(fileno(stdin), F_GETFL);
     fcntl(0, F_SETFL, flag | O_NONBLOCK);
-
     wvalue = usbAIn_USB7204(udev, DF, channel, gain);
     wvalue = rint(wvalue*table_AIN[DF][gain][channel].slope + table_AIN[DF][gain][channel].intercept);
     double readVal = volts_USB7204(wvalue, gain);
-//    printf("Channel: %d: value = %#hx, %.4fV\n", channel, wvalue, readVal);
     fcntl(fileno(stdin), F_SETFL, flag);
-
     return readVal;
+}
+
+void usb7402_interface::startRead(){
+    cout << "Thread released" << endl;
+    moveToThread(&thread);
+    connect(&thread, SIGNAL (started()), this, SLOT (usbCheckTasks()));
+    thread.start();
+    cout << "Thread started" << endl;
 }
 
 /**
  * @brief usb7402_interface::usbCheckTasks : tasks to check whether sensor values have changed
  */
 void usb7402_interface::usbCheckTasks(){
-    cout << "USB tasks running" << endl;
-    cout << "Sensor Vector size: " << sensorVector.size() << endl;
     for (uint i = 0; i < sensorVector.size(); i++){
-        meta * currSensor = sensorVector.at(i);
-        double val = readChannel(static_cast<uint8_t>(currSensor->usbChannel));
-        cout << "Value read: " << val << endl;
-        if (abs(currSensor->val - val) > 0.001){
-            currSensor->val = val;
-            emit sensorValueChanged(currSensor);
-        }
+        double val = readChannel(static_cast<uint8_t>(sensorVector.at(i)->usbChannel));
+        sensorVector.at(i)->val = val;
+        emit sensorValueChanged(sensorVector.at(i));
     }
+    emit finished();
 }

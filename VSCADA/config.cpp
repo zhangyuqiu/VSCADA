@@ -365,6 +365,7 @@ bool Config::read_config_file_data(){
                     storedSensor->val = 0;
                     storedSensor->calVal = 0;
                     storedSensor->main = 0;
+                    storedSensor->state = 0;
                     storedSensor->sensorIndex = -1;
                     storedSensor->minimum = -1;
                     storedSensor->maximum = -1;

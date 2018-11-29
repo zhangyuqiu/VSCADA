@@ -39,9 +39,9 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
         for (int j = 0; j < currSensor->i2cConfigs.size(); j++){
             uint32_t data = currSensor->i2cConfigs.at(j);
             char configData[3] = {0};
-            configData[0] =  static_cast<char>(data >> 24);
-            configData[0] =  static_cast<char>(data >> 16);
-            configData[0] =  static_cast<char>(data >> 8);
+            configData[0] =  static_cast<char>(data);
+            configData[1] =  static_cast<char>(data >> 8);
+            configData[2] =  static_cast<char>(data >> 16);
             if (write(fd, configData,3) != 3){
                 std::cout << "Writing i2c config address pointer for " << currSensor->sensorName << " failed" << endl;
             }
@@ -60,7 +60,7 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
         connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
     }
 //    connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(gpioCheckTasks()));
 }
 
 /**
@@ -292,12 +292,12 @@ int gpio_interface::i2cRead(meta * sensor){
         std::cout << "i2c read for " << sensor->sensorName << " failed" << endl;
         return -1;
     } else {
-        uint16_t result = static_cast<uint16_t>(readBuf[1]);
+        uint16_t result = static_cast<uint16_t>(readBuf[0]);
         result = static_cast<uint16_t>(result << 8);
-        result = static_cast<uint16_t>(result | readBuf[0]);
+        result = static_cast<uint16_t>(result | readBuf[1]);
         if (sensor->i2cDataField < 16){
-            result = static_cast<uint16_t>(result << sensor->i2cDataField);
-            result = static_cast<uint16_t>(result >> sensor->i2cDataField);
+            result = static_cast<uint16_t>(result << 16 - sensor->i2cDataField);
+            result = static_cast<uint16_t>(result >> 16 - sensor->i2cDataField);
         }
         sensor->val = static_cast<double>(result);
         return 0;
