@@ -11,12 +11,12 @@ INCLUDEPATH += $$_PRO_FILE_PWD_
 
 LIBS += -l sqlite3
 LIBS += -pthread
-#LIBS += -lusb-1.0
+LIBS += -lusb-1.0
 #LIBS += -lhid -lsetupapi
-LIBS += -l:libudev.so.1
-LIBS += -l:libc.so.6
-LIBS += -l:libusb-1.0.so.0
-LIBS += -l:ld-linux.so.3
+#LIBS += -l:libudev.so.1
+#LIBS += -l:libc.so.6
+#LIBS += -l:libusb-1.0.so.0
+#LIBS += -l:ld-linux.so.3
 LIBS += -lstdc++
 
 SOURCES += \
@@ -70,7 +70,6 @@ QT += serialbus widgets
 QT += core
 QMAKE_CXXFLAGS += -std=gnu++0x -pthread
 QMAKE_CFLAGS += -std=gnu++0x -pthread
-#LIBS += -lboost_system
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
