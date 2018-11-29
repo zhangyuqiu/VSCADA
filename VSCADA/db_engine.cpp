@@ -23,7 +23,7 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
         col_buf << column.at(i);
         if(i != column.size()-1) col_buf << ", ";
     }
-
+    QCoreApplication::processEvents();
     //incatenate vector elements into a string
     stringstream row_buf;
     for (uint i = 0; i < row.size(); i++){
@@ -38,7 +38,9 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
     cout << sql << endl;
     cout << endl;
 #endif
+    QCoreApplication::processEvents();
     rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+    QCoreApplication::processEvents();
     if (rc != SQLITE_OK){
         sqlite3_close(db);
 #ifdef DEBUG
@@ -355,7 +357,11 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
     QString currentBase = QString::fromStdString(db_file);
     QSqlDatabase mydb;
     mydb=QSqlDatabase::addDatabase("QSQLITE");
-    mydb.setDatabaseName("../VSCADA/savedsessions/"+currentBase);//path of data base
+    if(0== currentBase.compare("./system.db")){
+          mydb.setDatabaseName(currentBase);//path of data base
+    }else{
+        mydb.setDatabaseName("../VSCADA/savedsessions/"+currentBase);//path of data base
+}
     mydb.open();
 
     QSqlQuery* qry =new QSqlQuery(mydb);

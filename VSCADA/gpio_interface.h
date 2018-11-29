@@ -45,7 +45,7 @@ public:
     int GPIODirection(int pin, int dir);
     int i2cWrite(int address, int data);
 
-    int samplingRate = 500;
+    int samplingRate = 1000;
 
     QTimer * timer;
     vector<meta *> i2cSensors;

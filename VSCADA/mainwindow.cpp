@@ -81,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (uint i = 0; i < subs.size(); i++){
         connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
         connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
-        connect(subs.at(i), SIGNAL(valueChanged()), this, SLOT(updateGraph()));
+        connect(subs.at(i), SIGNAL(valueChanged(meta *)), this, SLOT(updateGraph(meta *)));
         connect(subs.at(i), SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
         connect(subs.at(i), SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
     }
@@ -541,7 +541,6 @@ void MainWindow::plotGraph(QString sensorName){
     gx.clear();
     gy.clear();
 
-    meta * sensor;
     vector<meta *> subMeta = conf->mainSensors;
     if (sensorName.toStdString().compare("None") == 0){
         plot->clearGraphs();
@@ -554,20 +553,20 @@ void MainWindow::plotGraph(QString sensorName){
 
     for (uint i = 0; i < subMeta.size(); i++){
         if (subMeta.at(i)->sensorName.compare(sensorName.toStdString()) == 0){
-            sensor = subMeta.at(i);
-            graphMax = (sensor->maximum);
-            graphMin = (sensor->minimum);
+            plotSensor = subMeta.at(i);
+            graphMax = (plotSensor->maximum);
+            graphMin = (plotSensor->minimum);
             for(uint i = 0; i < conf->subsystems.size(); i++){
                 vector<meta*> subSensors = conf->subsystems.at(i)->get_mainMeta();
                 for (uint j = 0; j < subSensors.size(); j++){
-                    if (sensor->sensorName.compare(subSensors.at(j)->sensorName) == 0){
+                    if (plotSensor->sensorName.compare(subSensors.at(j)->sensorName) == 0){
                         string tableName = conf->removeSpaces(conf->subsystems.at(i)->subsystemId) + "_caldata";
                         vector<string>cols;
                         cols.push_back("time");
                         cols.push_back("value");
                         vector<string>rows;
-                        timeData = conf->dbase->getTargetColumn(QString::fromStdString(tableName),"time","sensorname",QString::fromStdString(sensor->sensorName));
-                        valueData = conf->dbase->getTargetColumn(QString::fromStdString(tableName),"value","sensorname",QString::fromStdString(sensor->sensorName));
+                        timeData = conf->dbase->getTargetColumn(QString::fromStdString(tableName),"time","sensorname",QString::fromStdString(plotSensor->sensorName));
+                        valueData = conf->dbase->getTargetColumn(QString::fromStdString(tableName),"value","sensorname",QString::fromStdString(plotSensor->sensorName));
                         while (valueData.size() > timeData.size()){
                             valueData.pop_back();
                         }
@@ -878,7 +877,7 @@ void MainWindow::updateTab(int tabId){
     }
 }
 
-void MainWindow::updateGraph(){
+void MainWindow::updateGraph(meta * sen){
     cout << "Updating graph" << endl;
     meta * currSensor;
     vector<meta *> mainSensors = conf->mainSensors;

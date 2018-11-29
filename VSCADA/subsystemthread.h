@@ -11,6 +11,7 @@
 #include <QQueue>
 #include <QTime>
 #include <iomanip>
+#include <mutex>
 #include "typedefs.h"
 #include "db_engine.h"
 #include "math.h"
@@ -44,10 +45,12 @@ public:
 
     vector<meta *> get_mainMeta();
 
+    mutex procSensorMutex;
     QTimer * timer;                                 //timer to implement sampling frequency
     DataMonitor * monitor;                          //pointer to a datamonitor object
     DB_Engine * dbase;                              //pointer to database object
 
+    QThread * thread;
     QTimer * checkTmr;                              //timer placeholder for checking update frequencies
     QLineEdit * lineEdit;                           //lineEdif placeholder for sensor-specific line edits
     QTime * systemTimer;
@@ -63,6 +66,7 @@ public:
     vector<response> responseVector;                //stores configured responses
     vector<logic> logicVector;
 
+    QQueue<meta *> sensorQueue;
     QQueue<string> * msgQueue;                      //queue to store messages for display
     bool error;
     QQueue<response> * respCANQueue;                //queue for CAN responses
@@ -87,12 +91,13 @@ public slots:
 //    void updateEdits(meta *sensor);                             //updates LineEdit displays
     void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds
 //    void checkTimeout();                                        //check whether we haven't received some data
+//    void processData();
 
 signals:                           //execute response to CAN
     void pushGPIOData(response rsp);                            //execute response to GPIO
     void pushMessage(string msg);
     void pushErrMsg(string msg);
-    void valueChanged();
+    void valueChanged(meta *);
     void initiateRxn(int rxnCode);                               //execute configured reaction
     void updateDisplay(meta * sensor);
     void updateEditColor(string color, meta *sensor);

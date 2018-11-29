@@ -89,6 +89,7 @@ public:
     int currentSystem;
     int currentSubSystem;
     bool initialized = false;
+    meta * plotSensor;
 
     QTabWidget * tabs;
 
@@ -121,7 +122,7 @@ private slots:
     void openDetailWindow(SubsystemThread *thread);
     void closeDetailPage();
     void updateVals();
-    void updateGraph();
+    void updateGraph(meta *sen);
     void receiveMsg(string msg);
     void receiveErrMsg(string msg);
     void getCurrentSystem(int i);

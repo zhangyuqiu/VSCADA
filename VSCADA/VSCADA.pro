@@ -37,7 +37,8 @@ SOURCES += \
     libusb_interface/usb-7204.c \
     usb7402_interface.cpp \
     libusb_interface/hidapi.c \
-    postprocess.cpp
+    postprocess.cpp \
+    worker.cpp
 
 HEADERS += \
     db_engine.h \
@@ -58,7 +59,8 @@ HEADERS += \
     libusb_interface/test-usb7204.h \
     usb7402_interface.h \
     libusb_interface/hidapi.h \
-    postprocess.h
+    postprocess.h \
+    worker.h
 
 FORMS += \
         mainwindow.ui \
