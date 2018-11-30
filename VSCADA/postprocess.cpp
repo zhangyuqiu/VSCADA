@@ -88,9 +88,20 @@ void postProcess::update(){
 
 
        // Create list view item model
+       list = new QListView();
+       list->setFixedHeight(unitHeight*6);
+       list->setFixedWidth(unitWidth*4);
+       list->setSelectionMode(QAbstractItemView::SingleSelection);
+       QString  listFont = QString::number(stringSize*1.4);
+       list->setStyleSheet("font:"+listFont+"pt;");
 
+         poModel =new QStandardItemModel(list);
 
          getSensorList();
+
+         list->setModel(poModel);
+
+          mainLayout->addWidget(list,1,0);
 
 
 
@@ -133,7 +144,7 @@ void postProcess::update(){
 //       QObject::connect(loadButton, SIGNAL (clicked()), this , SLOT(loadTable()));
 
 
-
+       connect(poModel, SIGNAL(itemChanged(QStandardItem*)),this,SLOT(addSensor(QStandardItem*)));
        connect(dbBox, SIGNAL(currentIndexChanged(int)),this,SLOT(reload(int)));
 
 }
@@ -378,14 +389,9 @@ void postProcess::getSensorList(){
      string thisBase = currentBase.toStdString();
      db->setFile(thisBase);
 
-     list = new QListView();
-     list->setFixedHeight(unitHeight*6);
-     list->setFixedWidth(unitWidth*4);
-     list->setSelectionMode(QAbstractItemView::SingleSelection);
-     QString  listFont = QString::number(stringSize*1.4);
-     list->setStyleSheet("font:"+listFont+"pt;");
 
-    poModel =new QStandardItemModel(list);
+        poModel->removeRows( 0, poModel->rowCount() );
+
     sensorname=db->getTargetColumn("sensors","sensorname"," "," ");
     subsystem=db->getTargetColumn("sensors","subsystem"," "," ");
     int itemCount=0;
@@ -413,9 +419,7 @@ void postProcess::getSensorList(){
 
     }
 
-    list->setModel(poModel);
 
-     mainLayout->addWidget(list,1,0);
 
 //    int itemCount=0;
 
@@ -467,7 +471,8 @@ void postProcess::getSensorList(){
 
 //        }
 //    }
-     connect(poModel, SIGNAL(itemChanged(QStandardItem*)),this,SLOT(addSensor(QStandardItem*)));
+
+selected.clear();
 
 loadTable();
 }
