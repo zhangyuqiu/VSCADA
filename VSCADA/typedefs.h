@@ -98,9 +98,10 @@ typedef struct{
 typedef struct{
     double val1;
     double val2;
-    response rsp;
-    meta * sensor1;
-    meta * sensor2;
+    int rsp;
+    bool active;
+    int sensorId1;
+    int sensorId2;
     std::string logicName;
 }logic;
 

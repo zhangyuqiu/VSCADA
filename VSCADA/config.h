@@ -38,6 +38,7 @@ public:
     int systemMode;
 
     //dummy variables
+    logic * thisLogic;
     meta * storedSensor;
     controlSpec * currSpec;
     statemachine * thisFSM;

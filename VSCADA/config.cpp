@@ -26,7 +26,7 @@ bool Config::read_config_file_data(){
     vector<meta> allSensors;
     vector<response> allResponses;
     vector<int> minrates;
-    vector<logic> logicVector;
+    vector<logic *> logicVector;
 
     //************************************//
     //*****extract file to DOM object*****//
@@ -313,6 +313,54 @@ bool Config::read_config_file_data(){
     }
 #endif
 
+    //*********************************************//
+    //*****process system logic configurations*****//
+    //*********************************************//
+
+    for (int i = 0; i < systemLogic.size(); i++){
+        int id1 = -1;
+        int id2 = -1;
+        QDomNodeList logicConfigs = systemLogic.at(i).childNodes();
+        for (int j = 0; j < logicConfigs.size(); j++){
+            if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid1") == 0){
+                id1 = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
+                cout << "ID 1: " << id1 << endl;
+            } else if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid2") == 0){
+                id2 = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
+                cout << "ID 2: " << id2 << endl;
+            } else if (logicConfigs.at(j).nodeName().toStdString().compare("state") == 0){
+                thisLogic = new logic;
+                thisLogic->active = false;
+                thisLogic->sensorId1 = id1;
+                thisLogic->sensorId2 = id2;
+                QDomNodeList stateNodes = logicConfigs.at(j).childNodes();
+                for (int k = 0; k < stateNodes.size(); k++){
+                    if (stateNodes.at(k).nodeName().toStdString().compare("val1") == 0){
+                        thisLogic->val1 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
+                    } else if (stateNodes.at(k).nodeName().toStdString().compare("val2") == 0){
+                        thisLogic->val2 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
+                    } else if (stateNodes.at(k).nodeName().toStdString().compare("name") == 0){
+                        thisLogic->logicName = stateNodes.at(k).firstChild().nodeValue().toStdString();
+                    } else if (stateNodes.at(k).nodeName().toStdString().compare("responseid") == 0){
+                        thisLogic->rsp = stoi(stateNodes.at(k).firstChild().nodeValue().toStdString());
+                    }
+                }
+                logicVector.push_back(thisLogic);
+            }
+        }
+    }
+
+#ifdef CONFIG_PRINT
+    cout << "Logic Configured: " << endl;
+    for (uint i = 0; i < logicVector.size(); i++){
+        cout << "Logic Name: " << logicVector.at(i)->logicName << endl;
+        cout << "Logic Sensor1: " << logicVector.at(i)->sensorId1 << " value: " << logicVector.at(i)->val1 << endl;
+        cout << "Logic Sensor2: " << logicVector.at(i)->sensorId2 << " value: " << logicVector.at(i)->val2 << endl;
+        cout << "Logic response: " << logicVector.at(i)->rsp << endl << endl;
+    }
+#endif
+
+
     //***********************************************//
     //*****process system subsystems and sensors*****//
     //***********************************************//
@@ -502,65 +550,6 @@ bool Config::read_config_file_data(){
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
     }
-
-    //*********************************************//
-    //*****process system logic configurations*****//
-    //*********************************************//
-
-    for (int i = 0; i < systemLogic.size(); i++){
-        QDomNodeList logicConfigs = systemLogic.at(i).childNodes();
-        for (int j = 0; j < logicConfigs.size(); j++){
-            logic thisLogic;
-            if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid1") == 0){
-                int id = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
-                for (uint k = 0; k < storedSensors.size(); k++){
-                    if (storedSensors.at(k)->sensorIndex == id){
-                        thisLogic.sensor1 = storedSensors.at(k);
-                    }
-                }
-            } else if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid2") == 0){
-                int id = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
-                for (uint k = 0; k < storedSensors.size(); k++){
-                    if (storedSensors.at(k)->sensorIndex == id){
-                        thisLogic.sensor2 = storedSensors.at(k);
-                    }
-                }
-            } else if (logicConfigs.at(j).nodeName().toStdString().compare("state") == 0){
-                QDomNodeList stateNodes = logicConfigs.at(j).childNodes();
-                for (int k = 0; k < stateNodes.size(); k++){
-                    if (stateNodes.at(k).nodeName().toStdString().compare("val1") == 0){
-                        thisLogic.val1 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
-                    } else if (stateNodes.at(k).nodeName().toStdString().compare("val2") == 0){
-                        thisLogic.val2 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
-                    } else if (stateNodes.at(k).nodeName().toStdString().compare("name") == 0){
-                        thisLogic.logicName = stateNodes.at(k).firstChild().nodeValue().toStdString();
-                    } else if (stateNodes.at(k).nodeName().toStdString().compare("responseid") == 0){
-                        int rxnVal = stoi(stateNodes.at(k).firstChild().nodeValue().toStdString());
-                        for (uint m = 0; m < allResponses.size(); m++){
-                            if (allResponses.at(m).responseIndex == rxnVal){
-                                thisLogic.rsp = allResponses.at(m);
-                                break;
-                            }
-                            if (m == allResponses.size()-1){
-                                cout << "Error: Could not find response" << endl;
-                            }
-                        }
-                    }
-                }
-                logicVector.push_back(thisLogic);
-            }
-        }
-    }
-
-#ifdef CONFIG_PRINT
-    cout << "Logic Configured: " << endl;
-    for (uint i = 0; i < logicVector.size(); i++){
-        cout << "Logic Name: " << logicVector.at(i).logicName << endl;
-        cout << "Logic Sensor1: " << logicVector.at(i).sensor1->sensorName << " value: " << logicVector.at(i).val1 << endl;
-        cout << "Logic Sensor2: " << logicVector.at(i).sensor2->sensorName << " value: " << logicVector.at(i).val2 << endl;
-        cout << "Logic response: " << logicVector.at(i).rsp.msg << endl << endl;
-    }
-#endif
 
     //********************************************************//
     //              PREPARE DATABASE INIT SCRIPT              //

@@ -639,7 +639,6 @@ void MainWindow::receiveErrMsg(string msg){
 }
 
 void MainWindow::updateFSM_MW(statemachine * currFSM){
-    cout << "In here" << endl;
     for (uint i = 0; i < conf->FSMs.size(); i++){
         statemachine * currMachine = conf->FSMs.at(i);
         if (currMachine == currFSM){
@@ -878,7 +877,6 @@ void MainWindow::updateTab(int tabId){
 }
 
 void MainWindow::updateGraph(meta * sen){
-    cout << "Updating graph" << endl;
     meta * currSensor;
     vector<meta *> mainSensors = conf->mainSensors;
     string sensorName = plotComboBox->currentText().toStdString();

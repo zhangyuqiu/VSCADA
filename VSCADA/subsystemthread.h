@@ -24,7 +24,7 @@ class SubsystemThread : public QObject
 {
     Q_OBJECT
 public:
-    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic> lVector, vector<meta *> mainMeta);    //class object destructor
+    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic *> lVector, vector<meta *> mainMeta);    //class object destructor
     virtual ~SubsystemThread();                                                         //class object destructor
 
     void stop();                                    //stops data collection
@@ -64,7 +64,7 @@ public:
     vector<QLineEdit *> controlEdits;
     vector<QTimer *> editTimers;                    //stores checkTimers
     vector<response> responseVector;                //stores configured responses
-    vector<logic> logicVector;
+    vector<logic *> logicVector;
 
     QQueue<meta *> sensorQueue;
     QQueue<string> * msgQueue;                      //queue to store messages for display

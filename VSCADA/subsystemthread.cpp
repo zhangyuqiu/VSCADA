@@ -5,11 +5,11 @@
  * @param mtr - data monitor module
  * @param sensors - vector of subsystem sensors configured
  */
-SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic> lVector, vector<meta *> mainMeta){
+SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic *> lVector, vector<meta *> mainMeta){
     msgQueue = new QQueue<string>;
     timer = new QTimer;
     error=false;
-    connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
+    //connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
     subsystemId = id;
     responseVector = respVector;
@@ -187,44 +187,46 @@ void SubsystemThread::receiveData(meta * currSensor){
             calibrateData(currSensor);
             checkThresholds(currSensor);
             emit updateDisplay(currSensor);
-            //checkLogic(currSensor);
+            checkLogic(currSensor);
             logData(currSensor);
             emit valueChanged(currSensor);
         }
     }
 }
 
-//void SubsystemThread::processData(){
-//    if (!sensorQueue.isEmpty()){
-//        meta * currSensor = sensorQueue.dequeue();
-//        for (uint i = 0; i < sensorMeta.size(); i++){
-//            if (sensorMeta.at(i) == currSensor){
-//                calibrateData(currSensor);
-//                checkThresholds(currSensor);
-//                emit updateDisplay(currSensor);
-//                //checkLogic(currSensor);
-//                logData(currSensor);
-//                emit valueChanged(currSensor);
-//            }
-//        }
-//    }
-//}
-
 /**
  * @brief SubsystemThread::checkLogic : check configured logic
  * @param currSensor
  */
 void SubsystemThread::checkLogic(meta * currSensor){
+    meta * otherSensor;
     for(uint i = 0; i < logicVector.size(); i++){
-        logic currLogic = logicVector.at(i);
-        if (currSensor == currLogic.sensor1){
-            if ((currSensor->calVal - currLogic.val1) < 0.01 && (currLogic.sensor2->calVal - currLogic.val2) < 0.01){
-                emit initiateRxn(currLogic.rsp.responseIndex);
+        logic * currLogic = logicVector.at(i);
+        if (currSensor->sensorIndex == currLogic->sensorId1){
+            for (int j = 0; j < sensorMeta.size(); j++){
+                if (sensorMeta.at(j)->sensorIndex == currLogic->sensorId2){
+                    otherSensor = sensorMeta.at(j);
+                }
             }
-        } else if (currSensor == currLogic.sensor2){
-            if ((currSensor->calVal - currLogic.val2) < 0.01 && (currLogic.sensor1->calVal - currLogic.val1) < 0.01){
-                emit initiateRxn(currLogic.rsp.responseIndex);
+
+            if (abs(currSensor->calVal - currLogic->val1) < 0.01 && abs(otherSensor->calVal - currLogic->val2) < 0.01){
+                    emit initiateRxn(currLogic->rsp);
+                    currLogic->active = true;
+                return;
             }
+            currLogic->active = false;
+        } else if (currSensor->sensorIndex == currLogic->sensorId2){
+            for (int j = 0; j < sensorMeta.size(); j++){
+                if (sensorMeta.at(j)->sensorIndex == currLogic->sensorId1){
+                    otherSensor = sensorMeta.at(j);
+                }
+            }
+            if (abs(currSensor->calVal - currLogic->val2) < 0.01 && abs(otherSensor->calVal - currLogic->val1) < 0.01){
+                emit initiateRxn(currLogic->rsp);
+                currLogic->active = true;
+                return;
+            }
+            currLogic->active = false;
         }
     }
 }
@@ -279,30 +281,30 @@ void SubsystemThread::WaitForInternalThreadToExit()
  * @brief SubsystemThread::subsystemCollectionTasks - performs tasks for data collection
  */
 void SubsystemThread::subsystemCollectionTasks(){
-    cout << "Starting tasks" << endl;
-    if (!sensorQueue.isEmpty()){
-        cout << "Queue not empty!" << endl;
-        meta * currSensor = sensorQueue.dequeue();
-//        cout << "sensor fetched" << endl;
-        for (uint i = 0; i < sensorMeta.size(); i++){
-            if (sensorMeta.at(i) == currSensor){
-                currSensor = sensorMeta.at(i);
-                calibrateData(currSensor);
-                currSensor = sensorMeta.at(i);
-                checkThresholds(currSensor);
-                currSensor = sensorMeta.at(i);
-                emit updateDisplay(currSensor);
-                //checkLogic(currSensor);
-                currSensor = sensorMeta.at(i);
-                logData(currSensor);
-                currSensor = sensorMeta.at(i);
-                emit valueChanged(currSensor);
-            }
-        }
-    }
-    cout << "unlocking mutex" << endl;
-    this->procSensorMutex.unlock();
-    return;
+//    cout << "Starting tasks" << endl;
+//    if (!sensorQueue.isEmpty()){
+//        cout << "Queue not empty!" << endl;
+//        meta * currSensor = sensorQueue.dequeue();
+////        cout << "sensor fetched" << endl;
+//        for (uint i = 0; i < sensorMeta.size(); i++){
+//            if (sensorMeta.at(i) == currSensor){
+//                currSensor = sensorMeta.at(i);
+//                calibrateData(currSensor);
+//                currSensor = sensorMeta.at(i);
+//                checkThresholds(currSensor);
+//                currSensor = sensorMeta.at(i);
+//                emit updateDisplay(currSensor);
+//                //checkLogic(currSensor);
+//                currSensor = sensorMeta.at(i);
+//                logData(currSensor);
+//                currSensor = sensorMeta.at(i);
+//                emit valueChanged(currSensor);
+//            }
+//        }
+//    }
+//    cout << "unlocking mutex" << endl;
+//    this->procSensorMutex.unlock();
+//    return;
 }
 
 /**

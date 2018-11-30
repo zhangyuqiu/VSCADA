@@ -255,6 +255,7 @@ void DataControl::deactivateLog(system_state *prevstate){
  * @param responseIndex : response identifier
  */
 void DataControl::executeRxn(int responseIndex){
+    cout << "Reacting: index " << responseIndex << endl;
     //print to log
     vector<string> cols;
     vector<string> rows;
