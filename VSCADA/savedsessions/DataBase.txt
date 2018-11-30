@@ -12,5 +12,11 @@ thissession.db
 
 
 not_important.db
+<<<<<<< HEAD
+0
 
+0
+=======
+
+>>>>>>> 1f262981c19ef757c0a8e17c8e5a0023c22ba59d
 
