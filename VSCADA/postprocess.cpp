@@ -166,6 +166,8 @@ void postProcess::addSensor(QStandardItem *poItem)
 void postProcess::loadTable(){
     int xmax=0;
     int ymax=0;
+    int xmin=0;
+    int ymin=0;
     QString name;
     QString subname;
     QString currentTable;
@@ -188,8 +190,15 @@ void postProcess::loadTable(){
     vector<QString> tempstart =db->getTargetColumn("system_info","starttime"," "," ");
     vector<QString> tempend=db->getTargetColumn("system_info","endtime"," "," ");
 
-    startTime=tempstart.at(0);
-    endTime =tempend.at(0);
+    if(tempstart.size()==0){
+        startTime=" ";
+        endTime=" ";
+    }else{
+        startTime=tempstart.at(0);
+        endTime =tempend.at(0);
+    }
+
+
 
 
     QString  labelFont = QString::number(stringSize*1.5);
@@ -338,15 +347,24 @@ for(int j=0; j<data.size();j++){
     displayTable->setItem(row,column+1,item);
 
     double y= data.at(j).QString::toDouble();
+    double x =time.at(j).QString::toDouble();
 
     if(y>ymax){
         ymax=y;
     }
 
-    if(i>xmax){
-        xmax=i;
+    if(x>xmax){
+        xmax=x;
     }
-    gx.append(j);
+
+    if(y<ymin){
+        ymin=y;
+    }
+
+    if(x<xmin){
+        xmin=x;
+    }
+    gx.append(x);
     gy.append(y);
 
 
@@ -364,6 +382,8 @@ for(int j=0; j<data.size();j++){
   plot->graph(i)->setName(selected.at(i));
  plot->graph(i)->setScatterStyle(QCPScatterStyle::ssCircle);
  plot->graph(i)->setLineStyle(QCPGraph::lsLine);
+ plot->yAxis->setRange(ymin-4, -(ymax-ymin+4), Qt::AlignRight);
+ plot->xAxis->setRange(0, -(xmax+4), Qt::AlignRight);
   plot->graph(i)->setData(gx,gy);
 
 }
@@ -371,6 +391,7 @@ for(int j=0; j<data.size();j++){
 // plot->legend->setFont(legendFont);
 //plot->legend->setSelectedFont(legendFont);
 //plot->legend->setSelectableParts(QCPLegend::spItems);
+
  plot->replot();
  plot->update();
 
@@ -390,7 +411,7 @@ void postProcess::getSensorList(){
      db->setFile(thisBase);
 
 
-        poModel->removeRows( 0, poModel->rowCount() );
+    poModel->removeRows( 0, poModel->rowCount() );
 
     sensorname=db->getTargetColumn("sensors","sensorname"," "," ");
     subsystem=db->getTargetColumn("sensors","subsystem"," "," ");
