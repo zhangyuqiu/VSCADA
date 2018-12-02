@@ -172,23 +172,20 @@ void MainWindow::update(){
         else subsystemSectionLayout->addWidget(hBorder1,fieldRowCount,fieldColCount,1,4);
         fieldRowCount++;
 
-        QPushButton * healthButton = new QPushButton;
-        healthButton->setStyleSheet("font:10pt;");
-        healthButton->setText("Health");
-        QPalette healthPal = healthButton->palette();
-        if (currSub->error){
-            healthPal.setColor(QPalette::Button, QColor(255,0,0));
-        } else {
-            healthPal.setColor(QPalette::Button, QColor(0,255,0));
-        }
-        healthButton->setPalette(healthPal);
-        healthButton->setAutoFillBackground(true);
+        QPushButton * rebootBtn = new QPushButton;
+        rebootBtn->setStyleSheet("font:10pt;");
+        rebootBtn->setText("Reboot");
+        QPalette rebootPal = rebootBtn->palette();
+        rebootPal.setColor(QPalette::Button, QColor(0,100,0));
+        rebootBtn->setPalette(rebootPal);
+        rebootBtn->setAutoFillBackground(true);
         QString  butLabelFont = QString::number(stringSize*1.4);
-        healthButton->setStyleSheet("font:"+butLabelFont+"pt;");
-        healthButton->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        healthButton->setFixedHeight(static_cast<int>(unitHeight*1.4));
-        healthButtons.push_back(healthButton);
-        subsystemSectionLayout->addWidget(healthButton,fieldRowCount,fieldColCount,Qt::AlignCenter);
+        rebootBtn->setStyleSheet("font:"+butLabelFont+"pt;");
+        rebootBtn->setFixedWidth(static_cast<int>(unitWidth*1.5));
+        rebootBtn->setFixedHeight(static_cast<int>(unitHeight*1.4));
+        healthButtons.push_back(rebootBtn);
+        subsystemSectionLayout->addWidget(rebootBtn,fieldRowCount,fieldColCount,Qt::AlignCenter);
+        connect(rebootBtn, SIGNAL(clicked()), subs.at(i), SLOT(bootSubsystem()));
 
         QPushButton * detailButton = new QPushButton;
         detailButton->setStyleSheet("font:10pt;");

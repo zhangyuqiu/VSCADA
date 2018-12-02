@@ -20,7 +20,7 @@ Config::~Config(){
  * @return
  */
 bool Config::read_config_file_data(){
-    try {
+//    try {
     //local declarations
     vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;
@@ -371,12 +371,8 @@ bool Config::read_config_file_data(){
         string subSystemId;
         vector<meta *> sensors;
         vector<meta *> mainMeta;
-        bootloader bootItem;
-
-        cout << endl << "subsystem: " << qPrintable(subsystemNodes.at(i).firstChild().firstChild().nodeValue()) << endl;
-        cout << "subsystem ID: " << subSystemId << endl;
-        cout << "subsystem min: " << minrate << endl;
-        cout << "subsystem max: " << maxrate << endl;
+        vector<canItem> broadCast;
+        bootloader bootCmds;
 
         //get subsystem characteristics: subsystemId, minrate and maxrate
         QDomNodeList subsystemXteristics = subsystemNodes.at(i).childNodes();
@@ -391,20 +387,77 @@ bool Config::read_config_file_data(){
                 if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
                     maxrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: subsystem max rate not an integer");
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootaddress") == 0){
-                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    bootItem.canAddress = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: subsystem boot CAN address not an integer");
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootvalue") == 0){
-                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    bootItem.trigger = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: subsystem boot value not an integer");
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootmessage") == 0){
-                bootItem.displayMsg = subsystemXteristics.at(j).firstChild().nodeValue().toStdString();
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootconfig") == 0){
-                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    bootItem.configMsg.push_back(stoull(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()));
-                else configErrors.push_back("CONFIG ERROR: subsystem boot config message not an integer");
+            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("canbroadcast") == 0){
+                canItem item;
+                item.address = -1;
+                item.data = 0;
+                item.dataSize = 8;
+                QDomNodeList canItemList = subsystemXteristics.at(j).childNodes();
+                for (int m = 0; m < canItemList.size(); m++){
+                    if(canItemList.at(m).nodeName().toStdString().compare("address") == 0){
+                        if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                            item.address = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: broadcast CAN address not an integer");
+                    } else if(canItemList.at(m).nodeName().toStdString().compare("data") == 0){
+                        item.data = stoull(canItemList.at(m).firstChild().nodeValue().toStdString());
+                    } else if(canItemList.at(m).nodeName().toStdString().compare("bytes") == 0){
+                        if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                            item.dataSize = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: broadcast CAN data size not an integer");
+                    }
+                }
+                broadCast.push_back(item);
+            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootsequence") == 0){
+                QDomNodeList bootCmdList = subsystemXteristics.at(j).childNodes();
+                for (int k = 0; k < bootCmdList.size(); k++){
+                    if(bootCmdList.at(k).nodeName().toStdString().compare("bootcan") == 0){
+                        canItem item;
+                        item.address = -1;
+                        item.data = 0;
+                        item.dataSize = 8;
+                        QDomNodeList canItemList = bootCmdList.at(k).childNodes();
+                        for (int m = 0; m < canItemList.size(); m++){
+                            if(canItemList.at(m).nodeName().toStdString().compare("address") == 0){
+                                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                                    item.address = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                                else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
+                            } else if(canItemList.at(m).nodeName().toStdString().compare("data") == 0){
+                                item.data = stoull(canItemList.at(m).firstChild().nodeValue().toStdString());
+                            } else if(canItemList.at(m).nodeName().toStdString().compare("bytes") == 0){
+                                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                                    item.dataSize = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                                else configErrors.push_back("CONFIG ERROR: boot CAN data size not an integer");
+                            }
+                        }
+                        bootCmds.bootCanCmds.push_back(item);
+                    } else if(bootCmdList.at(k).nodeName().toStdString().compare("booti2c") == 0){
+                        if (isInteger(bootCmdList.at(k).firstChild().nodeValue().toStdString()))
+                            bootCmds.bootI2cCmds.push_back(stoi(bootCmdList.at(k).firstChild().nodeValue().toStdString()));
+                        else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
+                    } else if(bootCmdList.at(k).nodeName().toStdString().compare("bootgpio") == 0){
+                        gpioItem item;
+                        item.mode = -1;
+                        item.pin = -1;
+                        item.value = 0;
+                        QDomNodeList gpioItemList = bootCmdList.at(k).childNodes();
+                        for (int m = 0; m < gpioItemList.size(); m++){
+                            if(gpioItemList.at(m).nodeName().toStdString().compare("pin") == 0){
+                                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                                    item.pin = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                                else configErrors.push_back("CONFIG ERROR: boot GPIO pin not an integer");
+                            } else if(gpioItemList.at(m).nodeName().toStdString().compare("value") == 0){
+                                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                                    item.value = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                                else configErrors.push_back("CONFIG ERROR: boot GPIO val not an integer");
+                            } else if(gpioItemList.at(m).nodeName().toStdString().compare("mode") == 0){
+                                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                                    item.mode = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                                else configErrors.push_back("CONFIG ERROR: boot GPIO mode not an integer");
+                            }
+                        }
+                        bootCmds.bootGPIOCmds.push_back(item);
+                    }
+                }
             } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("sensors") == 0){
                 QDomNodeList sensorsList = subsystemXteristics.at(j).childNodes();
                 for (int k = 0; k < sensorsList.size(); k++){
@@ -445,7 +498,7 @@ bool Config::read_config_file_data(){
                             else configErrors.push_back("CONFIG ERROR: sensor index not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("primaddress") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->primAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                                storedSensor->primAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor primary address not an integer");
                             canSensors.push_back(storedSensor);
                         } else if (attributeList.at(m).nodeName().toStdString().compare("auxaddress") == 0){
@@ -542,10 +595,31 @@ bool Config::read_config_file_data(){
             }
         }
 
-        bootConfigs.push_back(bootItem);
+//        bootConfigs.push_back(bootItem);
+
+#ifdef CONFIG_PRINT
+    cout << "Boot Configuration: " << endl;
+    for (uint i = 0; i < bootCmds.bootCanCmds.size(); i++){
+        cout << "CAN address: " << bootCmds.bootCanCmds.at(i).address << " data: " << bootCmds.bootCanCmds.at(i).data << " size: " << bootCmds.bootCanCmds.at(i).dataSize << endl;
+    }
+    for (uint i = 0; i < bootCmds.bootI2cCmds.size(); i++){
+        cout << " I2c data: " << bootCmds.bootI2cCmds.at(i) << endl;
+    }
+    for (uint i = 0; i < bootCmds.bootGPIOCmds.size(); i++){
+        cout << "GPIO pin: " << bootCmds.bootGPIOCmds.at(i).pin << " value: " << bootCmds.bootGPIOCmds.at(i).value << " mode: " << bootCmds.bootGPIOCmds.at(i).mode << endl;
+    }
+#endif
+
+#ifdef CONFIG_PRINT
+    cout << "CAN Broadcast: " << endl;
+    for (uint i = 0; i < broadCast.size(); i++){
+        cout << "CAN address: " << broadCast.at(i).address << " data: " << broadCast.at(i).data << " size: " << broadCast.at(i).dataSize << endl;
+    }
+#endif
+
         //launch a subsystem thread
 
-        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,mainMeta);
+        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,mainMeta,broadCast,bootCmds);
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
@@ -628,6 +702,7 @@ bool Config::read_config_file_data(){
         rows.clear();
         rows.push_back(to_string(storedSensors.at(n)->sensorIndex));
         rows.push_back(storedSensors.at(n)->sensorName);
+        cout << "Sensor: " << storedSensors.at(n)->sensorName << " CANaddr: " << storedSensors.at(n)->primAddress << endl;
         rows.push_back(storedSensors.at(n)->subsystem);
         rows.push_back(to_string(storedSensors.at(n)->minimum));
         rows.push_back(to_string(storedSensors.at(n)->maximum));
@@ -666,6 +741,7 @@ bool Config::read_config_file_data(){
         SubsystemThread * thread = subsystems.at(i);
         thread->set_rate(minrates.at(i));
         thread->setDB(dbase);
+        subsystems.at(i)->bootSubsystem();
         subsystems.at(i)->start();
     }
 
@@ -674,10 +750,11 @@ bool Config::read_config_file_data(){
     cout << "Returning from config" << endl;
     return true;
 
-    } catch (...) {
-        configErrors.push_back("CRITICAL WARNING: CONFIGURATION UNSUCCESSFUL!!!");
-        return false;
-    }
+//    } catch (...) {
+//        cout << "Error caught: config issue" << endl;
+//        configErrors.push_back("CRITICAL WARNING: CONFIGURATION UNSUCCESSFUL!!!");
+//        return false;
+//    }
 }
 
 /**

@@ -26,6 +26,7 @@ signals:
 private slots:
     void recieve_frame();
     void sendData(int addr, uint64_t data);
+    void sendDataByte(int addr, uint64_t data, int size);
 };
 
 #endif // CANBUS_INTERFACE_H

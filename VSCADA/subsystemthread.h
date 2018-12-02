@@ -24,12 +24,11 @@ class SubsystemThread : public QObject
 {
     Q_OBJECT
 public:
-    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic *> lVector, vector<meta *> mainMeta);    //class object destructor
+    SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic *> lVector, vector<meta *> mainMeta, vector<canItem> broadCast, bootloader boot);    //class object destructor
     virtual ~SubsystemThread();                                                         //class object destructor
 
     void stop();                                    //stops data collection
     void start();                                   //starts data collection
-    void init_data();                               //retrieves GLV Data
     vector<int> get_data();                         //initializes GLV data vector
     string get_curr_time();                         //get curent time
     void setDB(DB_Engine * db);                     //sets database object
@@ -38,7 +37,7 @@ public:
     string getProgramTime();
     vector<meta *> get_metadata();                  //retrieves a configured list of sensors
     void setMonitor(DataMonitor * mtr);             //sets monitor object
-    void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
+//    void WaitForInternalThreadToExit();             //stops code until this thread is destroyed
     void calibrateData(meta * currSensor);
     void checkLogic(meta * currSensor);
     void setSystemTimer(QTime * timer);
@@ -58,6 +57,9 @@ public:
     int checkRate = 0;                              //rate for checking for sensor updates
     string subsystemId;                             //identifies subsystem by name
 
+    vector<canItem> broadCastVector;
+    bootloader bootCmds;
+
     vector<meta *> sensorMeta;                      //cooling sensor metadata
     vector<meta *> mainSensorVector;
     vector<QLineEdit *> edits;                      //lineEdits for displaying data
@@ -75,31 +77,35 @@ public:
     bool running = true;                            //to control running of collection thread
     vector<int> rawData;                            //cooling sensor data
 
-protected:
-    virtual void subsystemCollectionTasks();        //runs collection tasks
+//protected:
+//    virtual void subsystemCollectionTasks();        //runs collection tasks
 
-private:
-    /** Links the member function to ordinary space */
-    static void * InternalThreadEntryFunc(void * This) {((SubsystemThread *)This)->subsystemCollectionTasks(); return NULL;}
+//private:
+//    /** Links the member function to ordinary space */
+//    static void * InternalThreadEntryFunc(void * This) {((SubsystemThread *)This)->subsystemCollectionTasks(); return NULL;}
 
-    pthread_t _thread;
+//    pthread_t _thread;
 
 public slots:
     void receiveData(meta * currSensor);
     void logData(meta * currSensor);                            //records sensor data in database
-    void StartInternalThread();                                 //starts subsystem thread
+//    void StartInternalThread();                                 //starts subsystem thread
 //    void updateEdits(meta *sensor);                             //updates LineEdit displays
     void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds
 //    void checkTimeout();                                        //check whether we haven't received some data
 //    void processData();
+    void bootSubsystem();
+    void subsystemCollectionTasks();
 
 signals:                           //execute response to CAN
-    void pushGPIOData(response rsp);                            //execute response to GPIO
+    void pushI2cData(uint32_t value);
+    void pushGPIOData(int pin, int value);                            //execute response to GPIO
     void pushMessage(string msg);
     void pushErrMsg(string msg);
     void valueChanged(meta *);
     void initiateRxn(int rxnCode);                               //execute configured reaction
     void updateDisplay(meta * sensor);
+    void sendCANData(int address, uint64_t data, int size);
     void updateEditColor(string color, meta *sensor);
 };
 

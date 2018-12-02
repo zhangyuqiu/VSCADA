@@ -5,17 +5,18 @@
  * @param mtr - data monitor module
  * @param sensors - vector of subsystem sensors configured
  */
-SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic *> lVector, vector<meta *> mainMeta){
+SubsystemThread::SubsystemThread(vector<meta *> sensors, string id, vector<response> respVector, vector<logic *> lVector, vector<meta *> mainMeta, vector<canItem> broadCast, bootloader boot){
     msgQueue = new QQueue<string>;
     timer = new QTimer;
     error=false;
-    //connect(timer, SIGNAL(timeout()), this, SLOT(StartInternalThread()));
     sensorMeta = sensors;
     subsystemId = id;
     responseVector = respVector;
     logicVector = lVector;
     mainSensorVector = mainMeta;
-    init_data();
+    broadCastVector = broadCast;
+    bootCmds = boot;
+    connect(timer, SIGNAL(timeout()), this, SLOT(subsystemCollectionTasks()));
 }
 
 /**
@@ -103,10 +104,18 @@ void SubsystemThread::set_rate(int newRate){
 /**
  * @brief SubsystemThread::init_data - initializes vector of data to 0
  */
-void SubsystemThread::init_data(){
-    for(int i = 0; i < static_cast<int>(sensorMeta.size()); i++){
-        rawData.push_back(0);
+void SubsystemThread::bootSubsystem(){
+    timer->stop();
+    for (uint i = 0; i < bootCmds.bootCanCmds.size(); i++){
+        emit sendCANData(bootCmds.bootCanCmds.at(i).address,bootCmds.bootCanCmds.at(i).data,bootCmds.bootCanCmds.at(i).dataSize);
     }
+    for (uint i = 0; i < bootCmds.bootI2cCmds.size(); i++){
+        emit pushI2cData(bootCmds.bootI2cCmds.at(i));
+    }
+    for (uint i = 0; i < bootCmds.bootGPIOCmds.size(); i++){
+        emit pushGPIOData(bootCmds.bootGPIOCmds.at(i).pin, bootCmds.bootGPIOCmds.at(i).value);
+    }
+    timer->start();
 }
 
 /**
@@ -269,51 +278,30 @@ vector<int> SubsystemThread::get_data(){
     return rawData;
 }
 
-/**
- * @brief SubsystemThread::WaitForInternalThreadToExit - waits until thread finishes executing
- */
-void SubsystemThread::WaitForInternalThreadToExit()
-{
-   (void) pthread_join(_thread, nullptr);
-}
+///**
+// * @brief SubsystemThread::WaitForInternalThreadToExit - waits until thread finishes executing
+// */
+//void SubsystemThread::WaitForInternalThreadToExit()
+//{
+//   (void) pthread_join(_thread, nullptr);
+//}
 
 /**
  * @brief SubsystemThread::subsystemCollectionTasks - performs tasks for data collection
  */
 void SubsystemThread::subsystemCollectionTasks(){
-//    cout << "Starting tasks" << endl;
-//    if (!sensorQueue.isEmpty()){
-//        cout << "Queue not empty!" << endl;
-//        meta * currSensor = sensorQueue.dequeue();
-////        cout << "sensor fetched" << endl;
-//        for (uint i = 0; i < sensorMeta.size(); i++){
-//            if (sensorMeta.at(i) == currSensor){
-//                currSensor = sensorMeta.at(i);
-//                calibrateData(currSensor);
-//                currSensor = sensorMeta.at(i);
-//                checkThresholds(currSensor);
-//                currSensor = sensorMeta.at(i);
-//                emit updateDisplay(currSensor);
-//                //checkLogic(currSensor);
-//                currSensor = sensorMeta.at(i);
-//                logData(currSensor);
-//                currSensor = sensorMeta.at(i);
-//                emit valueChanged(currSensor);
-//            }
-//        }
-//    }
-//    cout << "unlocking mutex" << endl;
-//    this->procSensorMutex.unlock();
-//    return;
+    for (uint i = 0; i < broadCastVector.size(); i++){
+        emit sendCANData(broadCastVector.at(i).address,broadCastVector.at(i).data,broadCastVector.at(i).dataSize);
+    }
 }
 
-/**
- * @brief SubsystemThread::StartInternalThread - launches thread
- */
-void SubsystemThread::StartInternalThread()
-{
-   pthread_create(&_thread, nullptr, InternalThreadEntryFunc, this);
-}
+///**
+// * @brief SubsystemThread::StartInternalThread - launches thread
+// */
+//void SubsystemThread::StartInternalThread()
+//{
+//   pthread_create(&_thread, nullptr, InternalThreadEntryFunc, this);
+//}
 
 /**
  * @brief SubsystemThread::get_curr_time - retrieves current operation system time

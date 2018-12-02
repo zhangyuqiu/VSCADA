@@ -39,7 +39,7 @@ public:
     void startSystemTimer();
     string getProgramTime();
     void saveSession(string name);
-    void sendBootConfig(bootloader bl);
+//    void sendBootConfig(bootloader bl);
     int change_sampling_rate(int rate);
     vector<controlSpec *> get_control_specs();
     void init_meta_vector(vector<meta> vctr);
@@ -71,12 +71,17 @@ public slots:
     void deactivateLog(system_state * prevstate);
     void receive_can_data(uint32_t addr, uint64_t arr);
     void receive_control_val(int data, controlSpec * spec);
+    void passCANData(int address, uint64_t data, int size);
+    void passI2cData(uint32_t data);
+    void passGPIOData(int pin, int value);
 signals:
     void pushMessage(string msg);
     void pushGPIOData(int pin, int value);
+    void pushI2cData(uint32_t value);
     void updateFSM(statemachine * currFSM);
     void activateState(system_state * newState);
     void sendCANData(int address, uint64_t data);
+    void sendCANDataByte(int address, uint64_t data, int size);
     void deactivateState(system_state * prevstate);
     void sendToUSB7204(uint8_t channel, float voltage, bool*);
     void updateEdits(meta *);

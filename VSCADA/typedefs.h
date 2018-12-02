@@ -44,7 +44,7 @@ typedef struct{
     double calConst;
     int sensorIndex;
     int normRxnCode;
-    int primAddress;
+    uint32_t primAddress;
     double calMultiplier;
     int state;
     std::vector<poly> calPolynomial;
@@ -123,10 +123,21 @@ typedef struct{
 }statemachine;
 
 typedef struct{
-    int canAddress;
-    int trigger;
-    std::string displayMsg;
-    std::vector<uint64_t> configMsg;
+    int address;
+    uint64_t data;
+    int dataSize;
+}canItem;
+
+typedef struct{
+    int pin;
+    int value;
+    int mode;
+}gpioItem;
+
+typedef struct{
+    std::vector<canItem> bootCanCmds;
+    std::vector<uint32_t> bootI2cCmds;
+    std::vector<gpioItem> bootGPIOCmds;
 } bootloader;
 
 #endif // TYPEDEFS_H

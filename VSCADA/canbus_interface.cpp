@@ -70,7 +70,25 @@ void canbus_interface::sendData(int addr, uint64_t data){
     for(int i = sizeof(data)-1; i >= 0; i--){
         byteArr.append(charData[i]);
     }
-    qDebug() << "QByteArray Value: " << byteArr << endl;
+    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
+    QCanBusFrame * outFrame = new QCanBusFrame;
+    outFrame->setFrameId(static_cast<quint32>(addr));
+    outFrame->setPayload(byteArr);
+    can_bus->writeFrame(*outFrame);
+}
+
+/**
+ * @brief canbus_interface::sendDataByte sends specified bit data over CAN to specified address
+ * @param addr CAN address
+ * @param data : data to be sent
+ */
+void canbus_interface::sendDataByte(int addr, uint64_t data, int size){
+    QByteArray byteArr;
+    char * charData = static_cast<char*>(static_cast<void*>(&data));
+    for(int i = size-1; i >= 0; i--){
+        byteArr.append(charData[i]);
+    }
+    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
     QCanBusFrame * outFrame = new QCanBusFrame;
     outFrame->setFrameId(static_cast<quint32>(addr));
     outFrame->setPayload(byteArr);
