@@ -70,8 +70,10 @@ public:
     QComboBox * plotComboBox = new QComboBox;
     QLabel * currLabel;
     QPushButton * stateButton;
-    QPushButton * plotButton;
+    QPushButton * usbResetButton;
+    QPushButton * canResetButton;
     QPushButton * exitButton;
+    QPushButton * plotButton;
     QPushButton * indiButton;
     QPushButton * buttonControl;
     QHBoxLayout * controlsLayout;

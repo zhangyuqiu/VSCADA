@@ -157,3 +157,68 @@ void usb7402_interface::usbCheckTasks(){
     }
     emit finished();
 }
+
+void usb7402_interface::rebootUSB7204(){
+    udev = 0;
+
+    int ret = libusb_init(NULL);
+    if (ret < 0) {
+      perror("libusb_init: Failed to initialize libusb");
+      exit(1);
+    }
+
+    if ((udev = usb_device_find_USB_MCC(USB7204_PID, NULL))) {
+      printf("USB-7204 Device is found!\n");
+      pushMessage(initErr);
+      isActive = true;
+    } else {
+      printf("No device found.\n");
+      return;
+    }
+
+    if (isActive){
+        try{
+        // some initialization
+        printf("Building calibration table.  This may take a while ...\n");
+        usbBuildGainTable_USB7204(udev, table_AIN);
+        int i = 0;
+        int j = 0;
+        for (i = 0; i < NGAINS_USB7204; i++ ) {
+          for (j = 0; j < NCHAN_USB7204/2; j++) {
+            printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
+               i, j, table_AIN[DF][i][j].slope, table_AIN[DF][i][j].intercept);
+          }
+        }
+        i = BP_10_00V;
+        for (j = 0; j < NCHAN_USB7204; j++) {
+          printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
+             i, j, table_AIN[SE][i][j].slope, table_AIN[SE][i][j].intercept);
+        }
+
+        //print out the wMaxPacketSize.  Should be 64.
+        printf("\nwMaxPacketSize = %d\n", usb_get_max_packet_size(udev,0));
+
+        struct tm date;
+
+        // Print the calibration date
+        getMFGCAL_USB7204(udev, &date);
+        printf("\nLast Calibration date: %s", asctime(&date));
+        } catch (...){
+            cout << "USB_7204 interface not configured" << endl;
+            pushMessage(initErr);
+            isActive = false;
+        }
+
+        gain = BP_5_00V;
+        voltage = 4.9;
+    }
+
+    timer = new QTimer;
+    connect(timer, SIGNAL(timeout()), this, SLOT(usbCheckTasks()));
+
+    if (isActive){
+        for (uint i = 0; i < subsystems.size(); i++){
+            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
+        }
+    }
+}

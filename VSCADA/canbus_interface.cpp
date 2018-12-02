@@ -94,3 +94,9 @@ void canbus_interface::sendDataByte(int addr, uint64_t data, int size){
     outFrame->setPayload(byteArr);
     can_bus->writeFrame(*outFrame);
 }
+
+void canbus_interface::rebootCAN(){
+    system("sudo ip link set can0 down");
+    system("sudo ip link set can0 up type can bitrate 500000");
+    emit pushMsg("CAN Interface reboot");
+}

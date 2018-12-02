@@ -62,7 +62,7 @@ public slots:
    void startRead();
    void usbCheckTasks();
    void writeUSBData(uint8_t channel, float voltage, bool * success);
-
+   void rebootUSB7204();
 signals:
    void sensorValueChanged(meta * sensor);
    void pushMessage(string msg);

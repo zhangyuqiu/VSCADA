@@ -101,7 +101,6 @@ int DataControl::change_sampling_rate(int rate){
  * @param data : data transmitted
  */
 void DataControl::receive_can_data(uint32_t addr, uint64_t data){
-    cout << "Receiving Data: Addr-> " << addr << " Data-> " << data << endl;
     //check whether address matches any state machine address
     for (uint i = 0; i < FSMs.size(); i++){
         statemachine * currFSM = FSMs.at(i);
@@ -121,27 +120,21 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
     //check whether address matches any status address
     for (uint i = 0; i < states.size(); i++){
         if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data)){
-            cout << endl << "State found" << endl << endl;
             change_system_state(states.at(i));
         } else if (states.at(i)->primAddress == addr){
             emit deactivateState(states.at(i));
         }
     }
 
-    cout << "Number of sensors: " << sensorVector.size() << endl;
     //check whether address matches any sensor address
     for(uint i = 0; i < sensorVector.size(); i++){
-        cout << "Checking sensor: " << sensorVector.at(i)->sensorName << " address: " << sensorVector.at(i)->primAddress << " subsystem: " << sensorVector.at(i)->subsystem << endl;
         if(sensorVector.at(i)->primAddress == addr){
-            cout << "Sensor matches!" << endl;
             meta * currSensor = sensorVector.at(i);
             if (currSensor->val != isolateData64(currSensor->auxAddress,currSensor->offset,data)) {
                 currSensor->val = isolateData64(currSensor->auxAddress,currSensor->offset,data);
                 for (uint j = 0; j < subsystems.size(); j++){
-                    cout << "Checking subsystem: " << subsystems.at(j)->subsystemId << endl;
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
                         subsystems.at(j)->receiveData(currSensor);
-                        cout << "data passed to " << currSensor->subsystem << " : " << currSensor->sensorName << endl;
                         break;
                     }
                 }
@@ -157,21 +150,6 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
         }
     }
 }
-
-///**
-// * @brief DataControl::sendBootConfig : sends bootup data to specified address
-// * @param bl
-// */
-//void DataControl::sendBootConfig(bootloader bl){
-//    logMsg(bl.displayMsg);
-//    for(uint i = 0; i < bl.configMsg.size(); i++){
-//        stringstream s;
-//        s << showbase << internal << setfill('0');
-//        s << "Data " << std::hex << setw(16) << bl.configMsg.at(i) << " sent to address " << bl.canAddress;
-//        logMsg(s.str());
-//        emit sendCANData(bl.canAddress,bl.configMsg.at(i));
-//    }
-//}
 
 /**
  * @brief DataControl::isolateData64 isolate bits of data as specified

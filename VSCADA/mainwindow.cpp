@@ -89,6 +89,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(conf->dataCtrl, SIGNAL(updateEdits(meta *)), this, SLOT(updateEdits(meta *)));
     connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(updateFSM(statemachine *)), this, SLOT(updateFSM_MW(statemachine *)));
+    connect(conf->canInterface, SIGNAL(pushMsg(string)), this, SLOT(receiveMsg(string)));
     connect(conf->dataCtrl, SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
     connect(conf->usb7204, SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
     connect(this, SIGNAL(sendControlValue(int, controlSpec *)), conf->dataCtrl, SLOT(receive_control_val(int, controlSpec *)));
@@ -247,6 +248,30 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(label,0,0,Qt::AlignLeft);
 
     QHBoxLayout * btnsLayout = new QHBoxLayout;
+
+    canResetButton =new QPushButton();
+    canResetButton->setText("CAN Reset");
+    QPalette palCanRst = canResetButton->palette();
+    palCanRst.setColor(QPalette::Button, QColor(0,100,0));
+    canResetButton->setPalette(palCanRst);
+    canResetButton->setAutoFillBackground(true);
+    canResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
+    canResetButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+    canResetButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+    btnsLayout->addWidget(canResetButton,Qt::AlignCenter);
+    QObject::connect(canResetButton, SIGNAL (clicked()), conf->canInterface , SLOT(rebootCAN()));
+
+    usbResetButton =new QPushButton();
+    usbResetButton->setText("CAN Reset");
+    QPalette palUSBRst = usbResetButton->palette();
+    palCanRst.setColor(QPalette::Button, QColor(0,100,0));
+    usbResetButton->setPalette(palUSBRst);
+    usbResetButton->setAutoFillBackground(true);
+    usbResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
+    usbResetButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+    usbResetButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+    btnsLayout->addWidget(usbResetButton,Qt::AlignCenter);
+    QObject::connect(usbResetButton, SIGNAL (clicked()), conf->usb7204 , SLOT(rebootUSB7204()));
 
     QFrame * stateFrame = new QFrame(this);
     stateFrame->setLineWidth(2);

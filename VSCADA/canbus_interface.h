@@ -22,11 +22,13 @@ private:
 
 signals:
     void process_can_data(uint32_t addr, uint64_t data);
+    void pushMsg(std::string str);
 
 private slots:
     void recieve_frame();
     void sendData(int addr, uint64_t data);
     void sendDataByte(int addr, uint64_t data, int size);
+    void rebootCAN();
 };
 
 #endif // CANBUS_INTERFACE_H
