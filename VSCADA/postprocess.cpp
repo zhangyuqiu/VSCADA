@@ -62,6 +62,8 @@ void postProcess::update(){
 
 
 
+
+
     dbBox = new QComboBox;
     dbBox->setEditable (true);
     dbBox->setFixedWidth(static_cast<int>(unitWidth*4));
@@ -129,23 +131,25 @@ void postProcess::update(){
 //       exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
 //       mainLayout->addWidget(exitButton,0,2,Qt::AlignCenter);
 
-//       loadButton =new QPushButton();
-//       loadButton->setText("Load");
-//       QPalette palload = loadButton->palette();
-//       palload.setColor(QPalette::Button, QColor(0,0,255));
-//       loadButton->setPalette(palload);
-//       loadButton->setAutoFillBackground(true);
-////       exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
-//       loadButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-//       loadButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-//       mainLayout->addWidget(loadButton,0,1,Qt::AlignCenter);
+       loadButton =new QPushButton();
+       loadButton->setText("Explore");
+       QPalette palload = loadButton->palette();
+       palload.setColor(QPalette::Button, QColor(0,0,255));
+       loadButton->setPalette(palload);
+       loadButton->setAutoFillBackground(true);
+//       exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
+       loadButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+       loadButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+       mainLayout->addWidget(loadButton,0,2,Qt::AlignCenter);
 
 //       QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(close()));
-//       QObject::connect(loadButton, SIGNAL (clicked()), this , SLOT(loadTable()));
+       QObject::connect(loadButton, SIGNAL (clicked()), this , SLOT(exportCSV()));
 
 
        connect(poModel, SIGNAL(itemChanged(QStandardItem*)),this,SLOT(addSensor(QStandardItem*)));
        connect(dbBox, SIGNAL(currentIndexChanged(int)),this,SLOT(reload(int)));
+
+
 
 }
 
@@ -263,6 +267,7 @@ void postProcess::loadTable(){
         }
 
     }
+
 //        name=selected.at(i);
 //    string thisBase = currentBase.toStdString();
 //   string thisTable = currentTable.toStdString();
@@ -282,6 +287,8 @@ void postProcess::loadTable(){
 
 
 //   int columnNum =2*(selectName.size());
+
+
 
  displayTable = new QTableWidget();
  displayTable->setRowCount(rowNum);
@@ -504,6 +511,105 @@ void postProcess::reload(int no){
 //    displayTable->clear();
 //    loadTable();
     getSensorList();
+}
+
+void postProcess::exportCSV(){
+    currentBase = dbBox->currentText();
+    string thisBase = currentBase.toStdString();
+    QString newName;
+    int max=0;
+    QString numName;
+    QString numTable;
+
+    for(int i=0; i<selected.size();i++){
+        columnNum=columnNum+2;
+        numName=selected.at(i);
+        for(int k=0; k<sensorname.size();k++){
+            QString check=sensorname.at(k);
+            QString rawcheck=check+"_raw";
+            if(0== numName.compare(check)){
+               numTable=subsystem.at(k)+"_caldata";
+
+            }else if(0== numName.compare(rawcheck)){
+                numName=check;
+              numTable=subsystem.at(k)+"_rawdata";
+
+            }
+        }
+        vector<QString>  data=db->getTargetColumn(numTable,"value","sensorname",numName);
+        for(int j=0; j<data.size();j++){
+            if((j+1)>max){
+        max++;
+            }
+        }
+
+    }
+
+
+
+    for(int q=0;q<currentBase.size()-3;q++){
+   newName =newName+currentBase.at(q);
+    }
+    db->setFile(thisBase);
+
+    QString filename = "../VSCADA/export/"+newName+"_data.csv";
+         QFile file(filename);
+         if ( file.open(QIODevice::WriteOnly) )
+         {
+              QTextStream stream( &file );
+
+             stream << "StartTime" << "," << startTime  << "," << "EndTime" << "," << endTime  << endl;
+
+             QString sensorNames;
+
+             for(int x=0; x<selected.size();x++){
+             sensorNames=sensorNames+selected.at(x)+", ,";
+             }
+
+             stream << sensorNames<< endl;
+
+
+    for(int n=0; n<max;n++){
+        QString name;
+        QString currentTable;
+        QString output;
+        for(int i=0; i<selected.size();i++){
+            name=selected.at(i);
+            for(int k=0; k<sensorname.size();k++){
+                QString check=sensorname.at(k);
+                QString rawcheck=check+"_raw";
+                if(0== name.compare(check)){
+                   currentTable=subsystem.at(k)+"_caldata";
+
+                }else if(0== name.compare(rawcheck)){
+                    name=check;
+                  currentTable=subsystem.at(k)+"_rawdata";
+
+                }
+            }
+            vector<QString>  data=db->getTargetColumn(currentTable,"value","sensorname",name);
+            vector<QString>  time=db->getTargetColumn(currentTable,"time","sensorname",name);
+            int thisSize=static_cast<int>(time.size())-1;
+            if(n>thisSize){
+               output =output+" , ,";
+            }else{
+            output =output+time.at(n)+","+data.at(n)+",";
+            }
+        }
+        stream << output<< endl;
+
+    }
+
+}
+
+
+
+
+
+
+
+         file.close();
+
 }
 
 

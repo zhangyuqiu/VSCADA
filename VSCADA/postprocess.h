@@ -53,6 +53,9 @@ public:
     vector<QString> selected;
     QCustomPlot * plot;
     QLabel * startLabel;
+    int rowNum;
+    int columnNum;
+
 
     bool raw;
     int unitWidth;
@@ -66,6 +69,7 @@ private slots:
     void update();
     void loadTable();
     void reload(int no);
+    void exportCSV();
 
 private:
     Ui::postProcess *ui;
