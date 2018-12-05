@@ -7,6 +7,7 @@
 
 int main(int argc, char *argv[])
 {
+//    qputenv("QT_IM_MODULE",QByteArray("qtvirtualkeyboard"));
     QApplication a(argc, argv);
 
     QApplication::setStyle(QStyleFactory::create("fusion"));
@@ -46,5 +47,8 @@ int main(int argc, char *argv[])
 //    p->setWindowState((w->windowState()^Qt::WindowFullScreen));
 //    p->show();
 
+//    QQuickView view(QString("qrc:/%2").arg(MAIN_QML));
+//    view.setResizeMode(QQuickView::SizeRootObjectToView);
+//    view.show();
     return a.exec();
 }

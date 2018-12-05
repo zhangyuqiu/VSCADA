@@ -48,12 +48,15 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
         connect(subsystems.at(i), SIGNAL(pushGPIOData(int, int)), this,SLOT(passGPIOData(int, int)));
         subsystems.at(i)->setSystemTimer(systemTimer);
     }
+
     connect(this, SIGNAL(pushGPIOData(int,int)), gpioInterface,SLOT(GPIOWrite(int,int)));
     connect(this, SIGNAL(deactivateState(system_state *)), this,SLOT(deactivateLog(system_state *)));
     connect(this, SIGNAL(sendToUSB7204(uint8_t, float, bool*)), usb7204, SLOT(writeUSBData(uint8_t, float, bool*)));
     connect(this, SIGNAL(sendCANData(int, uint64_t)), canInterface, SLOT(sendData(int, uint64_t)));
     connect(this, SIGNAL(sendCANDataByte(int, uint64_t,int)), canInterface, SLOT(sendDataByte(int, uint64_t,int)));
     connect(canInterface, SIGNAL(process_can_data(uint32_t,uint64_t)), this, SLOT(receive_can_data(uint32_t,uint64_t)));
+    connect(usb7204, SIGNAL(sensorValueChanged(meta*)), this, SLOT(receive_sensor_data(meta*)));
+    connect(gpioInterface, SIGNAL(sensorValueChanged(meta*)), this, SLOT(receive_sensor_data(meta*)));
     cout << "DATA CONTROL CONFIGURED" << endl;
 }
 
@@ -95,6 +98,14 @@ int DataControl::change_sampling_rate(int rate){
     }
 }
 
+void DataControl::receive_sensor_data(meta * sensor){
+    for (uint i = 0; i < subsystems.size(); i++){
+        if (sensor->subsystem.compare(subsystems.at(i)->subsystemId) == 0){
+            subsystems.at(i)->receiveData(sensor);
+        }
+    }
+}
+
 /**
  * @brief DataControl::receive_can_data : gets data from canbus
  * @param addr : CAN address
@@ -107,7 +118,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
         if (currFSM->primAddress == static_cast<int>(addr)){
             for (uint j = 0; j < currFSM->states.size(); j++){
                 system_state * currState = currFSM->states.at(j);
-                if(currState->value == isolateData64(currState->auxAddress,currState->offset,data)){
+                if(currState->value == isolateData64(currState->auxAddress,currState->offset,data,currState->endianness)){
                     change_system_state(currState);
                 } else if (currState->active){
                     deactivateLog(currState);
@@ -119,7 +130,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
 
     //check whether address matches any status address
     for (uint i = 0; i < states.size(); i++){
-        if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data)){
+        if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data,states.at(i)->endianness)){
             change_system_state(states.at(i));
         } else if (states.at(i)->primAddress == addr){
             emit deactivateState(states.at(i));
@@ -130,8 +141,8 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
     for(uint i = 0; i < sensorVector.size(); i++){
         if(sensorVector.at(i)->primAddress == addr){
             meta * currSensor = sensorVector.at(i);
-            if (currSensor->val != isolateData64(currSensor->auxAddress,currSensor->offset,data)) {
-                currSensor->val = isolateData64(currSensor->auxAddress,currSensor->offset,data);
+            if (currSensor->val != static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness))){
+                currSensor->val = static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
                         subsystems.at(j)->receiveData(currSensor);
@@ -158,11 +169,29 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
  * @param data : bitstream (64) to be isolated
  * @return 32 bit result
  */
-uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data){
+uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data, int endianness){
     if (auxAddress > 63 || offset > 64) return 0;
     uint lastAddr = sizeof (data)*8 - offset;
     data = data << auxAddress;
     data = data >> lastAddr;
+    uint64_t endianData = 0;
+    stringstream s;
+    s << showbase << internal << setfill('0');
+    cout << "Aux: " << auxAddress << " offset: " << offset << " data: " << data << " endianness: " << endianness << endl;
+    if (endianness == 0){
+        if (offset > 8){
+            int cnt = offset/8;
+            uint64_t filter = 0xff;
+            for (int i = 0; i < cnt; i++){
+                endianData = endianData << 8;
+                uint64_t buf = (data >> i*8) & filter;
+                endianData = endianData | buf;
+            }
+            data = endianData;
+        }
+    }
+    s << "Final Data: " << std::hex << setw(16) << data;
+    cout << s.str() << endl;
     return static_cast<uint32_t>(data);
 }
 
@@ -247,7 +276,7 @@ void DataControl::executeRxn(int responseIndex){
 
     for (uint i = 0; i < responseVector.size(); i++){
         response rsp = responseVector.at(i);
-        if (rsp.responseIndex == responseIndex){
+        if (rsp.responseIndex == responseIndex && responseIndex != 0){
             rows.push_back(rsp.msg);
             logMsg(rsp.msg);
             if (rsp.primAddress >= 0){

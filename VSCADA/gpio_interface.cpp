@@ -50,7 +50,7 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
 
     for (uint i = 0; i < responseVector.size(); i++){
         response currRsp = responseVector.at(i);
-        if (currRsp.gpioPin >= 0){
+        if (currRsp.gpioPin >= 0 && currRsp.gpioPin != 21){
             GPIOExport(currRsp.gpioPin);
             GPIODirection(currRsp.gpioPin,OUT);
         }

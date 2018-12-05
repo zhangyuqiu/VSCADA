@@ -250,7 +250,7 @@ void MainWindow::update(){
     QHBoxLayout * btnsLayout = new QHBoxLayout;
 
     canResetButton =new QPushButton();
-    canResetButton->setText("CAN Reset");
+    canResetButton->setText("CAN\nReset");
     QPalette palCanRst = canResetButton->palette();
     palCanRst.setColor(QPalette::Button, QColor(0,100,0));
     canResetButton->setPalette(palCanRst);
@@ -262,9 +262,9 @@ void MainWindow::update(){
     QObject::connect(canResetButton, SIGNAL (clicked()), conf->canInterface , SLOT(rebootCAN()));
 
     usbResetButton =new QPushButton();
-    usbResetButton->setText("CAN Reset");
+    usbResetButton->setText("USB7204\nReset");
     QPalette palUSBRst = usbResetButton->palette();
-    palCanRst.setColor(QPalette::Button, QColor(0,100,0));
+    palUSBRst.setColor(QPalette::Button, QColor(0,100,0));
     usbResetButton->setPalette(palUSBRst);
     usbResetButton->setAutoFillBackground(true);
     usbResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
@@ -816,6 +816,7 @@ void MainWindow::shutdownSystem(){
     bool error = 0;
     string name = "";
     if (confirmation == QDialog::Accepted){
+
 repeat:
         if (error) name = info_dialog(errMsg);
         else name = info_dialog(clearMsg);

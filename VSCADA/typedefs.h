@@ -23,14 +23,15 @@ typedef struct{
 
 typedef struct{
     int main;
-    double val;
-    int offset;
+    int val;
+    uint offset;
+    int endianness;
     int gpioPin;
     int checkRate;
     double calVal;
     int maxRxnCode;
     int minRxnCode;
-    int auxAddress;
+    uint auxAddress;
     int i2cAddress;
     std::vector<uint32_t> i2cConfigs;
     //uint8_t i2cConfigPointer;
@@ -58,7 +59,7 @@ typedef struct{
         val = newVal;
     }
     void calData(){
-        calVal = val*calMultiplier + calConst;
+        calVal = static_cast<double>(val)*calMultiplier + calConst;
     }
 }meta;
 
@@ -74,6 +75,7 @@ typedef struct{
     int usbChannel;
     int auxAddress;
     bool textField;
+    int endianness;
     int primAddress;
     uint64_t sentVal;
     std::string name;
@@ -93,6 +95,7 @@ typedef struct{
     int primAddress;
     int responseIndex;
     int displayTarget;
+    int endianness;
 }response;
 
 typedef struct{
@@ -112,12 +115,14 @@ typedef struct{
     int auxAddress;
     int primAddress;
     std::string name;
+    int endianness;
 }system_state;
 
 typedef struct{
     int offset;
     int auxAddress;
     int primAddress;
+    int endianness;
     std::string name;
     std::vector<system_state *> states;
 }statemachine;

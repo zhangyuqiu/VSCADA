@@ -46,7 +46,7 @@ public:
     libusb_device_handle *udev;
     Calibration_AIN table_AIN[NMODE][NGAINS_USB7204][NCHAN_USB7204];
 
-    string initErr = "ERROR: USB-7204 device was not found on startup";
+    string initErr = "ERROR: USB-7204 device did not boot";
 
 protected:
 //   virtual void usbCheckTasks();                      //runs collection tasks

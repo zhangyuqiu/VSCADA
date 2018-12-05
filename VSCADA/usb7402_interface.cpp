@@ -68,7 +68,7 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
 
     if (isActive){
         for (uint i = 0; i < subsystems.size(); i++){
-            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
+//            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
         }
     }
 }
@@ -159,6 +159,8 @@ void usb7402_interface::usbCheckTasks(){
 }
 
 void usb7402_interface::rebootUSB7204(){
+    timer->stop();
+    libusb_close(udev);
     udev = 0;
 
     int ret = libusb_init(NULL);
@@ -168,11 +170,12 @@ void usb7402_interface::rebootUSB7204(){
     }
 
     if ((udev = usb_device_find_USB_MCC(USB7204_PID, NULL))) {
-      printf("USB-7204 Device is found!\n");
-      pushMessage(initErr);
-      isActive = true;
+        printf("USB-7204 Device is found!\n");
+        isActive = true;
     } else {
-      printf("No device found.\n");
+        isActive = false;
+        printf("No device found.\n");
+        pushMessage(initErr);
       return;
     }
 
@@ -213,12 +216,10 @@ void usb7402_interface::rebootUSB7204(){
         voltage = 4.9;
     }
 
-    timer = new QTimer;
-    connect(timer, SIGNAL(timeout()), this, SLOT(usbCheckTasks()));
-
     if (isActive){
         for (uint i = 0; i < subsystems.size(); i++){
-            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
+//            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
+            timer->start();
         }
     }
 }

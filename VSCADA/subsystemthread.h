@@ -41,6 +41,7 @@ public:
     void calibrateData(meta * currSensor);
     void checkLogic(meta * currSensor);
     void setSystemTimer(QTime * timer);
+    void receiveData(meta * currSensor);
 
     vector<meta *> get_mainMeta();
 
@@ -87,7 +88,6 @@ public:
 //    pthread_t _thread;
 
 public slots:
-    void receiveData(meta * currSensor);
     void logData(meta * currSensor);                            //records sensor data in database
 //    void StartInternalThread();                                 //starts subsystem thread
 //    void updateEdits(meta *sensor);                             //updates LineEdit displays

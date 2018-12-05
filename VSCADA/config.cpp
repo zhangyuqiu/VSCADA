@@ -27,6 +27,8 @@ bool Config::read_config_file_data(){
     vector<response> allResponses;
     vector<int> minrates;
     vector<logic *> logicVector;
+    int gpioRate = 1000;
+    int usb7204Rate = 1000;
 
     //************************************//
     //*****extract file to DOM object*****//
@@ -50,6 +52,8 @@ bool Config::read_config_file_data(){
     //************************************************//
 
     QDomNodeList mode = doc.elementsByTagName("mode");
+    QDomNodeList gpioConfRate = doc.elementsByTagName("gpiorate");
+    QDomNodeList usb7204ConfRate = doc.elementsByTagName("usb7204rate");
     QDomNodeList systemControls = doc.elementsByTagName("systemcontrols");
     QDomNodeList responseNodes = doc.elementsByTagName("response");
     QDomNodeList subsystemNodes = doc.elementsByTagName("subsystem");
@@ -65,6 +69,17 @@ bool Config::read_config_file_data(){
     cout << "Number of system states: " << systemStatuses.size() << endl;
     cout << "Number of state machines: " << stateMachines.size() << endl;
 #endif
+
+    //*****************************//
+    //*****set interface rates*****//
+    //*****************************//
+    if (gpioConfRate.size() > 0){
+        gpioRate = stoi(gpioConfRate.at(0).firstChild().nodeValue().toStdString());
+    }
+    if (usb7204ConfRate.size() > 0){
+        usb7204Rate = stoi(usb7204ConfRate.at(0).firstChild().nodeValue().toStdString());
+    }
+
 
     //*************************//
     //*****get system mode*****//
@@ -104,11 +119,11 @@ bool Config::read_config_file_data(){
                 currSpec->pressVal = -1;
                 currSpec->releaseVal = -1;
                 currSpec->usbChannel = -1;
-                currSpec->primAddress = -1;
-                currSpec->auxAddress = -1;
-                currSpec->offset = -1;
+                currSpec->primAddress = 1000;
+                currSpec->auxAddress = 0;
+                currSpec->offset = 0;
                 currSpec->multiplier = 1;
-
+                currSpec->endianness = 1;
                 QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
                 for (int k = 0; k < controlXteristics.size(); k++){
                     if (controlXteristics.at(k).nodeName().toStdString().compare("name") == 0){
@@ -119,15 +134,15 @@ bool Config::read_config_file_data(){
                         else configErrors.push_back("CONFIG ERROR: USB channel not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->primAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                            currSpec->primAddress = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
                         else configErrors.push_back("CONFIG ERROR: primary address not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->auxAddress = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                            currSpec->auxAddress = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
                         else configErrors.push_back("CONFIG ERROR: aux address not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->offset = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                            currSpec->offset = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
                         else configErrors.push_back("CONFIG ERROR: address offset not an integer");
                     } else if (controlXteristics.at(k).nodeName().toStdString().compare("gpiopin") == 0){
                         if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
@@ -174,21 +189,22 @@ bool Config::read_config_file_data(){
 
     for (int i = 0; i < stateMachines.size(); i++){
         thisFSM = new statemachine;
+        thisFSM->endianness = 1;
         QDomNodeList machineXteristics = stateMachines.at(i).childNodes();
         for (int j = 0; j < machineXteristics.size(); j++){
             if (machineXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                 thisFSM->name = machineXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
                 if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisFSM->primAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisFSM->primAddress = stoul(machineXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: primary address not an integer");
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
                 if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisFSM->auxAddress = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisFSM->auxAddress = stoul(machineXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: aux address not an integer");
             } else if (machineXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
                 if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisFSM->offset = stoi(machineXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisFSM->offset = stoul(machineXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: address offset not an integer");
             }else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
                 QDomNodeList stateXteristics = machineXteristics.at(j).childNodes();
@@ -196,6 +212,7 @@ bool Config::read_config_file_data(){
                 thisState->primAddress = thisFSM->primAddress;
                 thisState->auxAddress = thisFSM->auxAddress;
                 thisState->offset = thisFSM->offset;
+                thisState->endianness = thisFSM->endianness;
                 for (int k = 0; k < stateXteristics.size(); k++){
                     if (stateXteristics.at(k).nodeName().toStdString().compare("name") == 0){
                         thisState->name = stateXteristics.at(k).firstChild().nodeValue().toStdString();
@@ -225,21 +242,22 @@ bool Config::read_config_file_data(){
 
     for (int i = 0; i < systemStatuses.size(); i++){
         thisState = new system_state;
+        thisState->endianness = 1;
         QDomNodeList statusXteristics = systemStatuses.at(i).childNodes();
         for (int j = 0; j < statusXteristics.size(); j++){
             if (statusXteristics.at(j).nodeName().toStdString().compare("name") == 0){
                 thisState->name = statusXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
                 if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisState->primAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisState->primAddress = stoul(statusXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: primary address not an integer");
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
                 if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisState->auxAddress = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisState->auxAddress = stoul(statusXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: aux address not an integer");
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
                 if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisState->offset = stoi(statusXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisState->offset = stoul(statusXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: address offset not an integer");
             } else if (statusXteristics.at(j).nodeName().toStdString().compare("value") == 0){
                 if (isInteger(statusXteristics.at(j).firstChild().nodeValue().toStdString()))
@@ -258,12 +276,13 @@ bool Config::read_config_file_data(){
     for (int i = 0; i < responseNodes.size(); i++){
         QDomNodeList responseXteristics = responseNodes.at(i).childNodes();
         response thisRsp;
-        thisRsp.primAddress = -1;
+        thisRsp.primAddress = 1000;
         thisRsp.auxAddress = -1;
-        thisRsp.offset = -1;
+        thisRsp.offset = 0;
         thisRsp.gpioPin = -1;
         thisRsp.canValue = -1;
         thisRsp.gpioValue = -1;
+        thisRsp.endianness = 1;
         for (int j = 0; j < responseXteristics.size(); j++){
             if (responseXteristics.at(j).nodeName().toStdString().compare("id") == 0){
                 if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
@@ -273,15 +292,15 @@ bool Config::read_config_file_data(){
                 thisRsp.msg = responseXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("primaddress") == 0){
                 if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisRsp.primAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisRsp.primAddress = stoul(responseXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: primary address not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("auxaddress") == 0){
                 if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisRsp.auxAddress = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisRsp.auxAddress = stoul(responseXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: aux address not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("offset") == 0){
                 if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    thisRsp.offset = stoi(responseXteristics.at(j).firstChild().nodeValue().toStdString());
+                    thisRsp.offset = stoul(responseXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: address offset not an integer");
             } else if (responseXteristics.at(j).nodeName().toStdString().compare("gpiopin") == 0){
                 if (isInteger(responseXteristics.at(j).firstChild().nodeValue().toStdString()))
@@ -474,9 +493,9 @@ bool Config::read_config_file_data(){
                     storedSensor->maxRxnCode = -1;
                     storedSensor->minRxnCode = -1;
                     storedSensor->normRxnCode = -1;
-                    storedSensor->primAddress = -1;
-                    storedSensor->auxAddress = -1;
-                    storedSensor->offset = -1;
+                    storedSensor->primAddress = 1000;
+                    storedSensor->auxAddress = 0;
+                    storedSensor->offset = 0;
                     storedSensor->gpioPin = -1;
                     storedSensor->calMultiplier = 1;
                     storedSensor->calConst = 0;
@@ -485,6 +504,7 @@ bool Config::read_config_file_data(){
                     storedSensor->i2cReadDelay = 0;
                     storedSensor->i2cDataField = 16;
                     storedSensor->subsystem = subSystemId;
+                    storedSensor->endianness = 1;
                     QDomNode sensor = sensorsList.at(k);
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
@@ -503,11 +523,11 @@ bool Config::read_config_file_data(){
                             canSensors.push_back(storedSensor);
                         } else if (attributeList.at(m).nodeName().toStdString().compare("auxaddress") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->auxAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                                storedSensor->auxAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor aux address not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("offset") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->offset = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                                storedSensor->offset = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor address offset not an integer");
                         } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
                             storedSensor->minimum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
@@ -547,7 +567,11 @@ bool Config::read_config_file_data(){
                                 storedSensor->usbChannel = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
                             usbSensors.push_back(storedSensor);
-                        }else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("endianness") == 0){
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->endianness = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor i2c address not an integer");
@@ -745,8 +769,12 @@ bool Config::read_config_file_data(){
         subsystems.at(i)->start();
     }
 
+    gpioInterface->setSamplingRate(gpioRate);
     gpioInterface->startGPIOCheck();
-    if (usb7204->isActive) usb7204->startUSBCheck();
+    if (usb7204->isActive) {
+        usb7204->setSamplingRate(usb7204Rate);
+        usb7204->startUSBCheck();
+    }
     cout << "Returning from config" << endl;
     return true;
 

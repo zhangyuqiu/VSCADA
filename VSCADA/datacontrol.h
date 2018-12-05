@@ -45,7 +45,7 @@ public:
     void init_meta_vector(vector<meta> vctr);
     int change_system_state(system_state * newState);
     uint64_t LSBto64Spec(uint auxAddress, uint offset, uint64_t data);
-    uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data);
+    uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data, int endianness);
 
     // active submodule pointers
     DB_Engine * dbase;
@@ -67,6 +67,7 @@ public:
     string currState;
 
 public slots:
+    void receive_sensor_data(meta * sensor);
     void executeRxn(int responseIndex);
     void deactivateLog(system_state * prevstate);
     void receive_can_data(uint32_t addr, uint64_t arr);

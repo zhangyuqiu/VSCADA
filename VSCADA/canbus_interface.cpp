@@ -7,7 +7,7 @@ canbus_interface::canbus_interface() {
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
-
+    rebootCAN();
 }
 
 /**
@@ -50,7 +50,7 @@ void canbus_interface::recieve_frame() {
         QByteArray b = recframe.payload();
         uint32_t a = recframe.frameId();
 
-        uint64_t data = 0;
+        int64_t data = 0;
         qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
         for (int i = 0; i < b.size(); i++){
             data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
@@ -98,5 +98,5 @@ void canbus_interface::sendDataByte(int addr, uint64_t data, int size){
 void canbus_interface::rebootCAN(){
     system("sudo ip link set can0 down");
     system("sudo ip link set can0 up type can bitrate 500000");
-    emit pushMsg("CAN Interface reboot");
+    emit pushMsg("CAN Interface boot");
 }
