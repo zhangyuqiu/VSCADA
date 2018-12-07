@@ -154,8 +154,8 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
     for(uint i = 0; i < sensorVector.size(); i++){
         if(sensorVector.at(i)->primAddress == addr){
             meta * currSensor = sensorVector.at(i);
-            if (currSensor->val != static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness))){
-                currSensor->val = static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
+            if (currSensor->val != static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness))){
+                currSensor->val = static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
                         subsystems.at(j)->receiveData(currSensor);

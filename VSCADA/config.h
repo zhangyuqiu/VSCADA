@@ -36,6 +36,9 @@ public:
 
     //system mode : CAR or DYNO
     int systemMode;
+    int gpioRate;
+    int usb7204Rate;
+    int canRate;
 
     //dummy variables
     logic * thisLogic;

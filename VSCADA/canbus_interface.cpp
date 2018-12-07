@@ -7,7 +7,7 @@ canbus_interface::canbus_interface(int canRate) {
     bitrate = canRate;
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
-    connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
+    //connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
     rebootCAN();
 }
 
@@ -103,4 +103,8 @@ void canbus_interface::rebootCAN(){
     printf("Reboot Command: %c", *command);
     system(command);
     emit pushMsg("CAN Interface boot");
+}
+
+void canbus_interface::enableCAN(){
+    connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
 }

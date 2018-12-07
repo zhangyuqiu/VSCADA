@@ -23,7 +23,7 @@ typedef struct{
 
 typedef struct{
     int main;
-    int val;
+    double val;
     uint offset;
     int endianness;
     int gpioPin;

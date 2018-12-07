@@ -14,13 +14,13 @@ class canbus_interface : public QObject
 public:
     canbus_interface(int canRate);
     ~canbus_interface();
+    void enableCAN();
 
 private:
     QString errmsg;
     bool canconnect();
     QCanBusDevice *can_bus = nullptr;
     int bitrate;
-
 signals:
     void process_can_data(uint32_t addr, uint64_t data);
     void pushMsg(std::string str);

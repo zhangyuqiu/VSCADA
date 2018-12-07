@@ -106,6 +106,13 @@ MainWindow::MainWindow(QWidget *parent) :
     for (uint i = 0; i < conf->configErrors.size(); i++){
         addErrorMessage(QString::fromStdString(conf->configErrors.at(i)));
     }
+    conf->canInterface->enableCAN();
+    conf->gpioInterface->setSamplingRate(conf->gpioRate);
+    conf->gpioInterface->startGPIOCheck();
+    if (conf->usb7204->isActive) {
+        conf->usb7204->setSamplingRate(conf->usb7204Rate);
+        conf->usb7204->startUSBCheck();
+    }
 }
 
 MainWindow::~MainWindow(){
@@ -262,7 +269,7 @@ void MainWindow::update(){
     canResetButton =new QPushButton();
     canResetButton->setText("CAN\nReset");
     QPalette palCanRst = canResetButton->palette();
-    palCanRst.setColor(QPalette::Button, QColor(0,100,0));
+    palCanRst.setColor(QPalette::Button, QColor(0,0,200));
     canResetButton->setPalette(palCanRst);
     canResetButton->setAutoFillBackground(true);
     canResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
@@ -274,7 +281,7 @@ void MainWindow::update(){
     usbResetButton =new QPushButton();
     usbResetButton->setText("USB7204\nReset");
     QPalette palUSBRst = usbResetButton->palette();
-    palUSBRst.setColor(QPalette::Button, QColor(0,100,0));
+    palUSBRst.setColor(QPalette::Button, QColor(0,0,200));
     usbResetButton->setPalette(palUSBRst);
     usbResetButton->setAutoFillBackground(true);
     usbResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
@@ -587,7 +594,7 @@ void MainWindow::activateStateMW(system_state * nextState){
     for(uint i = 0; i < stateButtons.size(); i++){
         if (stateButtons.at(i)->text().toStdString().compare(nextState->name) == 0){
             QPalette palplot = stateButtons.at(i)->palette();
-            palplot.setColor(QPalette::Button, QColor(50,205,50));
+            palplot.setColor(QPalette::Button, QColor(0,100,0));
             stateButtons.at(i)->setPalette(palplot);
         }
     }

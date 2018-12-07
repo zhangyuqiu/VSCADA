@@ -27,9 +27,9 @@ bool Config::read_config_file_data(){
     vector<response> allResponses;
     vector<int> minrates;
     vector<logic *> logicVector;
-    int gpioRate = 1000;
-    int usb7204Rate = 1000;
-    int canRate = 125000;
+    gpioRate = 1000;
+    usb7204Rate = 1000;
+    canRate = 125000;
 
     //************************************//
     //*****extract file to DOM object*****//
@@ -797,12 +797,12 @@ bool Config::read_config_file_data(){
         subsystems.at(i)->start();
     }
 
-    gpioInterface->setSamplingRate(gpioRate);
-    gpioInterface->startGPIOCheck();
-    if (usb7204->isActive) {
-        usb7204->setSamplingRate(usb7204Rate);
-        usb7204->startUSBCheck();
-    }
+//    gpioInterface->setSamplingRate(gpioRate);
+//    gpioInterface->startGPIOCheck();
+//    if (usb7204->isActive) {
+//        usb7204->setSamplingRate(usb7204Rate);
+//        usb7204->startUSBCheck();
+//    }
     cout << "Returning from config" << endl;
     return true;
 
