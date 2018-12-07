@@ -896,10 +896,10 @@ repeat:
             conf->dataCtrl->saveSession(name);
             passive_dialog("Saved!");
         }
-        this->close();
+//        this->close();
     } else {
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
-        this->close();
+//        this->close();
     }
     QFile file("../VSCADA/savedsessions/DataBase.txt");
      file.open(QIODevice::WriteOnly | QIODevice::Append);
@@ -909,6 +909,7 @@ repeat:
      file.flush();
 
      file.close();
+     this->close();
 
 }
 
