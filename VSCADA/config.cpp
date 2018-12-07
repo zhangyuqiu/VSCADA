@@ -29,6 +29,7 @@ bool Config::read_config_file_data(){
     vector<logic *> logicVector;
     int gpioRate = 1000;
     int usb7204Rate = 1000;
+    int canRate = 125000;
 
     //************************************//
     //*****extract file to DOM object*****//
@@ -53,6 +54,7 @@ bool Config::read_config_file_data(){
 
     QDomNodeList mode = doc.elementsByTagName("mode");
     QDomNodeList gpioConfRate = doc.elementsByTagName("gpiorate");
+    QDomNodeList canConfRate = doc.elementsByTagName("canrate");
     QDomNodeList usb7204ConfRate = doc.elementsByTagName("usb7204rate");
     QDomNodeList systemControls = doc.elementsByTagName("systemcontrols");
     QDomNodeList responseNodes = doc.elementsByTagName("response");
@@ -79,7 +81,15 @@ bool Config::read_config_file_data(){
     if (usb7204ConfRate.size() > 0){
         usb7204Rate = stoi(usb7204ConfRate.at(0).firstChild().nodeValue().toStdString());
     }
+    if (canConfRate.size() > 0){
+        canRate = stoi(canConfRate.at(0).firstChild().nodeValue().toStdString());
+    }
 
+#ifdef CONFIG_PRINT
+    cout << "CAN Rate: " << canRate << endl;
+    cout << "GPIO Rate: " << gpioRate << endl;
+    cout << "USB7204 Rate: " << usb7204Rate << endl;
+#endif
 
     //*************************//
     //*****get system mode*****//
@@ -206,7 +216,7 @@ bool Config::read_config_file_data(){
                 if (isInteger(machineXteristics.at(j).firstChild().nodeValue().toStdString()))
                     thisFSM->offset = stoul(machineXteristics.at(j).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: address offset not an integer");
-            }else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
+            } else if (machineXteristics.at(j).nodeName().toStdString().compare("state") == 0){
                 QDomNodeList stateXteristics = machineXteristics.at(j).childNodes();
                 thisState = new system_state;
                 thisState->primAddress = thisFSM->primAddress;
@@ -223,6 +233,24 @@ bool Config::read_config_file_data(){
                     }
                 }
                 thisFSM->states.push_back(thisState);
+            } else if (machineXteristics.at(j).nodeName().toStdString().compare("condition") == 0){
+                QDomNodeList stateXteristics = machineXteristics.at(j).childNodes();
+                thisCondition = new condition;
+                thisCondition->value = -1;
+                for (int k = 0; k < stateXteristics.size(); k++){
+                    if (stateXteristics.at(k).nodeName().toStdString().compare("name") == 0){
+                        thisCondition->name = stateXteristics.at(k).firstChild().nodeValue().toStdString();
+                    } else if (stateXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
+                        if (isInteger(stateXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            thisState->auxAddress = stoi(stateXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: state value not an integer");
+                    } else if (stateXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
+                        if (isInteger(stateXteristics.at(k).firstChild().nodeValue().toStdString()))
+                            thisState->offset = stoi(stateXteristics.at(k).firstChild().nodeValue().toStdString());
+                        else configErrors.push_back("CONFIG ERROR: state value not an integer");
+                    }
+                }
+                thisFSM->conditions.push_back(thisCondition);
             }
         }
         FSMs.push_back(thisFSM);
@@ -741,7 +769,7 @@ bool Config::read_config_file_data(){
     //****************************************//
     usb7204 = new usb7402_interface(usbSensors,subsystems);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface();
+    canInterface = new canbus_interface(canRate);
     dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
                                FSMs,systemMode,controlSpecs,storedSensors,allResponses,bootConfigs);
 

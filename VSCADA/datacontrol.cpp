@@ -124,6 +124,12 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                     deactivateLog(currState);
                 }
             }
+            for (uint j = 0; j < currFSM->conditions.size(); j++){
+                condition * currCondition = currFSM->conditions.at(j);
+                currCondition->value = isolateData64(currCondition->auxAddress,currCondition->offset,data,currFSM->endianness);
+                string msg = currCondition->name + "->" + to_string(currCondition->value);
+                emit logMsg(msg);
+            }
             emit updateFSM(currFSM);
         }
     }

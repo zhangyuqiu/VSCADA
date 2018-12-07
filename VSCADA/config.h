@@ -43,6 +43,7 @@ public:
     controlSpec * currSpec;
     statemachine * thisFSM;
     system_state * thisState;
+    condition * thisCondition;
 
     //data vectors
     vector<meta *> canSensors;

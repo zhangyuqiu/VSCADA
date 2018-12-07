@@ -119,12 +119,20 @@ typedef struct{
 }system_state;
 
 typedef struct{
+    std::string name;
+    int auxAddress;
+    int offset;
+    int value;
+}condition;
+
+typedef struct{
     int offset;
     int auxAddress;
     int primAddress;
     int endianness;
     std::string name;
     std::vector<system_state *> states;
+    std::vector<condition *> conditions;
 }statemachine;
 
 typedef struct{
