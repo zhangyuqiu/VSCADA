@@ -15,12 +15,13 @@ void exampleMyFocus::focusInEvent ( QFocusEvent * event )
 //    else
         this->m_keyBoard->focusThis(this); // modifies focus for keyboard
     QLineEdit::focusInEvent(event);
-    std::cout << "Kanaeeeeeee!!!!!!!!!" << std::endl;
-    emit (focussed(true));
+    std::cout << "Kanaeeeeeee!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    emit focussed(true);
 }
 
 void exampleMyFocus::focusOutEvent(QFocusEvent *e)
 {
   QLineEdit::focusOutEvent(e);
-  emit (focussed(false));
+  std::cout << "Manakaaaaaaaaaaaa!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  emit focussed(false);
 }

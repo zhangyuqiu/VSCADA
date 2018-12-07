@@ -25,8 +25,8 @@ signals:
   void focussed(bool hasFocus);
 
     protected:
-       void focusInEvent (QFocusEvent * event);
-       void focusOutEvent(QFocusEvent *e);
+   void focusInEvent (QFocusEvent * event);
+   void focusOutEvent(QFocusEvent *e);
 
 };
 

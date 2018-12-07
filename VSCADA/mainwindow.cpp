@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->myKeyboard->createKeyboard(); // only create keyboard
 
     postProcessWindow = new postProcess;
+    kShow=false;
 
     central = new QWidget();
     mainLayout = new QVBoxLayout();
@@ -372,6 +373,18 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(outButton,0,4,Qt::AlignRight);
     QObject::connect(outButton, SIGNAL (clicked()), this , SLOT(hideKey()));
 
+
+    QLineEdit * testControl = new QLineEdit;
+    testControl->setText("kana");
+    testControl->setMaximumWidth(unitWidth*5);
+    testControl->setStyleSheet("font:"+labelFont+"pt;");
+
+            exampleMyFocus * focus = new exampleMyFocus(testControl,this->myKeyboard);
+//            connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
+            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
+
+            stateButtonLayout->addWidget(focus,0,5);
+
     mainLayout->addLayout(stateButtonLayout);
 
     QFrame * stateBorder = new QFrame(this);
@@ -432,10 +445,10 @@ void MainWindow::update(){
             editControl->setMaximumWidth(unitWidth*5);
             editControl->setStyleSheet("font:"+labelFont+"pt;");
 
-//            exampleMyFocus * focus = new exampleMyFocus(editControl,this->myKeyboard);
-//            connect(focus, SIGNAL(focussed(true)),this,SLOT(showKey(true)));
-//            fieldLayout->addWidget(focus);
-            fieldLayout->addWidget(editControl);
+            exampleMyFocus * focus = new exampleMyFocus(editControl,this->myKeyboard);
+            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
+            fieldLayout->addWidget(focus);
+//            fieldLayout->addWidget(editControl);
 
             fieldLayout->setAlignment(Qt::AlignCenter);
             controlEdits.push_back(editControl);
@@ -822,15 +835,23 @@ string MainWindow::info_dialog(string msg){
     exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
     la.addWidget(&ed);
     la.addWidget(focus);
+    focus->setText("manaka");
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
     connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
-    connect(focus, SIGNAL(focussed(true)),this,SLOT(showKey(true)));
+    connect(focus, SIGNAL(focussed(bol)),this,SLOT(popKey(bol)));
 
     la.addWidget(buttonBox);
+
     dlg.setLayout(&la);
+    this->myKeyboard = new widgetKeyBoard(false, 0, false,&dlg); // false = alpha numeric keyboard, true = numeric keyboard
+    this->myKeyboard->setZoomFacility(true);
+    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
+    this->myKeyboard->createKeyboard();
+    this->myKeyboard->show(this, NULL, false);
+
 reprompt:
     int result = dlg.exec();
 
@@ -953,9 +974,11 @@ void MainWindow::updateGraph(meta * sen){
 
 void MainWindow::showKey()
 {
+    kShow=true;
+    message->addItem("show");
     myKeyboard->show(this, NULL, false); // once created keyboard object, use this method to switch between windows
 //#if QT_VERSION >= 0x050000
-   this->myKeyboard->move((this->x())*1.2, (this->y() + this->myKeyboard->height())*3); // to move keyboard
+   this->myKeyboard->move((this->x())*1.2, (this->y() + this->myKeyboard->height())*3);
 //#else
 //     // move to center of screen, just below QLineEdit widget
 //     this->myKeyboard->move((QApplication::desktop()->screenGeometry().width() - myKeyboard->width())/2, this->y() + this->height() + 33);	// AW - 33 = height of window title bar + height of window frame
@@ -963,10 +986,24 @@ void MainWindow::showKey()
 }
 
 void MainWindow::popKey(bool v){
-    this->showKey();
+    if(v&&!kShow){
+    showKey();
+    }else if(kShow&&v){
+        hideKey();
+
+    }
+
 }
 
 void MainWindow::hideKey()
 {
+    message->addItem("hide");
+    kShow=false;
     myKeyboard->hide(true);
+}
+
+void MainWindow::removeKey(bool v)
+{
+    myKeyboard->hide(true);
+
 }

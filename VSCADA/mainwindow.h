@@ -113,6 +113,8 @@ public:
     double graphMin = 0;
     int maxSensorRow;
     bool detail;
+    bool kShow;
+
 
      QVector<double> gx,gy;
 
@@ -151,6 +153,7 @@ private slots:
     void showKey();
     void popKey(bool s);
     void hideKey();
+    void removeKey(bool s);
 
 private:
     Ui::MainWindow *ui;
