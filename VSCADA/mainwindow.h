@@ -85,6 +85,7 @@ public:
     QHBoxLayout * controlsLayout;
     QSlider * sliderControl;
     QLineEdit * editControl;
+    QLineEdit * thisEdit;
     detailPage * detailWindow;
 
     QListWidget * message;
@@ -114,6 +115,7 @@ public:
     int maxSensorRow;
     bool detail;
     bool kShow;
+    exampleMyFocus * thisfocus;
 
 
      QVector<double> gx,gy;

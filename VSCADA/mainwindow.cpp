@@ -349,41 +349,41 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(exitButton,0,2,Qt::AlignRight);
     QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(shutdownSystem()));
 
-    QPushButton * inButton =new QPushButton();
-    inButton->setText("EXIT");
-    QPalette palinButton = inButton->palette();
-    palinButton.setColor(QPalette::Button, QColor(0,0,255));
-    inButton->setPalette(palexit);
-    inButton->setAutoFillBackground(true);
-    inButton->setStyleSheet("font:"+butLabelFont+"pt;");
-    inButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-    inButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-    stateButtonLayout->addWidget(inButton,0,3,Qt::AlignRight);
-    QObject::connect(inButton, SIGNAL (clicked()), this , SLOT(showKey()));
+//    QPushButton * inButton =new QPushButton();
+//    inButton->setText("EXIT");
+//    QPalette palinButton = inButton->palette();
+//    palinButton.setColor(QPalette::Button, QColor(0,0,255));
+//    inButton->setPalette(palexit);
+//    inButton->setAutoFillBackground(true);
+//    inButton->setStyleSheet("font:"+butLabelFont+"pt;");
+//    inButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+//    inButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+//    stateButtonLayout->addWidget(inButton,0,3,Qt::AlignRight);
+//    QObject::connect(inButton, SIGNAL (clicked()), this , SLOT(showKey()));
 
-    QPushButton * outButton =new QPushButton();
-    outButton->setText("EXIT");
-    QPalette palhide = outButton->palette();
-    palhide.setColor(QPalette::Button, QColor(0,0,255));
-    outButton->setPalette(palexit);
-    outButton->setAutoFillBackground(true);
-    outButton->setStyleSheet("font:"+butLabelFont+"pt;");
-    outButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-    outButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-    stateButtonLayout->addWidget(outButton,0,4,Qt::AlignRight);
-    QObject::connect(outButton, SIGNAL (clicked()), this , SLOT(hideKey()));
+//    QPushButton * outButton =new QPushButton();
+//    outButton->setText("EXIT");
+//    QPalette palhide = outButton->palette();
+//    palhide.setColor(QPalette::Button, QColor(0,0,255));
+//    outButton->setPalette(palexit);
+//    outButton->setAutoFillBackground(true);
+//    outButton->setStyleSheet("font:"+butLabelFont+"pt;");
+//    outButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+//    outButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+//    stateButtonLayout->addWidget(outButton,0,4,Qt::AlignRight);
+//    QObject::connect(outButton, SIGNAL (clicked()), this , SLOT(hideKey()));
 
 
-    QLineEdit * testControl = new QLineEdit;
-    testControl->setText("kana");
-    testControl->setMaximumWidth(unitWidth*5);
-    testControl->setStyleSheet("font:"+labelFont+"pt;");
+//    QLineEdit * testControl = new QLineEdit;
+////    testControl->setText("kana");
+//    testControl->setMaximumWidth(unitWidth*5);
+//    testControl->setStyleSheet("font:"+labelFont+"pt;");
 
-            exampleMyFocus * focus = new exampleMyFocus(testControl,this->myKeyboard);
-//            connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
-            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
+//            exampleMyFocus * focus = new exampleMyFocus(testControl,this->myKeyboard);
+////            connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
+//            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
 
-            stateButtonLayout->addWidget(focus,0,5);
+//            stateButtonLayout->addWidget(focus,0,5);
 
     mainLayout->addLayout(stateButtonLayout);
 
@@ -444,11 +444,12 @@ void MainWindow::update(){
             editControl->setValidator( new QIntValidator(0, 999999999, this) );
             editControl->setMaximumWidth(unitWidth*5);
             editControl->setStyleSheet("font:"+labelFont+"pt;");
+            thisEdit=editControl;
 
-            exampleMyFocus * focus = new exampleMyFocus(editControl,this->myKeyboard);
-            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
-            fieldLayout->addWidget(focus);
-//            fieldLayout->addWidget(editControl);
+//           thisfocus = new exampleMyFocus(editControl,this->myKeyboard);
+//            connect(thisfocus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
+//            fieldLayout->addWidget(thisfocus);
+            fieldLayout->addWidget(editControl);
 
             fieldLayout->setAlignment(Qt::AlignCenter);
             controlEdits.push_back(editControl);
@@ -828,6 +829,8 @@ int MainWindow::active_dialog(string msg){
  */
 string MainWindow::info_dialog(string msg){
     QDialog dlg;
+    dlg.setFixedHeight(unitHeight*12);
+    dlg.setFixedWidth(unitWidth*12);
     QLineEdit  edit;
     QVBoxLayout la(&dlg);
     QLabel ed;
@@ -835,7 +838,7 @@ string MainWindow::info_dialog(string msg){
     exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
     la.addWidget(&ed);
     la.addWidget(focus);
-    focus->setText("manaka");
+
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -844,19 +847,23 @@ string MainWindow::info_dialog(string msg){
     connect(focus, SIGNAL(focussed(bol)),this,SLOT(popKey(bol)));
 
     la.addWidget(buttonBox);
-
+    la.addWidget(this->myKeyboard);
+     this->myKeyboard->show(this, NULL, false);
     dlg.setLayout(&la);
-    this->myKeyboard = new widgetKeyBoard(false, 0, false,&dlg); // false = alpha numeric keyboard, true = numeric keyboard
-    this->myKeyboard->setZoomFacility(true);
-    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
-    this->myKeyboard->createKeyboard();
-    this->myKeyboard->show(this, NULL, false);
+//    this->myKeyboard = new widgetKeyBoard(false, 0, false,&dlg); // false = alpha numeric keyboard, true = numeric keyboard
+//    this->myKeyboard->setZoomFacility(true);
+//    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
+//    this->myKeyboard->createKeyboard();
+//    this->myKeyboard->show(this, NULL, false);
+//    this->myKeyboard->setFixedHeight(unitHeight*3);
+//    this->myKeyboard->setFixedHeight(unitWidth*6);
+//    this->myKeyboard->move(0,4);
 
 reprompt:
     int result = dlg.exec();
 
     if(result == QDialog::Accepted){
-        string str = edit.text().toStdString();
+        string str = focus->text().toStdString();
         if (str.compare("") == 0){
             goto reprompt;
         }
@@ -983,6 +990,7 @@ void MainWindow::showKey()
 //     // move to center of screen, just below QLineEdit widget
 //     this->myKeyboard->move((QApplication::desktop()->screenGeometry().width() - myKeyboard->width())/2, this->y() + this->height() + 33);	// AW - 33 = height of window title bar + height of window frame
 //#endif
+    myKeyboard->focusThis(thisEdit);
 }
 
 void MainWindow::popKey(bool v){
