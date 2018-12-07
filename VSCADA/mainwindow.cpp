@@ -3,9 +3,14 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow), myKeyboard(NULL)
 {
     ui->setupUi(this);
+
+    this->myKeyboard = new widgetKeyBoard(false, 0, false); // false = alpha numeric keyboard, true = numeric keyboard
+    this->myKeyboard->setZoomFacility(true);
+    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
+    this->myKeyboard->createKeyboard(); // only create keyboard
 
     postProcessWindow = new postProcess;
 
@@ -101,6 +106,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow(){
     delete ui;
+    delete (this->myKeyboard);
 }
 
 void MainWindow::update(){
@@ -342,6 +348,30 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(exitButton,0,2,Qt::AlignRight);
     QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(shutdownSystem()));
 
+    QPushButton * inButton =new QPushButton();
+    inButton->setText("EXIT");
+    QPalette palinButton = inButton->palette();
+    palinButton.setColor(QPalette::Button, QColor(0,0,255));
+    inButton->setPalette(palexit);
+    inButton->setAutoFillBackground(true);
+    inButton->setStyleSheet("font:"+butLabelFont+"pt;");
+    inButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+    inButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+    stateButtonLayout->addWidget(inButton,0,3,Qt::AlignRight);
+    QObject::connect(inButton, SIGNAL (clicked()), this , SLOT(showKey()));
+
+    QPushButton * outButton =new QPushButton();
+    outButton->setText("EXIT");
+    QPalette palhide = outButton->palette();
+    palhide.setColor(QPalette::Button, QColor(0,0,255));
+    outButton->setPalette(palexit);
+    outButton->setAutoFillBackground(true);
+    outButton->setStyleSheet("font:"+butLabelFont+"pt;");
+    outButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+    outButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+    stateButtonLayout->addWidget(outButton,0,4,Qt::AlignRight);
+    QObject::connect(outButton, SIGNAL (clicked()), this , SLOT(hideKey()));
+
     mainLayout->addLayout(stateButtonLayout);
 
     QFrame * stateBorder = new QFrame(this);
@@ -401,7 +431,12 @@ void MainWindow::update(){
             editControl->setValidator( new QIntValidator(0, 999999999, this) );
             editControl->setMaximumWidth(unitWidth*5);
             editControl->setStyleSheet("font:"+labelFont+"pt;");
+
+//            exampleMyFocus * focus = new exampleMyFocus(editControl,this->myKeyboard);
+//            connect(focus, SIGNAL(focussed(true)),this,SLOT(showKey(true)));
+//            fieldLayout->addWidget(focus);
             fieldLayout->addWidget(editControl);
+
             fieldLayout->setAlignment(Qt::AlignCenter);
             controlEdits.push_back(editControl);
             editCtrls.push_back(currSpec);
@@ -780,17 +815,19 @@ int MainWindow::active_dialog(string msg){
  */
 string MainWindow::info_dialog(string msg){
     QDialog dlg;
-    QLineEdit edit;
+    QLineEdit  edit;
     QVBoxLayout la(&dlg);
     QLabel ed;
     ed.setText(QString::fromStdString(msg));
+    exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
     la.addWidget(&ed);
-    la.addWidget(&edit);
+    la.addWidget(focus);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
     connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
+    connect(focus, SIGNAL(focussed(true)),this,SLOT(showKey(true)));
 
     la.addWidget(buttonBox);
     dlg.setLayout(&la);
@@ -910,4 +947,26 @@ void MainWindow::updateGraph(meta * sen){
             addPoint(stod(conf->dataCtrl->getProgramTime()),data);
         }
     }
+}
+
+
+
+void MainWindow::showKey()
+{
+    myKeyboard->show(this, NULL, false); // once created keyboard object, use this method to switch between windows
+//#if QT_VERSION >= 0x050000
+   this->myKeyboard->move((this->x())*1.2, (this->y() + this->myKeyboard->height())*3); // to move keyboard
+//#else
+//     // move to center of screen, just below QLineEdit widget
+//     this->myKeyboard->move((QApplication::desktop()->screenGeometry().width() - myKeyboard->width())/2, this->y() + this->height() + 33);	// AW - 33 = height of window title bar + height of window frame
+//#endif
+}
+
+void MainWindow::popKey(bool v){
+    this->showKey();
+}
+
+void MainWindow::hideKey()
+{
+    myKeyboard->hide(true);
 }

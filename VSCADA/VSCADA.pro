@@ -5,7 +5,7 @@ CONFIG += qt
 
 TARGET = VSCADA
 QT     += xml
-QT     += core gui printsupport sql
+QT     += core gui printsupport sql multimedia
 DEFINES += QT_DEPRECATED_WARNINGS
 INCLUDEPATH += $$_PRO_FILE_PWD_
 
@@ -13,11 +13,11 @@ DEFINES += MAIN_QML=\\\"Basic.qml\\\"
 
 LIBS += -l sqlite3
 LIBS += -pthread
-#LIBS += -lusb-1.0
-LIBS += -l:libudev.so.1
-LIBS += -l:libc.so.6
-LIBS += -l:libusb-1.0.so.0
-LIBS += -l:ld-linux.so.3
+LIBS += -lusb-1.0
+#LIBS += -l:libudev.so.1
+#LIBS += -l:libc.so.6
+#LIBS += -l:libusb-1.0.so.0
+#LIBS += -l:ld-linux.so.3
 #LIBS += -lstdc++
 
 SOURCES += \
@@ -39,7 +39,10 @@ SOURCES += \
     usb7402_interface.cpp \
     libusb_interface/hidapi.c \
     postprocess.cpp \
-    worker.cpp
+    worker.cpp \
+    examplemyfocus.cpp \
+    QKeyPushButton.cpp \
+    widgetKeyBoard.cpp
 
 HEADERS += \
     db_engine.h \
@@ -61,7 +64,10 @@ HEADERS += \
     usb7402_interface.h \
     libusb_interface/hidapi.h \
     postprocess.h \
-    worker.h
+    worker.h \
+    examplemyfocus.h \
+    QKeyPushButton.h \
+    widgetKeyBoard.h
 
 FORMS += \
         mainwindow.ui \
@@ -78,3 +84,6 @@ QMAKE_CFLAGS += -std=gnu++0x -pthread
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    0
