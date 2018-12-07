@@ -64,7 +64,7 @@ public:
     vector<QPushButton *> FSMButtons;
     vector<QLineEdit *> edits;
     vector<QTimer *> editTimers;
-//    widgetKeyBoard  *myKeyboard;
+    widgetKeyBoard  *myKeyboard;
 
     QString ** systemName;
 
@@ -85,6 +85,7 @@ public:
     QHBoxLayout * controlsLayout;
     QSlider * sliderControl;
     QLineEdit * editControl;
+    QLineEdit * thisEdit;
     detailPage * detailWindow;
 
     QListWidget * message;
@@ -114,6 +115,7 @@ public:
     int maxSensorRow;
     bool detail;
     bool kShow;
+    exampleMyFocus * thisfocus;
 
 
      QVector<double> gx,gy;

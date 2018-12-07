@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
 //    this->myKeyboard->createKeyboard(); // only create keyboard
 
-    //postProcessWindow = new postProcess;
+    postProcessWindow = new postProcess;
     kShow=false;
 
     central = new QWidget();
@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString LabelFont = QString::number(stringSize);
     tabs->setStyleSheet("QTabBar::tab {font:"+LabelFont+"pt}");
     tabs->addTab(central,"General");
-    //tabs->addTab(postProcessWindow->central, "PostProcessing");
+    tabs->addTab(postProcessWindow->central, "PostProcessing");
     tabs->setFixedWidth(rect.width() - 18);
     tabs->setFixedHeight(rect.height() - 50);
     QString  font = QString::number(stringSize*1.5);
@@ -379,6 +379,7 @@ void MainWindow::update(){
 
 //    QLineEdit * testControl = new QLineEdit;
 //    testControl->setText("kana");
+////    testControl->setText("kana");
 //    testControl->setMaximumWidth(unitWidth*5);
 //    testControl->setStyleSheet("font:"+labelFont+"pt;");
 
@@ -387,6 +388,10 @@ void MainWindow::update(){
 
 //            stateButtonLayout->addWidget(focus,0,5);
 //    stateButtonLayout->addWidget(testControl,0,5);
+////            connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
+//            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
+
+//            stateButtonLayout->addWidget(focus,0,5);
     mainLayout->addLayout(stateButtonLayout);
 
     QFrame * stateBorder = new QFrame(this);
@@ -446,10 +451,9 @@ void MainWindow::update(){
             editControl->setValidator( new QIntValidator(0, 999999999, this) );
             editControl->setMaximumWidth(unitWidth*5);
             editControl->setStyleSheet("font:"+labelFont+"pt;");
+            thisEdit=editControl;
 
-//            exampleMyFocus * focus = new exampleMyFocus(editControl,this->myKeyboard);
-//            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
-//            fieldLayout->addWidget(focus);
+
             fieldLayout->addWidget(editControl);
 
             fieldLayout->setAlignment(Qt::AlignCenter);
@@ -830,15 +834,18 @@ int MainWindow::active_dialog(string msg){
  */
 string MainWindow::info_dialog(string msg){
     QDialog dlg;
+    dlg.setFixedHeight(unitHeight*12);
+    dlg.setFixedWidth(unitWidth*12);
     QLineEdit  edit;
     QVBoxLayout la(&dlg);
     QLabel ed;
     ed.setText(QString::fromStdString(msg));
-//    exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
+    exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
     la.addWidget(&ed);
-    la.addWidget(&edit);
+//    la.addWidget(&edit);
 //    la.addWidget(focus);
 //    focus->setText("manaka");
+    la.addWidget(focus);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -847,19 +854,23 @@ string MainWindow::info_dialog(string msg){
 //    connect(focus, SIGNAL(focussed(bol)),this,SLOT(popKey(bol)));
 
     la.addWidget(buttonBox);
-
+    la.addWidget(this->myKeyboard);
+     this->myKeyboard->show(this, NULL, false);
     dlg.setLayout(&la);
 //    this->myKeyboard = new widgetKeyBoard(false, 0, false,&dlg); // false = alpha numeric keyboard, true = numeric keyboard
 //    this->myKeyboard->setZoomFacility(true);
 //    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
 //    this->myKeyboard->createKeyboard();
 //    this->myKeyboard->show(this, NULL, false);
+//    this->myKeyboard->setFixedHeight(unitHeight*3);
+//    this->myKeyboard->setFixedHeight(unitWidth*6);
+//    this->myKeyboard->move(0,4);
 
 reprompt:
     int result = dlg.exec();
 
     if(result == QDialog::Accepted){
-        string str = edit.text().toStdString();
+        string str = focus->text().toStdString();
         if (str.compare("") == 0){
             goto reprompt;
         }
@@ -892,10 +903,10 @@ repeat:
             conf->dataCtrl->saveSession(name);
             passive_dialog("Saved!");
         }
-        this->close();
+//        this->close();
     } else {
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
-        this->close();
+//        this->close();
     }
     QFile file("../VSCADA/savedsessions/DataBase.txt");
      file.open(QIODevice::WriteOnly | QIODevice::Append);
@@ -905,6 +916,7 @@ repeat:
      file.flush();
 
      file.close();
+     this->close();
 
 }
 
@@ -986,6 +998,19 @@ void MainWindow::updateGraph(meta * sen){
 ////     // move to center of screen, just below QLineEdit widget
 ////     this->myKeyboard->move((QApplication::desktop()->screenGeometry().width() - myKeyboard->width())/2, this->y() + this->height() + 33);	// AW - 33 = height of window title bar + height of window frame
 ////#endif
+//}
+//void MainWindow::showKey()
+//{
+//    kShow=true;
+//    message->addItem("show");
+//    myKeyboard->show(this, NULL, false); // once created keyboard object, use this method to switch between windows
+////#if QT_VERSION >= 0x050000
+//   this->myKeyboard->move((this->x())*1.2, (this->y() + this->myKeyboard->height())*3);
+////#else
+////     // move to center of screen, just below QLineEdit widget
+////     this->myKeyboard->move((QApplication::desktop()->screenGeometry().width() - myKeyboard->width())/2, this->y() + this->height() + 33);	// AW - 33 = height of window title bar + height of window frame
+////#endif
+//    myKeyboard->focusThis(thisEdit);
 //}
 
 //void MainWindow::popKey(bool v){

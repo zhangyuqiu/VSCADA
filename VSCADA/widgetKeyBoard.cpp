@@ -357,9 +357,9 @@ void widgetKeyBoard::focusThis(QLineEdit *control)
         this->init_keyboard(control);
         this->controlKeyEcho(control);
     }
-    else {
-        ;// Non è attiva nessuna finestra su cui operare
-    }
+//    else {
+//        ;// Non è attiva nessuna finestra su cui operare
+//    }
 }
 
 void widgetKeyBoard::closeEvent(QCloseEvent * event)
