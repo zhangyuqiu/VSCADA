@@ -10,6 +10,11 @@
 #include <QtWidgets>
 #include <qcustomplot.h>
 #include <string>
+#include <QCoreApplication>
+#include <QGuiApplication>
+#include <QKeyEvent>
+#include "widgetKeyBoard.h"
+#include "examplemyfocus.h"
 #include "config.h"
 #include "typedefs.h"
 #include "canbus_interface.h"
@@ -59,6 +64,7 @@ public:
     vector<QPushButton *> FSMButtons;
     vector<QLineEdit *> edits;
     vector<QTimer *> editTimers;
+    widgetKeyBoard  *myKeyboard;
 
     QString ** systemName;
 
@@ -107,6 +113,8 @@ public:
     double graphMin = 0;
     int maxSensorRow;
     bool detail;
+    bool kShow;
+
 
      QVector<double> gx,gy;
 
@@ -142,6 +150,10 @@ private slots:
     void updateEdits(meta * sensor);
     void changeEditColor(string color, meta *sensor);
     void checkTimeout();
+    void showKey();
+    void popKey(bool s);
+    void hideKey();
+    void removeKey(bool s);
 
 private:
     Ui::MainWindow *ui;

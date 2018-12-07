@@ -5,7 +5,6 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
-#include <fstream>
 #include <unistd.h>
 #include <stack>
 #include <bitset>
