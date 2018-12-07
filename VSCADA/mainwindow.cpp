@@ -10,10 +10,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-//    this->myKeyboard = new widgetKeyBoard(false, 0, false); // false = alpha numeric keyboard, true = numeric keyboard
-//    this->myKeyboard->setZoomFacility(true);
-//    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
-//    this->myKeyboard->createKeyboard(); // only create keyboard
+    this->myKeyboard = new widgetKeyBoard(false, 0, false); // false = alpha numeric keyboard, true = numeric keyboard
+    this->myKeyboard->setZoomFacility(true);
+    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
+    this->myKeyboard->createKeyboard(); // only create keyboard
 
     postProcessWindow = new postProcess;
     kShow=false;
@@ -840,30 +840,33 @@ int MainWindow::active_dialog(string msg){
  * @return either accepted or rejected
  */
 string MainWindow::info_dialog(string msg){
-    QDialog dlg;
-    dlg.setFixedHeight(unitHeight*12);
-    dlg.setFixedWidth(unitWidth*12);
-    QLineEdit  edit;
-    QVBoxLayout la(&dlg);
-    QLabel ed;
-    ed.setText(QString::fromStdString(msg));
-    exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
-    la.addWidget(&ed);
-//    la.addWidget(&edit);
+//    QDialog dlg;
+//    dlg.setFixedHeight(unitHeight*12);
+//    dlg.setFixedWidth(unitWidth*12);
+//    QLineEdit  edit;
+//    QVBoxLayout la(&dlg);
+//    QLabel ed;
+//    ed.setText(QString::fromStdString(msg));
+//    exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
+//    la.addWidget(&ed);
+////    la.addWidget(&edit);
+////    la.addWidget(focus);
+////    focus->setText("manaka");
 //    la.addWidget(focus);
-//    focus->setText("manaka");
-    la.addWidget(focus);
 
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+//    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-    connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
-    connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
-//    connect(focus, SIGNAL(focussed(bol)),this,SLOT(popKey(bol)));
+//    connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
+//    connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
+////    connect(focus, SIGNAL(focussed(bol)),this,SLOT(popKey(bol)));
 
-    la.addWidget(buttonBox);
-    la.addWidget(this->myKeyboard);
-     this->myKeyboard->show(this, NULL, false);
-    dlg.setLayout(&la);
+//    la.addWidget(buttonBox);
+//    la.addWidget(this->myKeyboard);
+//     this->myKeyboard->show(this, NULL, false);
+//    dlg.setLayout(&la);
+
+
+
 //    this->myKeyboard = new widgetKeyBoard(false, 0, false,&dlg); // false = alpha numeric keyboard, true = numeric keyboard
 //    this->myKeyboard->setZoomFacility(true);
 //    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
@@ -873,19 +876,56 @@ string MainWindow::info_dialog(string msg){
 //    this->myKeyboard->setFixedHeight(unitWidth*6);
 //    this->myKeyboard->move(0,4);
 
-reprompt:
-    int result = dlg.exec();
+//reprompt:
+//    int result = dlg.exec();
 
-    if(result == QDialog::Accepted){
-        string str = focus->text().toStdString();
-        if (str.compare("") == 0){
-            goto reprompt;
-        }
-        str += ".db";
-        return str;
-    } else {
-        return "0";
-    }
+//    if(result == QDialog::Accepted){
+//        string str = focus->text().toStdString();
+//        if (str.compare("") == 0){
+//            goto reprompt;
+//        }
+//        str += ".db";
+//        return str;
+//    } else {
+//        return "0";
+//    }
+
+        QDialog dlg;
+        dlg.setFixedHeight(unitHeight*12);
+        dlg.setFixedWidth(unitWidth*12);
+       QLineEdit edit;
+       QVBoxLayout la(&dlg);
+       QLabel ed;
+       ed.setText(QString::fromStdString(msg));
+        exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
+       la.addWidget(&ed);
+       la.addWidget(focus);
+
+       QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+       connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
+       connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
+
+       la.addWidget(buttonBox);
+       la.addWidget(this->myKeyboard);
+       this->myKeyboard->show(this, NULL, false);
+//           this->myKeyboard->setFixedHeight(unitHeight*3);
+//           this->myKeyboard->setFixedHeight(unitWidth*6);
+           this->myKeyboard->move(0,4);
+       dlg.setLayout(&la);
+   reprompt:
+       int result = dlg.exec();
+
+       if(result == QDialog::Accepted){
+           string str = focus->text().toStdString();
+           if (str.compare("") == 0){
+               goto reprompt;
+           }
+           str += ".db";
+           return str;
+       } else {
+           return "0";
+       }
 }
 
 void MainWindow::shutdownSystem(){

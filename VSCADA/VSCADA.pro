@@ -13,11 +13,11 @@ DEFINES += MAIN_QML=\\\"Basic.qml\\\"
 
 LIBS += -l sqlite3
 LIBS += -pthread
-#LIBS += -lusb-1.0
-LIBS += -l:libudev.so.1
-LIBS += -l:libc.so.6
-LIBS += -l:libusb-1.0.so.0
-LIBS += -l:ld-linux.so.3
+LIBS += -lusb-1.0
+#LIBS += -l:libudev.so.1
+#LIBS += -l:libc.so.6
+#LIBS += -l:libusb-1.0.so.0
+#LIBS += -l:ld-linux.so.3
 #LIBS += -lstdc++
 
 SOURCES += \
