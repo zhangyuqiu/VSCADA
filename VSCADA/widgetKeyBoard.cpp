@@ -28,7 +28,7 @@
 widgetKeyBoard::widgetKeyBoard(bool embeddedKeyboard, QWidget *activeForm,  bool onlyNumericPad, QWidget *parent) :
         QWidget(parent), m_nextInput(NULL), m_activeWindow(activeForm), m_numericPad(onlyNumericPad),
         m_currentTextBox(NULL), m_embeddedKeyboard(embeddedKeyboard), m_echoMode(false), m_zoomFacilityEmbedded(false), m_enablePasswordEcho(false),
-        m_player(QDir::currentPath() + CLICK_SOUND), m_clipboard(QApplication::clipboard())
+        m_clipboard(QApplication::clipboard())
 {
     this->m_zoomedKey = NULL;
     this->m_clipboard->clear();
@@ -307,12 +307,8 @@ void widgetKeyBoard::init_keyboard(QLineEdit *focusThisControl)
 
 void widgetKeyBoard::soundClick(void)
 {
-#if QT_VERSION >= 0x050000
+
     static QString sound = QString(":/").append(CLICK_SOUND);
-    this->m_player.play(sound);
-#else // TODO: check if Qt 4.x support resource file
-    this->m_player.play();
-#endif
 }
 
 void widgetKeyBoard::show(QWidget *activeForm, QLineEdit *first, bool frameless)

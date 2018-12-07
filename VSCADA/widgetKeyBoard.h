@@ -17,7 +17,6 @@
     #define _WIDGETKEYBOARD_H
 
     #include "QKeyPushButton.h"
-    #include <QSound>
     #include <QLineEdit>
     #include <QClipboard>
     #include <QLabel>
@@ -77,7 +76,6 @@
             bool            m_zoomFacilityEmbedded;
             bool            m_enablePasswordEcho; // controls the possibility to change among normal/password echo
             bool            m_numericPad;
-            QSound          m_player;
             QClipboard      *m_clipboard;
     };
 

@@ -152,7 +152,11 @@ void usb7402_interface::startRead(){
 void usb7402_interface::usbCheckTasks(){
     for (uint i = 0; i < sensorVector.size(); i++){
         double val = readChannel(static_cast<uint8_t>(sensorVector.at(i)->usbChannel));
+        std::cout << "Value Read from channel " << sensorVector.at(i)->usbChannel << ": " << val;
         sensorVector.at(i)->val = val;
+        std::cout << "Sensor Raw Val: " << sensorVector.at(i)->val << ": " << val;
+        sensorVector.at(i)->calData();
+        std::cout << "Sensor Cal Val: " << sensorVector.at(i)->calVal << ": " << val;
         emit sensorValueChanged(sensorVector.at(i));
     }
     emit finished();

@@ -64,7 +64,7 @@ public:
     vector<QPushButton *> FSMButtons;
     vector<QLineEdit *> edits;
     vector<QTimer *> editTimers;
-    widgetKeyBoard  *myKeyboard;
+//    widgetKeyBoard  *myKeyboard;
 
     QString ** systemName;
 
@@ -150,10 +150,10 @@ private slots:
     void updateEdits(meta * sensor);
     void changeEditColor(string color, meta *sensor);
     void checkTimeout();
-    void showKey();
-    void popKey(bool s);
-    void hideKey();
-    void removeKey(bool s);
+//    void showKey();
+//    void popKey(bool s);
+//    void hideKey();
+//    void removeKey(bool s);
 
 private:
     Ui::MainWindow *ui;

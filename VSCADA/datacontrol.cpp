@@ -112,6 +112,8 @@ void DataControl::receive_sensor_data(meta * sensor){
  * @param data : data transmitted
  */
 void DataControl::receive_can_data(uint32_t addr, uint64_t data){
+    bool print = false;
+    string msg;
     //check whether address matches any state machine address
     for (uint i = 0; i < FSMs.size(); i++){
         statemachine * currFSM = FSMs.at(i);
@@ -126,9 +128,14 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
             }
             for (uint j = 0; j < currFSM->conditions.size(); j++){
                 condition * currCondition = currFSM->conditions.at(j);
-                currCondition->value = isolateData64(currCondition->auxAddress,currCondition->offset,data,currFSM->endianness);
-                string msg = currCondition->name + "->" + to_string(currCondition->value);
-                emit logMsg(msg);
+                if (currCondition->value != isolateData64(currCondition->auxAddress,currCondition->offset,data,currFSM->endianness)){
+                    currCondition->value = isolateData64(currCondition->auxAddress,currCondition->offset,data,currFSM->endianness);
+                    print = true;
+                }
+                msg += currCondition->name + "->" + to_string(currCondition->value) ;
+            }
+            if (print){
+                logMsg(msg);
             }
             emit updateFSM(currFSM);
         }
