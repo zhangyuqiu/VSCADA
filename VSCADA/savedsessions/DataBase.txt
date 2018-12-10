@@ -6,9 +6,3 @@ system.db
 test.db
 test2.db
 thissession.db
-
-0
-0
-0
-0
-YU.db
