@@ -61,12 +61,7 @@ void SubsystemThread::logData(meta * currSensor){
     vector<string> rows;
     string rawTable = subsystemId + "_rawdata";
     string calTable = subsystemId + "_caldata";
-//    cout << "Debug dbase write" << endl;
-//    cout << "Subsystem ID: " << subsystemId << endl;
-//    cout << "Size of sensor vector: " << sensorMeta.size() << endl;
-//    for (uint i = 0; i < sensorMeta.size(); i++){
-//        cout << "Checking sensor: " << sensorMeta.at(i)->sensorName << endl;
-//        if (sensorMeta.at(i) == currSensor){
+
     rows.push_back(getProgramTime());
     rows.push_back(currSensor->sensorName);
     rows.push_back(currSensor->sensorName);
@@ -80,9 +75,6 @@ void SubsystemThread::logData(meta * currSensor){
     rows.push_back(to_string(currSensor->calVal));
     dbase->insert_row(calTable,cols,rows);
     return;
-//        }
-//    }
-//    cout << "Sensor Not Found. System Error" << currSensor->sensorName << endl;
 }
 
 /**
@@ -278,14 +270,6 @@ vector<int> SubsystemThread::get_data(){
     return rawData;
 }
 
-///**
-// * @brief SubsystemThread::WaitForInternalThreadToExit - waits until thread finishes executing
-// */
-//void SubsystemThread::WaitForInternalThreadToExit()
-//{
-//   (void) pthread_join(_thread, nullptr);
-//}
-
 /**
  * @brief SubsystemThread::subsystemCollectionTasks - performs tasks for data collection
  */
@@ -295,13 +279,6 @@ void SubsystemThread::subsystemCollectionTasks(){
     }
 }
 
-///**
-// * @brief SubsystemThread::StartInternalThread - launches thread
-// */
-//void SubsystemThread::StartInternalThread()
-//{
-//   pthread_create(&_thread, nullptr, InternalThreadEntryFunc, this);
-//}
 
 /**
  * @brief SubsystemThread::get_curr_time - retrieves current operation system time

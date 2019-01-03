@@ -88,18 +88,19 @@ string DataControl::getProgramTime(){
  */
 int DataControl::change_sampling_rate(int rate){
     //change sampling rate for specific sensor(s)
-    try {
-        usb7204->setSamplingRate(rate);
-        gpioInterface->setSamplingRate(rate);
-        return 1;
-    } catch (...) {
-        logMsg("ERROR: Smapling Rate not changed");
-        return 0;
-    }
+//    try {
+//        usb7204->setSamplingRate(rate);
+//        gpioInterface->setSamplingRate(rate);
+//        return 1;
+//    } catch (...) {
+//        logMsg("ERROR: Smapling Rate not changed");
+//        return 0;
+//    }
 }
 
 void DataControl::receive_sensor_data(meta * sensor){
     for (uint i = 0; i < subsystems.size(); i++){
+        QCoreApplication::processEvents();
         if (sensor->subsystem.compare(subsystems.at(i)->subsystemId) == 0){
             subsystems.at(i)->receiveData(sensor);
         }
@@ -117,8 +118,10 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
     //check whether address matches any state machine address
     for (uint i = 0; i < FSMs.size(); i++){
         statemachine * currFSM = FSMs.at(i);
+        QCoreApplication::processEvents();
         if (currFSM->primAddress == static_cast<int>(addr)){
             for (uint j = 0; j < currFSM->states.size(); j++){
+                QCoreApplication::processEvents();
                 system_state * currState = currFSM->states.at(j);
                 if(currState->value == isolateData64(currState->auxAddress,currState->offset,data,currState->endianness)){
                     change_system_state(currState);
@@ -143,6 +146,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
 
     //check whether address matches any status address
     for (uint i = 0; i < states.size(); i++){
+        QCoreApplication::processEvents();
         if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data,states.at(i)->endianness)){
             change_system_state(states.at(i));
         } else if (states.at(i)->primAddress == addr){
@@ -152,6 +156,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
 
     //check whether address matches any sensor address
     for(uint i = 0; i < sensorVector.size(); i++){
+        QCoreApplication::processEvents();
         if(sensorVector.at(i)->primAddress == addr){
             meta * currSensor = sensorVector.at(i);
             if (currSensor->val != static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness))){
@@ -188,9 +193,9 @@ uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data,
     data = data << auxAddress;
     data = data >> lastAddr;
     uint64_t endianData = 0;
-    stringstream s;
-    s << showbase << internal << setfill('0');
-    cout << "Aux: " << auxAddress << " offset: " << offset << " data: " << data << " endianness: " << endianness << endl;
+    //stringstream s;
+    //s << showbase << internal << setfill('0');
+    //cout << "Aux: " << auxAddress << " offset: " << offset << " data: " << data << " endianness: " << endianness << endl;
     if (endianness == 0){
         if (offset > 8){
             int cnt = offset/8;
@@ -203,8 +208,8 @@ uint32_t DataControl::isolateData64(uint auxAddress, uint offset, uint64_t data,
             data = endianData;
         }
     }
-    s << "Final Data: " << std::hex << setw(16) << data;
-    cout << s.str() << endl;
+    //s << "Final Data: " << std::hex << setw(16) << data;
+    //cout << s.str() << endl;
     return static_cast<uint32_t>(data);
 }
 

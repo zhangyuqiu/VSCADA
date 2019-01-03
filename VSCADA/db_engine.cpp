@@ -362,6 +362,7 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
     }else{
         mydb.setDatabaseName("../VSCADA/savedsessions/"+currentBase);//path of data base
 }
+    QCoreApplication::processEvents();
     mydb.open();
 
     QSqlQuery* qry =new QSqlQuery(mydb);
@@ -378,11 +379,12 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
                 }
 
 }else{
-
+    QCoreApplication::processEvents();
     QString selectName="SELECT "+read+" FROM "+currentTable+" WHERE "+target+"='"+name+"'";
     qry->prepare(selectName);
     qry->exec();
     while(qry->next()){
+        QCoreApplication::processEvents();
           QString num =qry->value(0).toString();
           data.push_back(num);
 

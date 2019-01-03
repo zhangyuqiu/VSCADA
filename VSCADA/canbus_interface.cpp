@@ -7,7 +7,6 @@ canbus_interface::canbus_interface(int canRate) {
     bitrate = canRate;
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
-    //connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
     rebootCAN();
 }
 
@@ -56,6 +55,7 @@ void canbus_interface::recieve_frame() {
         for (int i = 0; i < b.size(); i++){
             data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
         }
+        QCoreApplication::processEvents();
         emit process_can_data(a,data);
     }
 }

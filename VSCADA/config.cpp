@@ -20,7 +20,7 @@ Config::~Config(){
  * @return
  */
 bool Config::read_config_file_data(){
-//    try {
+    try {
     //local declarations
     vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;
@@ -797,20 +797,14 @@ bool Config::read_config_file_data(){
         subsystems.at(i)->start();
     }
 
-//    gpioInterface->setSamplingRate(gpioRate);
-//    gpioInterface->startGPIOCheck();
-//    if (usb7204->isActive) {
-//        usb7204->setSamplingRate(usb7204Rate);
-//        usb7204->startUSBCheck();
-//    }
     cout << "Returning from config" << endl;
     return true;
 
-//    } catch (...) {
-//        cout << "Error caught: config issue" << endl;
-//        configErrors.push_back("CRITICAL WARNING: CONFIGURATION UNSUCCESSFUL!!!");
-//        return false;
-//    }
+    } catch (...) {
+        cout << "Error caught: config issue" << endl;
+        configErrors.push_back("CRITICAL WARNING: CONFIGURATION UNSUCCESSFUL!!!");
+        return false;
+    }
 }
 
 /**

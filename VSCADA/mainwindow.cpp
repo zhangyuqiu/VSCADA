@@ -106,6 +106,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (uint i = 0; i < conf->configErrors.size(); i++){
         addErrorMessage(QString::fromStdString(conf->configErrors.at(i)));
     }
+
     conf->canInterface->enableCAN();
     conf->gpioInterface->setSamplingRate(conf->gpioRate);
     conf->gpioInterface->startGPIOCheck();
@@ -117,7 +118,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow(){
     delete ui;
-//    delete (this->myKeyboard);
 }
 
 void MainWindow::update(){
@@ -898,7 +898,7 @@ string MainWindow::info_dialog(string msg){
        QLabel ed;
        ed.setText(QString::fromStdString(msg));
         exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
-       la.addWidget(&ed);
+       la.addWidget(&ed,Qt::AlignCenter);
        la.addWidget(focus);
 
        QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -909,9 +909,12 @@ string MainWindow::info_dialog(string msg){
        la.addWidget(buttonBox);
        la.addWidget(this->myKeyboard);
        this->myKeyboard->show(this, NULL, false);
-//           this->myKeyboard->setFixedHeight(unitHeight*3);
-//           this->myKeyboard->setFixedHeight(unitWidth*6);
-           this->myKeyboard->move(0,4);
+//       QRect rec = QApplication::desktop()->screenGeometry();
+//       int height=rec.height();
+//       int width=rec.width();
+//       this->myKeyboard->setFixedHeight(height/5);
+//       this->myKeyboard->setFixedHeight(width);
+//       this->myKeyboard->move(0,4);
        dlg.setLayout(&la);
    reprompt:
        int result = dlg.exec();
@@ -950,10 +953,8 @@ repeat:
             conf->dataCtrl->saveSession(name);
             passive_dialog("Saved!");
         }
-//        this->close();
     } else {
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
-//        this->close();
     }
     QFile file("../VSCADA/savedsessions/DataBase.txt");
      file.open(QIODevice::WriteOnly | QIODevice::Append);
