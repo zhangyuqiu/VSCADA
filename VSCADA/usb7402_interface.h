@@ -27,17 +27,19 @@ public:
     usb7402_interface(vector<meta *> sensors, vector<SubsystemThread *> subs);
     ~usb7402_interface();
 
+    //member functions
     void stopUSBCheck();
     void startUSBCheck();
     int writeChannel(int channel);
     void setSamplingRate(int newRate);
     double readChannel(uint8_t channel);
 
-    QThread thread;
+    //objects and instance vectors
     QTimer * timer;
     vector<meta *> sensorVector;
     vector<SubsystemThread *> subsystems;
 
+    //global variables
     bool isActive = 0;
     float voltage;
     uint8_t gain;
@@ -46,23 +48,14 @@ public:
     libusb_device_handle *udev;
     Calibration_AIN table_AIN[NMODE][NGAINS_USB7204][NCHAN_USB7204];
 
-    string initErr = "ERROR: USB-7204 device did not boot";
-
-protected:
-//   virtual void usbCheckTasks();                      //runs collection tasks
-
-private:
-   /** Links the member function to ordinary space */
-//   static void * InternalThreadEntryFunc(void * This) {((usb7402_interface *)This)->usbCheckTasks(); return NULL;}
-
-//   pthread_t _thread;
+    string initErr = "ERROR: USB-7204 boot failed";
+    string initSuccess = "USB-7204 boot successful";
 
 public slots:
-//   void StartInternalThread(){InternalThreadEntryFunc(this);}
-   void startRead();
    void usbCheckTasks();
    void writeUSBData(uint8_t channel, float voltage, bool * success);
    void rebootUSB7204();
+
 signals:
    void sensorValueChanged(meta * sensor);
    void pushMessage(string msg);

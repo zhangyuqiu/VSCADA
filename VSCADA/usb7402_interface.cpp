@@ -9,20 +9,21 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
 {
     subsystems = subs;
     sensorVector = sensors;
-    udev = 0;
+    udev = nullptr;
 
-    int ret = libusb_init(NULL);
+    int ret = libusb_init(nullptr);
     if (ret < 0) {
       perror("libusb_init: Failed to initialize libusb");
-      exit(1);
+      pushMessage(initErr);
+      return;
     }
 
-    if ((udev = usb_device_find_USB_MCC(USB7204_PID, NULL))) {
+    if ((udev = usb_device_find_USB_MCC(USB7204_PID, nullptr))) {
       printf("USB-7204 Device is found!\n");
-      pushMessage(initErr);
       isActive = true;
     } else {
       printf("No device found.\n");
+      pushMessage(initErr);
       return;
     }
 
@@ -36,13 +37,13 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
         for (i = 0; i < NGAINS_USB7204; i++ ) {
           for (j = 0; j < NCHAN_USB7204/2; j++) {
             printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
-               i, j, table_AIN[DF][i][j].slope, table_AIN[DF][i][j].intercept);
+               i, j, static_cast<double>(table_AIN[DF][i][j].slope), static_cast<double>(table_AIN[DF][i][j].intercept));
           }
         }
         i = BP_10_00V;
         for (j = 0; j < NCHAN_USB7204; j++) {
           printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
-             i, j, table_AIN[SE][i][j].slope, table_AIN[SE][i][j].intercept);
+             i, j, static_cast<double>(table_AIN[SE][i][j].slope), static_cast<double>(table_AIN[SE][i][j].intercept));
         }
 
         //print out the wMaxPacketSize.  Should be 64.
@@ -60,7 +61,7 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
         }
 
         gain = BP_5_00V;
-        voltage = 4.9;
+        voltage = static_cast<float>(4.9);
     }
 
     timer = new QTimer;
@@ -68,8 +69,10 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
 
     if (isActive){
         for (uint i = 0; i < subsystems.size(); i++){
-//            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
         }
+        pushMessage(initSuccess);
+    } else {
+        pushMessage(initErr);
     }
 }
 
@@ -78,7 +81,7 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
  */
 usb7402_interface::~usb7402_interface()
 {
-    //blah...
+
 }
 
 /**
@@ -132,18 +135,10 @@ double usb7402_interface::readChannel(uint8_t channel){
     int flag = fcntl(fileno(stdin), F_GETFL);
     fcntl(0, F_SETFL, flag | O_NONBLOCK);
     wvalue = usbAIn_USB7204(udev, DF, channel, gain);
-    wvalue = rint(wvalue*table_AIN[DF][gain][channel].slope + table_AIN[DF][gain][channel].intercept);
+    wvalue = static_cast<unsigned short>(rint(wvalue*table_AIN[DF][gain][channel].slope + table_AIN[DF][gain][channel].intercept));
     double readVal = volts_USB7204(wvalue, gain);
     fcntl(fileno(stdin), F_SETFL, flag);
     return readVal;
-}
-
-void usb7402_interface::startRead(){
-    cout << "Thread released" << endl;
-    moveToThread(&thread);
-    connect(&thread, SIGNAL (started()), this, SLOT (usbCheckTasks()));
-    thread.start();
-    cout << "Thread started" << endl;
 }
 
 /**
@@ -152,28 +147,26 @@ void usb7402_interface::startRead(){
 void usb7402_interface::usbCheckTasks(){
     for (uint i = 0; i < sensorVector.size(); i++){
         double val = readChannel(static_cast<uint8_t>(sensorVector.at(i)->usbChannel));
-        std::cout << "Value Read from channel " << sensorVector.at(i)->usbChannel << ": " << val;
         sensorVector.at(i)->val = val;
-        std::cout << "Sensor Raw Val: " << sensorVector.at(i)->val << ": " << val;
-        sensorVector.at(i)->calData();
-        std::cout << "Sensor Cal Val: " << sensorVector.at(i)->calVal << ": " << val;
         emit sensorValueChanged(sensorVector.at(i));
     }
-    emit finished();
 }
 
 void usb7402_interface::rebootUSB7204(){
-    timer->stop();
-    libusb_close(udev);
-    udev = 0;
+    if (isActive){
+        timer->stop();
+    }
 
-    int ret = libusb_init(NULL);
+    libusb_close(udev);
+    udev = nullptr;
+
+    int ret = libusb_init(nullptr);
     if (ret < 0) {
       perror("libusb_init: Failed to initialize libusb");
       exit(1);
     }
 
-    if ((udev = usb_device_find_USB_MCC(USB7204_PID, NULL))) {
+    if ((udev = usb_device_find_USB_MCC(USB7204_PID, nullptr))) {
         printf("USB-7204 Device is found!\n");
         isActive = true;
     } else {
@@ -193,13 +186,13 @@ void usb7402_interface::rebootUSB7204(){
         for (i = 0; i < NGAINS_USB7204; i++ ) {
           for (j = 0; j < NCHAN_USB7204/2; j++) {
             printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
-               i, j, table_AIN[DF][i][j].slope, table_AIN[DF][i][j].intercept);
+               i, j, static_cast<double>(table_AIN[DF][i][j].slope), static_cast<double>(table_AIN[DF][i][j].intercept));
           }
         }
         i = BP_10_00V;
         for (j = 0; j < NCHAN_USB7204; j++) {
           printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n",
-             i, j, table_AIN[SE][i][j].slope, table_AIN[SE][i][j].intercept);
+             i, j, static_cast<double>(table_AIN[SE][i][j].slope), static_cast<double>(table_AIN[SE][i][j].intercept));
         }
 
         //print out the wMaxPacketSize.  Should be 64.
@@ -217,13 +210,13 @@ void usb7402_interface::rebootUSB7204(){
         }
 
         gain = BP_5_00V;
-        voltage = 4.9;
+        voltage = static_cast<float>(4.9);
     }
 
     if (isActive){
         for (uint i = 0; i < subsystems.size(); i++){
-//            connect(this, SIGNAL(sensorValueChanged(meta*)), subsystems.at(i), SLOT(receiveData(meta*)));
             timer->start();
         }
+        pushMessage(initSuccess);
     }
 }

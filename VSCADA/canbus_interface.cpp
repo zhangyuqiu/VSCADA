@@ -6,8 +6,6 @@
 canbus_interface::canbus_interface(int canRate) {
     bitrate = canRate;
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
-    canconnect();
-    //connect(can_bus, &QCanBusDevice::framesReceived, this, &canbus_interface::recieve_frame);
     rebootCAN();
 }
 
@@ -16,7 +14,8 @@ canbus_interface::canbus_interface(int canRate) {
  */
 canbus_interface::~canbus_interface()
 {
-    delete can_bus;
+    if (can_bus != nullptr) delete can_bus;
+
 }
 
 /**
@@ -52,7 +51,7 @@ void canbus_interface::recieve_frame() {
         uint32_t a = recframe.frameId();
 
         int64_t data = 0;
-        qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
+//        qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
         for (int i = 0; i < b.size(); i++){
             data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
         }
@@ -71,11 +70,13 @@ void canbus_interface::sendData(int addr, uint64_t data){
     for(int i = sizeof(data)-1; i >= 0; i--){
         byteArr.append(charData[i]);
     }
-    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
+//    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
     QCanBusFrame * outFrame = new QCanBusFrame;
     outFrame->setFrameId(static_cast<quint32>(addr));
     outFrame->setPayload(byteArr);
     can_bus->writeFrame(*outFrame);
+
+    delete outFrame;
 }
 
 /**
@@ -83,26 +84,35 @@ void canbus_interface::sendData(int addr, uint64_t data){
  * @param addr CAN address
  * @param data : data to be sent
  */
-void canbus_interface::sendDataByte(int addr, uint64_t data, int size){
+void canbus_interface::sendDataByte(int addr, uint64_t data, int bytes){
     QByteArray byteArr;
     char * charData = static_cast<char*>(static_cast<void*>(&data));
-    for(int i = size-1; i >= 0; i--){
+    for(int i = bytes-1; i >= 0; i--){
         byteArr.append(charData[i]);
     }
-    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
+//    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
     QCanBusFrame * outFrame = new QCanBusFrame;
     outFrame->setFrameId(static_cast<quint32>(addr));
     outFrame->setPayload(byteArr);
     can_bus->writeFrame(*outFrame);
+
+    delete outFrame;
 }
 
+/**
+ * @brief canbus_interface::rebootCAN resets CAN network and sets bitrate
+ */
 void canbus_interface::rebootCAN(){
     system("sudo ip link set can0 down");
     std::string s = "sudo ip link set can0 up type can bitrate " + std::to_string(bitrate);
     const char * command = s.c_str();
     printf("Reboot Command: %c", *command);
     system(command);
-    emit pushMsg("CAN Interface boot");
+    if (canconnect()){
+        emit pushMsg("CAN boot successful");
+    } else {
+        emit pushMsg("ERROR: CAN boot failed");
+    }
 }
 
 void canbus_interface::enableCAN(){

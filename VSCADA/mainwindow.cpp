@@ -1,21 +1,19 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-//MainWindow::MainWindow(QWidget *parent) :
-//    QMainWindow(parent),
-//    ui(new Ui::MainWindow), myKeyboard(NULL)
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    this->myKeyboard = new widgetKeyBoard(false, 0, false); // false = alpha numeric keyboard, true = numeric keyboard
-    this->myKeyboard->setZoomFacility(true);
-    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
-    this->myKeyboard->createKeyboard(); // only create keyboard
+//    this->myKeyboard = new widgetKeyBoard(false, nullptr, false); // false = alpha numeric keyboard, true = numeric keyboard
+//    this->myKeyboard->setZoomFacility(true);
+//    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
+//    this->myKeyboard->createKeyboard(); // only create keyboard
 
-    postProcessWindow = new postProcess;
+//    postProcessWindow = new postProcess;
     kShow=false;
 
     central = new QWidget();
@@ -51,17 +49,47 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QRect rect = QApplication::desktop()->screenGeometry();
 
+    //****************************************************//
+    QScrollArea * logWidget = new QScrollArea;
+    QString  butLabelFont = QString::number(stringSize*1.4);
+
+    QVBoxLayout * msgLayout = new QVBoxLayout;
+    QLabel * msgLabel = new QLabel;
+    msgLabel->setText("System Log");
+    msgLabel->setStyleSheet("font:"+butLabelFont+"pt;");
+    msgLabel->setAlignment(Qt::AlignCenter);
+    msgLayout->addWidget(msgLabel, Qt::AlignCenter);
+
+    QFont font = QFont ("Courier");
+    if (!initialized){
+        message = new QListWidget();
+    }
+    QString  errorMessage;
+    errorMessage = "Starting Data Acquisition...";
+    addErrorMessage(errorMessage);
+    QString  messageFont = QString::number(stringSize*1.5);
+    message->setStyleSheet("font:"+messageFont+"pt;");
+    message->addItem("FontSize:"+fontSize);
+    message->setFixedHeight(static_cast<int>(height*0.8));
+    message->setFixedWidth(static_cast<int>(width*0.98));
+    message->setFont(font);
+    msgLayout->addWidget(message);
+
+    logWidget->setLayout(msgLayout);
+    //****************************************************//
+
     QScrollArea *scrollArea = new QScrollArea();
     tabs = new QTabWidget;
     tabs->setTabsClosable(true);
     QString LabelFont = QString::number(stringSize);
     tabs->setStyleSheet("QTabBar::tab {font:"+LabelFont+"pt}");
     tabs->addTab(central,"General");
-    tabs->addTab(postProcessWindow->central, "PostProcessing");
+//    tabs->addTab(postProcessWindow->central, "PostProcessing");
+    tabs->addTab(logWidget,"System Log");
     tabs->setFixedWidth(rect.width() - 18);
     tabs->setFixedHeight(rect.height() - 50);
-    QString  font = QString::number(stringSize*1.5);
-    tabs->setStyleSheet("font:"+font+"pt;");
+    QString  myfont = QString::number(stringSize*1.5);
+    tabs->setStyleSheet("font:"+myfont+"pt;");
     scrollArea->setWidgetResizable(true);
     scrollArea->setWidget(tabs);
 
@@ -77,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
         edits.push_back(lineEdit);
         lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
         lineEdit->setAlignment(Qt::AlignCenter);
-        lineEdit->setDisabled(1);
+        lineEdit->setReadOnly(true);
         editTimers.push_back(checkTmr);
     }
 
@@ -90,8 +118,8 @@ MainWindow::MainWindow(QWidget *parent) :
     for (uint i = 0; i < subs.size(); i++){
         connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
         connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
-        connect(subs.at(i), SIGNAL(valueChanged(meta *)), this, SLOT(updateGraph(meta *)));
         connect(subs.at(i), SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
+        connect(subs.at(i), SIGNAL(updateHealth()), this, SLOT(updateHealth()));
         connect(subs.at(i), SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
     }
     connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
@@ -101,23 +129,33 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(conf->canInterface, SIGNAL(pushMsg(string)), this, SLOT(receiveMsg(string)));
     connect(conf->dataCtrl, SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
     connect(conf->usb7204, SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateClock()));
     connect(this, SIGNAL(sendControlValue(int, controlSpec *)), conf->dataCtrl, SLOT(receive_control_val(int, controlSpec *)));
 
     for (uint i = 0; i < conf->configErrors.size(); i++){
         addErrorMessage(QString::fromStdString(conf->configErrors.at(i)));
     }
-    conf->canInterface->enableCAN();
-    conf->gpioInterface->setSamplingRate(conf->gpioRate);
-    conf->gpioInterface->startGPIOCheck();
-    if (conf->usb7204->isActive) {
-        conf->usb7204->setSamplingRate(conf->usb7204Rate);
-        conf->usb7204->startUSBCheck();
+
+    if (conf->systemMode == CAR || conf->systemMode == CAR){
+        conf->canInterface->enableCAN();
+        conf->gpioInterface->setSamplingRate(conf->gpioRate);
+        conf->gpioInterface->startGPIOCheck();
+        if (conf->usb7204->isActive) {
+            conf->usb7204->setSamplingRate(conf->usb7204Rate);
+            conf->usb7204->startUSBCheck();
+        }
+    } else if (conf->systemMode == TEST){
+        conf->trafficTest->startTests();
     }
+
+    timer->start(1000);
 }
 
 MainWindow::~MainWindow(){
+    for (uint i = 0; i < edits.size(); i++){
+        delete edits.at(i);
+    }
     delete ui;
-//    delete (this->myKeyboard);
 }
 
 void MainWindow::update(){
@@ -248,13 +286,14 @@ void MainWindow::update(){
 
     QScrollArea * subsystemArea = new QScrollArea;
     subsystemArea->setFixedWidth(screenWidth-30);
-    subsystemArea->setFixedHeight(subsystemWidget->height()-85);
+//    subsystemArea->setFixedHeight(subsystemWidget->height()-85);
+    subsystemArea->setFixedHeight(static_cast<int>(subsystemWidget->height()*1.3));
     subsystemArea->setBackgroundRole(QPalette::Window);
     subsystemArea->setWidget(subsystemWidget);
 
     mainLayout->addWidget(subsystemArea);
 
-    QString  butLabelFont = QString::number(stringSize*1.5);
+    QString  butLabelFont = QString::number(stringSize*1.3);
     QString  labelFont = QString::number(stringSize*2);
     QGridLayout * stateButtonLayout = new QGridLayout;
 
@@ -265,6 +304,7 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(label,0,0,Qt::AlignLeft);
 
     QHBoxLayout * btnsLayout = new QHBoxLayout;
+    btnsLayout->setAlignment(Qt::AlignCenter);
 
     canResetButton =new QPushButton();
     canResetButton->setText("CAN\nReset");
@@ -313,6 +353,7 @@ void MainWindow::update(){
         stateButton->setFixedHeight(static_cast<int>(unitHeight*1.5));
         FSMButtons.push_back(stateButton);
         FSMLayout->addWidget(stateButton, Qt::AlignCenter);
+        FSMLayout->setAlignment(Qt::AlignCenter);
         btnsLayout->addLayout(FSMLayout,Qt::AlignCenter);
     }
 
@@ -347,7 +388,7 @@ void MainWindow::update(){
 
     stateButtonLayout->addLayout(btnsLayout,0,1,Qt::AlignCenter);
 
-    exitButton =new QPushButton();
+    exitButton = new QPushButton();
     exitButton->setText("EXIT");
     QPalette palexit = exitButton->palette();
     palexit.setColor(QPalette::Button, QColor(0,0,255));
@@ -359,46 +400,6 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(exitButton,0,2,Qt::AlignRight);
     QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(shutdownSystem()));
 
-//    QPushButton * inButton =new QPushButton();
-//    inButton->setText("EXIT");
-//    QPalette palinButton = inButton->palette();
-//    palinButton.setColor(QPalette::Button, QColor(0,0,255));
-//    inButton->setPalette(palexit);
-//    inButton->setAutoFillBackground(true);
-//    inButton->setStyleSheet("font:"+butLabelFont+"pt;");
-//    inButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-//    inButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-//    stateButtonLayout->addWidget(inButton,0,3,Qt::AlignRight);
-//    QObject::connect(inButton, SIGNAL (clicked()), this , SLOT(showKey()));
-
-//    QPushButton * outButton =new QPushButton();
-//    outButton->setText("EXIT");
-//    QPalette palhide = outButton->palette();
-//    palhide.setColor(QPalette::Button, QColor(0,0,255));
-//    outButton->setPalette(palexit);
-//    outButton->setAutoFillBackground(true);
-//    outButton->setStyleSheet("font:"+butLabelFont+"pt;");
-//    outButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-//    outButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-//    stateButtonLayout->addWidget(outButton,0,4,Qt::AlignRight);
-//    QObject::connect(outButton, SIGNAL (clicked()), this , SLOT(hideKey()));
-
-
-//    QLineEdit * testControl = new QLineEdit;
-//    testControl->setText("kana");
-////    testControl->setText("kana");
-//    testControl->setMaximumWidth(unitWidth*5);
-//    testControl->setStyleSheet("font:"+labelFont+"pt;");
-
-//            exampleMyFocus * focus = new exampleMyFocus(testControl,this->myKeyboard);
-//            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
-
-//            stateButtonLayout->addWidget(focus,0,5);
-//    stateButtonLayout->addWidget(testControl,0,5);
-////            connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
-//            connect(focus, SIGNAL(focussed(bool)),this,SLOT(popKey(bool)));
-
-//            stateButtonLayout->addWidget(focus,0,5);
     mainLayout->addLayout(stateButtonLayout);
 
     QFrame * stateBorder = new QFrame(this);
@@ -408,150 +409,118 @@ void MainWindow::update(){
     stateBorder->setFrameShadow(QFrame::Raised);
     mainLayout->addWidget(stateBorder);
 
-    controlsLayout = new QHBoxLayout;
-    currLabel = new QLabel("CONTROLS: ");
-    currLabel->setStyleSheet("font:"+labelFont+"pt;");
-    controlsLayout->addWidget(currLabel,Qt::AlignLeft);
+    if (conf->systemMode == DYNO){
+        controlsLayout = new QHBoxLayout;
+        currLabel = new QLabel("CONTROLS: ");
+        currLabel->setStyleSheet("font:"+labelFont+"pt;");
+        controlsLayout->addWidget(currLabel,Qt::AlignLeft);
 
-    for (uint i = 0; i < conf->controlSpecs.size(); i++){
-        controlSpec * currSpec = conf->controlSpecs.at(i);
-        if (currSpec->slider){
-            QVBoxLayout * sliderLayout = new QVBoxLayout;
-            currLabel = new QLabel(QString::fromStdString(currSpec->name));
-            currLabel->setAlignment(Qt::AlignCenter);
-            currLabel->setStyleSheet("font:"+labelFont+"pt;");
-            sliderLayout->addWidget(currLabel);
-            sliderControl = new QSlider(Qt::Horizontal);
-            sliderControl->setRange(currSpec->minslider,currSpec->maxslider);
-            QPalette palSlider = sliderControl->palette();
-            sliderControl->setMaximumWidth(unitWidth*5);
-            sliderLayout->addWidget(sliderControl);
-            sliderLayout->setAlignment(Qt::AlignCenter);
-            controlsLayout->addLayout(sliderLayout,Qt::AlignCenter);
-            controlSliders.push_back(sliderControl);
-            sliderCtrls.push_back(currSpec);
-            connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
+        for (uint i = 0; i < conf->controlSpecs.size(); i++){
+            controlSpec * currSpec = conf->controlSpecs.at(i);
+            if (currSpec->slider){
+                QVBoxLayout * sliderLayout = new QVBoxLayout;
+                currLabel = new QLabel(QString::fromStdString(currSpec->name));
+                currLabel->setAlignment(Qt::AlignCenter);
+                currLabel->setStyleSheet("font:"+labelFont+"pt;");
+                sliderLayout->addWidget(currLabel);
+                sliderControl = new QSlider(Qt::Horizontal);
+                sliderControl->setRange(currSpec->minslider,currSpec->maxslider);
+                QPalette palSlider = sliderControl->palette();
+                sliderControl->setMaximumWidth(unitWidth*5);
+                sliderLayout->addWidget(sliderControl);
+                sliderLayout->setAlignment(Qt::AlignCenter);
+                controlsLayout->addLayout(sliderLayout,Qt::AlignCenter);
+                controlSliders.push_back(sliderControl);
+                sliderCtrls.push_back(currSpec);
+                connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
+            }
+            if (currSpec->button){
+                buttonControl =new QPushButton();
+                buttonControl->setText(QString::fromStdString(currSpec->name));
+                QPalette palindi = buttonControl->palette();
+                palindi.setColor(QPalette::Button, QColor(142,45,197).darker());
+                buttonControl->setPalette(palindi);
+                buttonControl->setAutoFillBackground(true);
+                buttonControl->setStyleSheet("font:"+butLabelFont+"pt;");
+                buttonControl->setFixedWidth(static_cast<int>(unitWidth));
+                buttonControl->setFixedHeight(static_cast<int>(unitHeight*1.5));
+                controlButtons.push_back(buttonControl);
+                buttonCtrls.push_back(currSpec);
+                controlsLayout->addWidget(buttonControl,Qt::AlignCenter);
+                connect(buttonControl, SIGNAL(pressed()), this, SLOT(ctrlButtonPressed()));
+                connect(buttonControl, SIGNAL(released()), this, SLOT(ctrlButtonReleased()));
+            }
+            if (currSpec->textField){
+                QVBoxLayout * fieldLayout = new QVBoxLayout;
+                currLabel = new QLabel(QString::fromStdString(currSpec->name));
+                currLabel->setAlignment(Qt::AlignCenter);
+                currLabel->setStyleSheet("font:"+labelFont+"pt;");
+                fieldLayout->addWidget(currLabel);
+                editControl = new QLineEdit;
+                editControl->setValidator( new QIntValidator(0, 999999999, this) );
+                editControl->setMaximumWidth(unitWidth*5);
+                editControl->setStyleSheet("font:"+labelFont+"pt;");
+                thisEdit=editControl;
+
+
+                fieldLayout->addWidget(editControl);
+
+                fieldLayout->setAlignment(Qt::AlignCenter);
+                controlEdits.push_back(editControl);
+                editCtrls.push_back(currSpec);
+                controlsLayout->addLayout(fieldLayout,Qt::AlignCenter);
+                connect(editControl, SIGNAL(returnPressed()), this, SLOT(editUpdated()));
+            }
         }
-        if (currSpec->button){
-            buttonControl =new QPushButton();
-            buttonControl->setText(QString::fromStdString(currSpec->name));
-            QPalette palindi = buttonControl->palette();
-            palindi.setColor(QPalette::Button, QColor(142,45,197).darker());
-            buttonControl->setPalette(palindi);
-            buttonControl->setAutoFillBackground(true);
-            buttonControl->setStyleSheet("font:"+butLabelFont+"pt;");
-            buttonControl->setFixedWidth(static_cast<int>(unitWidth));
-            buttonControl->setFixedHeight(static_cast<int>(unitHeight*1.5));
-            controlButtons.push_back(buttonControl);
-            buttonCtrls.push_back(currSpec);
-            controlsLayout->addWidget(buttonControl,Qt::AlignCenter);
-            connect(buttonControl, SIGNAL(pressed()), this, SLOT(ctrlButtonPressed()));
-            connect(buttonControl, SIGNAL(released()), this, SLOT(ctrlButtonReleased()));
-        }
-        if (currSpec->textField){
-            QVBoxLayout * fieldLayout = new QVBoxLayout;
-            currLabel = new QLabel(QString::fromStdString(currSpec->name));
-            currLabel->setAlignment(Qt::AlignCenter);
-            currLabel->setStyleSheet("font:"+labelFont+"pt;");
-            fieldLayout->addWidget(currLabel);
-            editControl = new QLineEdit;
-            editControl->setValidator( new QIntValidator(0, 999999999, this) );
-            editControl->setMaximumWidth(unitWidth*5);
-            editControl->setStyleSheet("font:"+labelFont+"pt;");
-            thisEdit=editControl;
+        mainLayout->addLayout(controlsLayout);
 
-
-            fieldLayout->addWidget(editControl);
-
-            fieldLayout->setAlignment(Qt::AlignCenter);
-            controlEdits.push_back(editControl);
-            editCtrls.push_back(currSpec);
-            controlsLayout->addLayout(fieldLayout,Qt::AlignCenter);
-            connect(editControl, SIGNAL(returnPressed()), this, SLOT(editUpdated()));
-        }
+        QFrame * controlBorder = new QFrame(this);
+        controlBorder->setLineWidth(2);
+        controlBorder->setMidLineWidth(1);
+        controlBorder->setFrameShape(QFrame::HLine);
+        controlBorder->setFrameShadow(QFrame::Raised);
+        mainLayout->addWidget(controlBorder);
     }
-    mainLayout->addLayout(controlsLayout);
 
-    QFrame * controlBorder = new QFrame(this);
-    controlBorder->setLineWidth(2);
-    controlBorder->setMidLineWidth(1);
-    controlBorder->setFrameShape(QFrame::HLine);
-    controlBorder->setFrameShadow(QFrame::Raised);
-    mainLayout->addWidget(controlBorder);
+    QString footerFont = QString::fromStdString(to_string(stringSize*3));
 
-    QVBoxLayout * msgLayout = new QVBoxLayout;
-    QLabel * msgLabel = new QLabel;
-    msgLabel->setText("System Log");
-    msgLabel->setStyleSheet("font:"+butLabelFont+"pt;");
-    msgLabel->setAlignment(Qt::AlignCenter);
-    msgLayout->addWidget(msgLabel, Qt::AlignCenter);
+    QLabel * modeLabel = new QLabel;
+    modeLabel->setAlignment(Qt::AlignCenter);
+    modeLabel->setStyleSheet("font:"+footerFont+"pt;");
+    if (conf->systemMode == DYNO) modeLabel->setText("Mode: DYNO");
+    else if (conf->systemMode == CAR) modeLabel->setText("Mode: VEHICLE");
+    else if (conf->systemMode == TEST) modeLabel->setText("Mode: TEST");
+    else modeLabel->setText("Mode: UNSPECIFIED");
+    mainLayout->addWidget(modeLabel, Qt::AlignCenter);
 
-    QFont font = QFont ("Courier");
-    if (!initialized){
-        message = new QListWidget();
-    }
-    QString  errorMessage;
-    errorMessage = "Starting Data Acquisition...";
-    addErrorMessage(errorMessage);
-    QString  messageFont = QString::number(stringSize*1.5);
-    message->setStyleSheet("font:"+messageFont+"pt;");
-    message->addItem("FontSize:"+fontSize);
-    message->setFixedHeight(unitHeight*6);
-    message->setFixedWidth(unitWidth*7);
-    message->setFont(font);
-    msgLayout->addWidget(message);
-    bottomLayout->addLayout(msgLayout,0,0,Qt::AlignCenter);
+    clock = new QLabel;
+    clock->setAlignment(Qt::AlignCenter);
+    clock->setStyleSheet("font:"+footerFont+"pt;");
+    clock->setText("00:00:00");
+    mainLayout->addWidget(clock, Qt::AlignCenter);
+}
 
-    QFrame * bottomBorder = new QFrame(this);
-    bottomBorder->setLineWidth(2);
-    bottomBorder->setMidLineWidth(1);
-    bottomBorder->setFrameShape(QFrame::VLine);
-    bottomBorder->setFrameShadow(QFrame::Raised);
-    bottomLayout->addWidget(bottomBorder,0,1);
-
-    QVBoxLayout * plotLayout = new QVBoxLayout;
-    QHBoxLayout * comboLayout = new QHBoxLayout;
-    QLabel * plotLabel = new QLabel("Select Plot: ");
-    plotLabel->setStyleSheet("font:"+butLabelFont+"pt;");
-    plotLabel->setFixedWidth(200);
-    plotLabel->setAlignment(Qt::AlignCenter);
-    comboLayout->addWidget(plotLabel, Qt:: AlignCenter);
-
-    vector<meta *> sensors = conf->mainSensors;
-    plotComboBox->setStyleSheet("font:"+butLabelFont+"pt;");
-    plotComboBox->setFixedWidth(300);
-    plotComboBox->addItem("None");
-    for (uint i = 0; i < sensors.size(); i++){
-        plotComboBox->addItem(QString::fromStdString(sensors.at(i)->sensorName));
-    }
-    comboLayout->addWidget(plotComboBox, Qt::AlignCenter);
-    comboLayout->setAlignment(Qt::AlignCenter);
-    connect(plotComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(plotGraph(QString)));
-
-    QHBoxLayout * graphLayout = new QHBoxLayout;
-    if (!initialized){
-        plot = new QCustomPlot();
-        plot->addGraph();
-        plot->setFixedHeight(unitHeight*6);
-        plot->setFixedWidth(unitWidth*7);
-        plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
-        plot->graph(0)->setLineStyle(QCPGraph::lsLine);
-        plot->yAxis->setRange(0,0, Qt::AlignCenter);
-    }
-    graphLayout->addWidget(plot, Qt::AlignCenter);
-
-    plotLayout->addLayout(comboLayout, Qt::AlignCenter);
-    plotLayout->addLayout(graphLayout, Qt::AlignCenter);
-
-    plotLayout->setAlignment(Qt::AlignCenter);
-    bottomLayout->addLayout(plotLayout,0,2,Qt::AlignCenter);
-    mainLayout->addLayout(bottomLayout, Qt::AlignCenter);
-    central->setMaximumWidth(screenWidth - 50);
-    initialized = true;
+void MainWindow::updateClock(){
+    int time = conf->dataCtrl->systemTimer->elapsed();
+    time = time/1000;
+    int sec = time%60;
+    int min = (time/60)%60;
+    int hrs = (time/3600)%60;
+    string str_sec;
+    string str_min;
+    string str_hrs;
+    if (sec < 10) str_sec = "0" + to_string(sec);
+    else str_sec = to_string(sec);
+    if (min < 10) str_min = "0" + to_string(min);
+    else str_min = to_string(min);
+    if (hrs < 10) str_hrs = "0" + to_string(hrs);
+    else str_hrs = to_string(hrs);
+    string updatedTime = str_hrs + ":" + str_min + ":" + str_sec;
+    clock->setText(QString::fromStdString(updatedTime));
 }
 
 void MainWindow::sliderValChanged(int value){
-    cout << "Current Value: " << value << endl;
+//    cout << "Current Value: " << value << endl;
     QObject* obj = sender();
     for (uint i = 0; i < controlSliders.size(); i++){
         if (obj == controlSliders.at(i)){
@@ -610,7 +579,7 @@ void MainWindow::deactivateStateMW(system_state * prevState){
     }
 }
 
-void MainWindow::drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay ){
+void MainWindow::drawEdit(QLineEdit * edit,QString dataDisplay ){
     edit= new QLineEdit();
     edit->setText(dataDisplay);
     edit->setMinimumWidth(unitWidth);
@@ -673,7 +642,7 @@ void MainWindow::plotGraph(QString sensorName){
         plot->graph(0)->setData(gx,gy);
     }
 
-    cout << "Graph Min: " << graphMin << " Graph Max: " << graphMax << endl;
+//    cout << "Graph Min: " << graphMin << " Graph Max: " << graphMax << endl;
 
     plot->yAxis->setRange(graphMin, -(graphMax-graphMin), Qt::AlignRight);
 
@@ -709,16 +678,21 @@ void MainWindow::detailButtonPushed(){
 void MainWindow::receiveErrMsg(string msg){
     QString str = QString::fromStdString(msg);
     addErrorMessage(QString::fromStdString(msg));
-    vector<SubsystemThread *> subs;
-    subs = conf->subsystems;
+}
+
+void MainWindow::updateHealth(){
+    vector<SubsystemThread *> subs = conf->subsystems;
     for (uint i = 0; i < subs.size(); i++){
-            bool error = subs.at(i)->error;
-            if(error){
-                QPalette palb = healthButtons.at(i)->palette();
-                palb.setColor(QPalette::Button, QColor(255,0,0));
-                healthButtons.at(i)->setPalette(palb);
-            }
-     }
+        if(subs.at(i)->error){
+            QPalette palb = healthButtons.at(i)->palette();
+            palb.setColor(QPalette::Button, QColor(255,0,0));
+            healthButtons.at(i)->setPalette(palb);
+        } else {
+            QPalette palb = healthButtons.at(i)->palette();
+            palb.setColor(QPalette::Button, QColor(0,100,0));
+            healthButtons.at(i)->setPalette(palb);
+        }
+    }
 }
 
 void MainWindow::updateFSM_MW(statemachine * currFSM){
@@ -729,7 +703,7 @@ void MainWindow::updateFSM_MW(statemachine * currFSM){
                 if (currMachine->states.at(j)->active){
                     FSMButtons.at(i)->setText(QString::fromStdString(currMachine->states.at(j)->name));
                     QPalette palb = FSMButtons.at(i)->palette();
-                    palb.setColor(QPalette::Button, QColor(50,205,50));
+                    palb.setColor(QPalette::Button, QColor(0,100,0));
                     FSMButtons.at(i)->setPalette(palb);
                     return;
                 }
@@ -739,13 +713,15 @@ void MainWindow::updateFSM_MW(statemachine * currFSM){
 }
 
 void MainWindow::addErrorMessage(QString eMessage){
-    message->addItem(eMessage);
+    string time = conf->dataCtrl->getProgramTime();
+    string msg = eMessage.toStdString();
+    msg = time + ": " + msg;
+    message->addItem(QString::fromStdString(msg));
     message->scrollToBottom();
 }
 
 void MainWindow::updateVals(){
-// addPoint(xinit,yinit);
-//yinit++;
+
 }
 
 void MainWindow::getCurrentSystem(int i){
@@ -758,14 +734,6 @@ void MainWindow::openDetailWindow(SubsystemThread *thread){
     detailWindow->setCurrentSystem(thread);
     tabs->addTab(detailWindow->central, QString::fromStdString(thread->subsystemId + "_Detail"));
     tabs->setCurrentIndex(tabs->count() - 1);
-    for (uint i = 0; i < conf->FSMs.size(); i++){
-        detailWindow->updateFSM_MW(conf->dataCtrl->FSMs.at(i));
-    }
-    for (uint i = 0; i < conf->dataCtrl->states.size(); i++){
-        if (conf->dataCtrl->states.at(i)->active){
-            detailWindow->activateStateMW(conf->dataCtrl->states.at(i));
-        }
-    }
 }
 
 void MainWindow::closeTab(int tabId){
@@ -830,7 +798,6 @@ int MainWindow::active_dialog(string msg){
     } else {
         return QDialog::Rejected;
     }
-    return QDialog::Rejected;
 }
 
 /**
@@ -890,42 +857,42 @@ string MainWindow::info_dialog(string msg){
 //        return "0";
 //    }
 
-        QDialog dlg;
-        dlg.setFixedHeight(unitHeight*12);
-        dlg.setFixedWidth(unitWidth*12);
-       QLineEdit edit;
-       QVBoxLayout la(&dlg);
-       QLabel ed;
-       ed.setText(QString::fromStdString(msg));
-        exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
-       la.addWidget(&ed);
-       la.addWidget(focus);
 
-       QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-       connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
-       connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
+//        QDialog dlg;
+//        dlg.setFixedHeight(unitHeight*12);
+//        dlg.setFixedWidth(unitWidth*12);
+//       QLineEdit edit;
+//       QVBoxLayout la(&dlg);
+//       QLabel ed;
+//       ed.setText(QString::fromStdString(msg));
+//        exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
+//       la.addWidget(&ed);
+//       la.addWidget(focus);
 
-       la.addWidget(buttonBox);
-       la.addWidget(this->myKeyboard);
-       this->myKeyboard->show(this, NULL, false);
-//           this->myKeyboard->setFixedHeight(unitHeight*3);
-//           this->myKeyboard->setFixedHeight(unitWidth*6);
-           this->myKeyboard->move(0,4);
-       dlg.setLayout(&la);
-   reprompt:
-       int result = dlg.exec();
+//       QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-       if(result == QDialog::Accepted){
-           string str = focus->text().toStdString();
-           if (str.compare("") == 0){
-               goto reprompt;
-           }
-           str += ".db";
-           return str;
-       } else {
-           return "0";
-       }
+//       connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
+//       connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
+
+//       la.addWidget(buttonBox);
+//       la.addWidget(this->myKeyboard);
+//       this->myKeyboard->show(this, nullptr, false);
+//           this->myKeyboard->move(0,4);
+//       dlg.setLayout(&la);
+//   reprompt:
+//       int result = dlg.exec();
+
+//       if(result == QDialog::Accepted){
+//           string str = focus->text().toStdString();
+//           if (str.compare("") == 0){
+//               goto reprompt;
+//           }
+//           str += ".db";
+//           return str;
+//       } else {
+//           return "0";
+//       }
 }
 
 void MainWindow::shutdownSystem(){
@@ -950,10 +917,8 @@ repeat:
             conf->dataCtrl->saveSession(name);
             passive_dialog("Saved!");
         }
-//        this->close();
     } else {
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
-//        this->close();
     }
     QFile file("../VSCADA/savedsessions/DataBase.txt");
      file.open(QIODevice::WriteOnly | QIODevice::Append);
@@ -963,6 +928,7 @@ repeat:
      file.flush();
 
      file.close();
+//     delete conf;
      this->close();
 
 }
@@ -1015,11 +981,11 @@ void MainWindow::changeEditColor(string color, meta * sensor){
 
 void MainWindow::updateTab(int tabId){
     if (tabId == 0){
-//        this->update();
+
     }
 }
 
-void MainWindow::updateGraph(meta * sen){
+void MainWindow::updateGraph(){
     meta * currSensor;
     vector<meta *> mainSensors = conf->mainSensors;
     string sensorName = plotComboBox->currentText().toStdString();
@@ -1031,54 +997,3 @@ void MainWindow::updateGraph(meta * sen){
         }
     }
 }
-
-
-
-//void MainWindow::showKey()
-//{
-//    kShow=true;
-//    message->addItem("show");
-//    myKeyboard->show(this, NULL, false); // once created keyboard object, use this method to switch between windows
-////#if QT_VERSION >= 0x050000
-//   this->myKeyboard->move((this->x())*1.2, (this->y() + this->myKeyboard->height())*3);
-////#else
-////     // move to center of screen, just below QLineEdit widget
-////     this->myKeyboard->move((QApplication::desktop()->screenGeometry().width() - myKeyboard->width())/2, this->y() + this->height() + 33);	// AW - 33 = height of window title bar + height of window frame
-////#endif
-//}
-//void MainWindow::showKey()
-//{
-//    kShow=true;
-//    message->addItem("show");
-//    myKeyboard->show(this, NULL, false); // once created keyboard object, use this method to switch between windows
-////#if QT_VERSION >= 0x050000
-//   this->myKeyboard->move((this->x())*1.2, (this->y() + this->myKeyboard->height())*3);
-////#else
-////     // move to center of screen, just below QLineEdit widget
-////     this->myKeyboard->move((QApplication::desktop()->screenGeometry().width() - myKeyboard->width())/2, this->y() + this->height() + 33);	// AW - 33 = height of window title bar + height of window frame
-////#endif
-//    myKeyboard->focusThis(thisEdit);
-//}
-
-//void MainWindow::popKey(bool v){
-//    if(v&&!kShow){
-//    showKey();
-//    }else if(kShow&&v){
-//        hideKey();
-
-//    }
-
-//}
-
-//void MainWindow::hideKey()
-//{
-//    message->addItem("hide");
-//    kShow=false;
-//    myKeyboard->hide(true);
-//}
-
-//void MainWindow::removeKey(bool v)
-//{
-//    myKeyboard->hide(true);
-
-//}

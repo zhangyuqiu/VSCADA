@@ -42,7 +42,6 @@ public:
     QStandardItemModel*  poModel;
     int maxSensorRow;
     QListWidget * message;
-    //QPushButton * exitButton;
     QPushButton * loadButton;
     QComboBox * dbBox;
     QString currentBase;

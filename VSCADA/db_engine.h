@@ -7,7 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <QString>
-#include<QtSql>
+#include <QtSql>
+#include <mutex>
 
 using namespace std;
 
@@ -40,5 +41,6 @@ public:
     // global items
     string db_file = "./system.db";
     sqlite3 * db;
+    std::mutex dbMutex;
 };
 #endif // DB_ENGINE_H

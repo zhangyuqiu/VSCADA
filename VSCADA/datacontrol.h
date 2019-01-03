@@ -38,7 +38,6 @@ public:
     void startSystemTimer();
     string getProgramTime();
     void saveSession(string name);
-//    void sendBootConfig(bootloader bl);
     int change_sampling_rate(int rate);
     vector<controlSpec *> get_control_specs();
     void init_meta_vector(vector<meta> vctr);
@@ -60,7 +59,8 @@ public:
     vector<controlSpec *> controlSpecs;
     vector<SubsystemThread *> subsystems;
     vector<bootloader> bootConfigs;
-    // overall system mode
+
+    // overall system status info
     int systemMode;
     string modeName;
     string currState;

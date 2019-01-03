@@ -37,12 +37,28 @@ int main(int argc, char *argv[])
 
     QApplication::setPalette(palette);
 
+    QRect rec = QApplication::desktop()->screenGeometry();
+    int height=rec.height();
+    int width=rec.width();
+
+//    QPixmap pixmap("team_pic.jpg");
+//    pixmap = pixmap.scaledToHeight(height);
+//    QWidget splashWidget;
+//    QMovie *movie = new QMovie("load_gear.gif");
+//    QLabel *processLabel = new QLabel(movie);
+//    processLabel->setMovie(movie);
+//    movie->start();
+
+//    pixmap.scaledToWidth(width);
+//    QSplashScreen splash(processLabel);
+//    splash.show();
+//    a.processEvents();
+//    sleep(2);
     MainWindow * w = new MainWindow;
     dashboard * d= new dashboard;
     //postProcess * p = new postProcess;
     //d->setWindowState((w->windowState()^Qt::WindowFullScreen));
     w->setWindowState((w->windowState()^Qt::WindowFullScreen));
-//    w->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
     w->show();
 //    p->setWindowState((w->windowState()^Qt::WindowFullScreen));
 //    p->show();

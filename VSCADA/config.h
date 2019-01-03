@@ -16,6 +16,7 @@
 #include "subsystemthread.h"
 #include <QtXml/QtXml>
 #include "usb7402_interface.h"
+#include "traffictest.h"
 
 
 #define CONFIG_PRINT
@@ -60,6 +61,9 @@ public:
     vector<statemachine *> FSMs;
     vector<system_state *> sysStates;
     vector<controlSpec *> controlSpecs;
+
+    //test module
+    TrafficTest * trafficTest;
 
     // submodule declarations
     DB_Engine * dbase;

@@ -17,13 +17,7 @@ maxresponseid char not null,
 minresponseid char not null,
 calconstant char not null
 );
-create table if not exists TSV_rawdata(
-time char not null,
-sensorindex char not null,
-sensorname char not null,
-value char not null
-);
-create table if not exists COOLING_rawdata(
+create table if not exists MOTOR_CONTROLLER_rawdata(
 time char not null,
 sensorindex char not null,
 sensorname char not null,
@@ -41,19 +35,13 @@ sensorindex char not null,
 sensorname char not null,
 value char not null
 );
-create table if not exists MOTORCONTROLLER_rawdata(
+create table if not exists HUFFBOX_rawdata(
 time char not null,
 sensorindex char not null,
 sensorname char not null,
 value char not null
 );
-create table if not exists TSV_caldata(
-time char not null,
-sensorindex char not null,
-sensorname char not null,
-value char not null
-);
-create table if not exists COOLING_caldata(
+create table if not exists MOTOR_CONTROLLER_caldata(
 time char not null,
 sensorindex char not null,
 sensorname char not null,
@@ -71,7 +59,7 @@ sensorindex char not null,
 sensorname char not null,
 value char not null
 );
-create table if not exists MOTORCONTROLLER_caldata(
+create table if not exists HUFFBOX_caldata(
 time char not null,
 sensorindex char not null,
 sensorname char not null,
