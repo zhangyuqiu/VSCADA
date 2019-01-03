@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
 //    this->myKeyboard->createKeyboard(); // only create keyboard
 
-    postProcessWindow = new postProcess;
+//    postProcessWindow = new postProcess;
     kShow=false;
 
     central = new QWidget();
@@ -84,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString LabelFont = QString::number(stringSize);
     tabs->setStyleSheet("QTabBar::tab {font:"+LabelFont+"pt}");
     tabs->addTab(central,"General");
-    tabs->addTab(postProcessWindow->central, "PostProcessing");
+//    tabs->addTab(postProcessWindow->central, "PostProcessing");
     tabs->addTab(logWidget,"System Log");
     tabs->setFixedWidth(rect.width() - 18);
     tabs->setFixedHeight(rect.height() - 50);
