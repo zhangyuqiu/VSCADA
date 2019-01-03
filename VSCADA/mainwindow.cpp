@@ -864,9 +864,9 @@ string MainWindow::info_dialog(string msg){
        QVBoxLayout la(&dlg);
        QLabel ed;
        ed.setText(QString::fromStdString(msg));
-        exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
+//        exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
        la.addWidget(&ed,Qt::AlignCenter);
-       la.addWidget(focus);
+//       la.addWidget(focus);
 
        QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -886,16 +886,16 @@ string MainWindow::info_dialog(string msg){
    reprompt:
        int result = dlg.exec();
 
-       if(result == QDialog::Accepted){
-           string str = focus->text().toStdString();
-           if (str.compare("") == 0){
-               goto reprompt;
-           }
-           str += ".db";
-           return str;
-       } else {
-           return "0";
-       }
+//       if(result == QDialog::Accepted){
+//           string str = focus->text().toStdString();
+//           if (str.compare("") == 0){
+//               goto reprompt;
+//           }
+//           str += ".db";
+//           return str;
+//       } else {
+//           return "0";
+//       }
 }
 
 void MainWindow::shutdownSystem(){

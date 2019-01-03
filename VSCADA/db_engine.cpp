@@ -390,15 +390,8 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
           QString num =qry->value(0).toString();
           data.push_back(num);
         }
-    } else {
-        QString selectName="SELECT "+read+" FROM "+currentTable+" WHERE "+target+"='"+name+"'";
-        qry->prepare(selectName);
-        qry->exec();
-        while(qry->next()){
-            QString num =qry->value(0).toString();
-            data.push_back(num);
-        }
     }
+
     mydb.close();
     delete qry;
     return data;
