@@ -2,7 +2,12 @@
 
 DB_Engine::DB_Engine()
 {
+//    rc = sqlite3_open(db_file.c_str(), &db);
+}
 
+DB_Engine::~DB_Engine()
+{
+//    sqlite3_close(db);
 }
 
 /**
@@ -15,7 +20,6 @@ DB_Engine::DB_Engine()
  * @return
  */
 int DB_Engine::insert_row(string table, vector<string> column, vector<string> row){
-    int rc = sqlite3_open(db_file.c_str(), &db);
     //char * zErrMsg;
     //incatenate vector elements into a string
     stringstream col_buf;
@@ -39,19 +43,17 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
     cout << endl;
 #endif
     QCoreApplication::processEvents();
+    dbMutex.lock();
+    int rc = sqlite3_open(db_file.c_str(), &db);
     rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+    sqlite3_close(db);
+    dbMutex.unlock();
     QCoreApplication::processEvents();
     if (rc != SQLITE_OK){
-        sqlite3_close(db);
-#ifdef DEBUG
-        cout << "Row wasn't inserted" << endl;
-#endif
+//        cout << "Row wasn't inserted" << endl;
         return 0;
     } else {
-#ifdef DEBUG
-        cout << "Row inserted successfully" << endl;
-#endif
-        sqlite3_close(db);
+//        cout << "Row inserted successfully" << endl;
         return 1;
     }
 }
@@ -138,6 +140,7 @@ string DB_Engine::sql_file_to_string(string fileName){
         //cout << temp << endl;
     }
     //cout << buf.str() << endl;
+    inFile.close();
     return buf.str();
 }
 
@@ -365,10 +368,9 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
     QCoreApplication::processEvents();
     mydb.open();
 
-    QSqlQuery* qry =new QSqlQuery(mydb);
+    QSqlQuery* qry = new QSqlQuery(mydb);
     vector<QString> data;
     if(0== target.compare(" ")){
-
             QString selectName="SELECT "+read+" FROM "+currentTable;
             qry->prepare(selectName);
             qry->exec();
@@ -387,10 +389,17 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
         QCoreApplication::processEvents();
           QString num =qry->value(0).toString();
           data.push_back(num);
-
         }
-}
-
+    } else {
+        QString selectName="SELECT "+read+" FROM "+currentTable+" WHERE "+target+"='"+name+"'";
+        qry->prepare(selectName);
+        qry->exec();
+        while(qry->next()){
+            QString num =qry->value(0).toString();
+            data.push_back(num);
+        }
+    }
     mydb.close();
+    delete qry;
     return data;
 }

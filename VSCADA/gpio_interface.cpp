@@ -36,7 +36,7 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
         }
 
         //write configuration stream
-        for (int j = 0; j < currSensor->i2cConfigs.size(); j++){
+        for (uint j = 0; j < currSensor->i2cConfigs.size(); j++){
             uint32_t data = currSensor->i2cConfigs.at(j);
             char configData[3] = {0};
             configData[0] =  static_cast<char>(data);
@@ -96,7 +96,7 @@ int gpio_interface::GPIOExport(int pin)
     }
 
     bytes_written = snprintf(buffer, BUFFER_MAX, "%d", pin);
-    write(fd, buffer, bytes_written);
+    write(fd, buffer, static_cast<size_t>(bytes_written));
     close(fd);
     return(0);
 }
@@ -119,7 +119,7 @@ int gpio_interface::GPIOUnexport(int pin)
     }
 
     bytes_written = snprintf(buffer, BUFFER_MAX, "%d", pin);
-    write(fd, buffer, bytes_written);
+    write(fd, buffer, static_cast<size_t>(bytes_written));
     close(fd);
     return(0);
 }
@@ -283,7 +283,7 @@ int gpio_interface::i2cRead(meta * sensor){
         return -1;
     }
 
-    usleep(sensor->i2cReadDelay);
+    usleep(static_cast<__useconds_t>(sensor->i2cReadDelay));
 
     //read from i2c device
     char readBuf[2] = {0};
@@ -295,13 +295,12 @@ int gpio_interface::i2cRead(meta * sensor){
         result = static_cast<uint16_t>(result << 8);
         result = static_cast<uint16_t>(result | readBuf[1]);
         if (sensor->i2cDataField < 16){
-            result = static_cast<uint16_t>(result << 16 - sensor->i2cDataField);
-            result = static_cast<uint16_t>(result >> 16 - sensor->i2cDataField);
+            result = static_cast<uint16_t>(result << (16 - sensor->i2cDataField));
+            result = static_cast<uint16_t>(result >> (16 - sensor->i2cDataField));
         }
         sensor->val = static_cast<double>(result);
         return 0;
     }
-    return -1;
 }
 
 /**

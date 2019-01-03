@@ -52,6 +52,11 @@ postProcess::postProcess(QWidget *parent) :
 
 postProcess::~postProcess()
 {
+    delete central;
+    delete mainLayout;
+    delete conf;
+    delete displayTable;
+    delete plot;
     delete ui;
 }
 

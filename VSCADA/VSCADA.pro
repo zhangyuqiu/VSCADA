@@ -39,10 +39,9 @@ SOURCES += \
     usb7402_interface.cpp \
     libusb_interface/hidapi.c \
     postprocess.cpp \
-    worker.cpp \
-    examplemyfocus.cpp \
     QKeyPushButton.cpp \
-    widgetKeyBoard.cpp
+    widgetKeyBoard.cpp \
+    traffictest.cpp
 
 HEADERS += \
     db_engine.h \
@@ -64,10 +63,9 @@ HEADERS += \
     usb7402_interface.h \
     libusb_interface/hidapi.h \
     postprocess.h \
-    worker.h \
-    examplemyfocus.h \
     QKeyPushButton.h \
-    widgetKeyBoard.h
+    widgetKeyBoard.h \
+    traffictest.h
 
 FORMS += \
         mainwindow.ui \

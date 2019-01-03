@@ -108,6 +108,8 @@ void SubsystemThread::bootSubsystem(){
         emit pushGPIOData(bootCmds.bootGPIOCmds.at(i).pin, bootCmds.bootGPIOCmds.at(i).value);
     }
     timer->start();
+    string bootMsg = subsystemId + " boot sequence completed";
+    logMsg(bootMsg);
 }
 
 /**
@@ -131,13 +133,15 @@ vector<meta *> SubsystemThread::get_mainMeta(){
  * @param sensor
  */
 void SubsystemThread::checkThresholds(meta * sensor){
-    error = false;
     string msg;
     if (sensor->calVal >= sensor->maximum){
         if (sensor->state != 1){
             sensor->state = 1;
             emit updateEditColor("red",sensor);
-            error=true;
+            if (!error){
+                error = true;
+                emit updateHealth();
+            }
             msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
             emit pushErrMsg(msg);
             emit initiateRxn(sensor->maxRxnCode);
@@ -147,7 +151,10 @@ void SubsystemThread::checkThresholds(meta * sensor){
         if (sensor->state != -1){
             sensor->state = -1;
             emit updateEditColor("blue",sensor);
-            error=true;
+            if (!error){
+                error = true;
+                emit updateHealth();
+            }
             msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->minimum);
             emit pushErrMsg(msg);
             emit initiateRxn(sensor->minRxnCode);
@@ -158,8 +165,19 @@ void SubsystemThread::checkThresholds(meta * sensor){
             sensor->state = 0;
             emit updateEditColor("yellow",sensor);
             emit initiateRxn(sensor->normRxnCode);
+            if (error) {
+                checkError();
+                emit updateHealth();
+            }
         }
     }
+}
+
+void SubsystemThread::checkError(){
+    for (uint i = 0; i < sensorMeta.size(); i++){
+        if (sensorMeta.at(i)->state != 0) return;
+    }
+    error = false;
 }
 
 /**
@@ -204,28 +222,27 @@ void SubsystemThread::checkLogic(meta * currSensor){
     for(uint i = 0; i < logicVector.size(); i++){
         logic * currLogic = logicVector.at(i);
         if (currSensor->sensorIndex == currLogic->sensorId1){
-            for (int j = 0; j < sensorMeta.size(); j++){
+            for (uint j = 0; j < sensorMeta.size(); j++){
                 if (sensorMeta.at(j)->sensorIndex == currLogic->sensorId2){
                     otherSensor = sensorMeta.at(j);
+                    if (abs(currSensor->calVal - currLogic->val1) < 0.01 && abs(otherSensor->calVal - currLogic->val2) < 0.01){
+                            emit initiateRxn(currLogic->rsp);
+                            currLogic->active = true;
+                        return;
+                    }
                 }
-            }
-
-            if (abs(currSensor->calVal - currLogic->val1) < 0.01 && abs(otherSensor->calVal - currLogic->val2) < 0.01){
-                    emit initiateRxn(currLogic->rsp);
-                    currLogic->active = true;
-                return;
             }
             currLogic->active = false;
         } else if (currSensor->sensorIndex == currLogic->sensorId2){
-            for (int j = 0; j < sensorMeta.size(); j++){
+            for (uint j = 0; j < sensorMeta.size(); j++){
                 if (sensorMeta.at(j)->sensorIndex == currLogic->sensorId1){
                     otherSensor = sensorMeta.at(j);
+                    if (abs(currSensor->calVal - currLogic->val2) < 0.01 && abs(otherSensor->calVal - currLogic->val1) < 0.01){
+                        emit initiateRxn(currLogic->rsp);
+                        currLogic->active = true;
+                        return;
+                    }
                 }
-            }
-            if (abs(currSensor->calVal - currLogic->val2) < 0.01 && abs(otherSensor->calVal - currLogic->val1) < 0.01){
-                emit initiateRxn(currLogic->rsp);
-                currLogic->active = true;
-                return;
             }
             currLogic->active = false;
         }
@@ -246,7 +263,7 @@ void SubsystemThread::logMsg(string msg){
     rows.push_back("console");
     rows.push_back(msg);
     dbase->insert_row("system_log",cols,rows);
-    msgQueue->enqueue(msg);
+    pushMessage(msg);
 }
 
 /**
@@ -278,7 +295,6 @@ void SubsystemThread::subsystemCollectionTasks(){
         emit sendCANData(broadCastVector.at(i).address,broadCastVector.at(i).data,broadCastVector.at(i).dataSize);
     }
 }
-
 
 /**
  * @brief SubsystemThread::get_curr_time - retrieves current operation system time

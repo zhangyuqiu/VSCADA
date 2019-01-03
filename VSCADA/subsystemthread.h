@@ -42,6 +42,7 @@ public:
     void checkLogic(meta * currSensor);
     void setSystemTimer(QTime * timer);
     void receiveData(meta * currSensor);
+    void checkError();
 
     vector<meta *> get_mainMeta();
 
@@ -71,7 +72,7 @@ public:
 
     QQueue<meta *> sensorQueue;
     QQueue<string> * msgQueue;                      //queue to store messages for display
-    bool error;
+    bool error = false;
     QQueue<response> * respCANQueue;                //queue for CAN responses
     QQueue<response> * respGPIOQueue;               //queue for gpio responses
 
@@ -107,6 +108,7 @@ signals:                           //execute response to CAN
     void updateDisplay(meta * sensor);
     void sendCANData(int address, uint64_t data, int size);
     void updateEditColor(string color, meta *sensor);
+    void updateHealth();
 };
 
 #endif // SUBSYSTEMTHREAD_H

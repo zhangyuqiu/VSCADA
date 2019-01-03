@@ -14,7 +14,6 @@
 #include <QGuiApplication>
 #include <QKeyEvent>
 #include "widgetKeyBoard.h"
-#include "examplemyfocus.h"
 #include "config.h"
 #include "typedefs.h"
 #include "canbus_interface.h"
@@ -34,7 +33,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void drawEdit(QLineEdit * edit, int x, int y,QString dataDisplay);
+    void drawEdit(QLineEdit * edit, QString dataDisplay);
     void addErrorMessage(QString message);
     int active_dialog(string msg);
     int passive_dialog(string msg);
@@ -87,6 +86,7 @@ public:
     QLineEdit * editControl;
     QLineEdit * thisEdit;
     detailPage * detailWindow;
+    QLabel * clock;
 
     QListWidget * message;
     QCustomPlot * plot;
@@ -115,7 +115,6 @@ public:
     int maxSensorRow;
     bool detail;
     bool kShow;
-    exampleMyFocus * thisfocus;
 
 
      QVector<double> gx,gy;
@@ -134,7 +133,7 @@ private slots:
     void openDetailWindow(SubsystemThread *thread);
     void closeDetailPage();
     void updateVals();
-    void updateGraph(meta *sen);
+    void updateGraph();
     void receiveMsg(string msg);
     void receiveErrMsg(string msg);
     void getCurrentSystem(int i);
@@ -152,10 +151,8 @@ private slots:
     void updateEdits(meta * sensor);
     void changeEditColor(string color, meta *sensor);
     void checkTimeout();
-//    void showKey();
-//    void popKey(bool s);
-//    void hideKey();
-//    void removeKey(bool s);
+    void updateClock();
+    void updateHealth();
 
 private:
     Ui::MainWindow *ui;

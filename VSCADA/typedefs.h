@@ -9,12 +9,9 @@
 #include <fstream>
 #define DYNO 0
 #define CAR 1
+#define TEST 2
 #define DASH_DISP 0
 #define BACK_DISP 1
-#define GLV 0
-#define TSI 1
-#define TSV 2
-#define COOLING 3
 
 typedef struct{
     int exponent;
@@ -64,7 +61,7 @@ typedef struct{
 }meta;
 
 typedef struct{
-    int offset;
+    uint offset;
     int gpiopin;
     bool slider;
     bool button;
@@ -73,10 +70,10 @@ typedef struct{
     int minslider;
     int releaseVal;
     int usbChannel;
-    int auxAddress;
+    uint auxAddress;
     bool textField;
     int endianness;
-    int primAddress;
+    uint primAddress;
     uint64_t sentVal;
     std::string name;
     std::string type;
@@ -85,14 +82,14 @@ typedef struct{
 
 typedef struct{
     int defVal;
-    int offset;
+    uint offset;
     int gpioPin;
     int gpioPair;
     int canValue;
     int gpioValue;
-    int auxAddress;
+    uint auxAddress;
     std::string msg;
-    int primAddress;
+    uint primAddress;
     int responseIndex;
     int displayTarget;
     int endianness;
@@ -110,25 +107,25 @@ typedef struct{
 
 typedef struct{
     int value;
-    int offset;
+    uint offset;
     bool active;
-    int auxAddress;
-    int primAddress;
+    uint auxAddress;
+    uint primAddress;
     std::string name;
     int endianness;
 }system_state;
 
 typedef struct{
     std::string name;
-    int auxAddress;
-    int offset;
+    uint auxAddress;
+    uint offset;
     int value;
 }condition;
 
 typedef struct{
-    int offset;
-    int auxAddress;
-    int primAddress;
+    uint offset;
+    uint auxAddress;
+    uint primAddress;
     int endianness;
     std::string name;
     std::vector<system_state *> states;

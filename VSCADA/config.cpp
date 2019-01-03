@@ -11,7 +11,31 @@ Config::Config(){
  * @brief Config::~Config class destructor
  */
 Config::~Config(){
-    //blah...
+    if (dataCtrl != nullptr) delete dataCtrl;
+    if (usb7204 != nullptr) delete usb7204;
+    if (gpioInterface != nullptr) delete gpioInterface;
+    if (canInterface != nullptr) delete canInterface;
+    if (dbase != nullptr) delete dbase;
+
+    for (uint i = 0; i < storedSensors.size(); i++){
+        if (storedSensors.at(i) != nullptr) delete storedSensors.at(i);
+    }
+
+    for (uint i = 0; i < FSMs.size(); i++){
+        if (FSMs.at(i) != nullptr) delete FSMs.at(i);
+    }
+
+    for (uint i = 0; i < sysStates.size(); i++){
+        if (sysStates.at(i) != nullptr) delete sysStates.at(i);
+    }
+
+    for (uint i = 0; i < controlSpecs.size(); i++){
+        if (controlSpecs.at(i) != nullptr) delete controlSpecs.at(i);
+    }
+
+    for (uint i = 0; i < subsystems.size(); i++){
+        if (subsystems.at(i) != nullptr) delete subsystems.at(i);
+    }
 }
 
 /**
@@ -20,7 +44,6 @@ Config::~Config(){
  * @return
  */
 bool Config::read_config_file_data(){
-    try {
     //local declarations
     vector<vector<meta *>> sensorVector;
     vector<meta> allSensors;
@@ -99,9 +122,13 @@ bool Config::read_config_file_data(){
         QDomNodeList modeXteristics = mode.at(i).childNodes();
         for (int j = 0; j < modeXteristics.size(); j++){
             if (modeXteristics.at(j).nodeName().toStdString().compare("type") == 0){
-                if(modeXteristics.at(j).firstChild().nodeValue().toStdString().compare("0") == 0){
+                if(modeXteristics.at(j).firstChild().nodeValue().toStdString().compare("DYNO") == 0){
                     systemMode = DYNO;
-                } else if(mode.at(i).firstChild().nodeValue().toStdString().compare("1") == 0){
+                } else if(modeXteristics.at(i).firstChild().nodeValue().toStdString().compare("CAR") == 0){
+                    systemMode = CAR;
+                } else if(modeXteristics.at(i).firstChild().nodeValue().toStdString().compare("TEST") == 0){
+                    systemMode = TEST;
+                } else {
                     systemMode = CAR;
                 }
             }
@@ -479,7 +506,7 @@ bool Config::read_config_file_data(){
                         bootCmds.bootCanCmds.push_back(item);
                     } else if(bootCmdList.at(k).nodeName().toStdString().compare("booti2c") == 0){
                         if (isInteger(bootCmdList.at(k).firstChild().nodeValue().toStdString()))
-                            bootCmds.bootI2cCmds.push_back(stoi(bootCmdList.at(k).firstChild().nodeValue().toStdString()));
+                            bootCmds.bootI2cCmds.push_back(stoul(bootCmdList.at(k).firstChild().nodeValue().toStdString()));
                         else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
                     } else if(bootCmdList.at(k).nodeName().toStdString().compare("bootgpio") == 0){
                         gpioItem item;
@@ -772,7 +799,7 @@ bool Config::read_config_file_data(){
     canInterface = new canbus_interface(canRate);
     dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
                                FSMs,systemMode,controlSpecs,storedSensors,allResponses,bootConfigs);
-
+    trafficTest = new TrafficTest(canSensors,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
 
     //********************************//
     //*****initialize system info*****//
@@ -799,12 +826,6 @@ bool Config::read_config_file_data(){
 
     cout << "Returning from config" << endl;
     return true;
-
-    } catch (...) {
-        cout << "Error caught: config issue" << endl;
-        configErrors.push_back("CRITICAL WARNING: CONFIGURATION UNSUCCESSFUL!!!");
-        return false;
-    }
 }
 
 /**

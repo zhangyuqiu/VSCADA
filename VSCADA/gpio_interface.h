@@ -21,9 +21,6 @@
 #define LOW  0
 #define HIGH 1
 
-#define PIN  24 /* P1-18 */
-#define POUT 4  /* P1-07 */
-
 using namespace std;
 
 class gpio_interface : public QObject
@@ -54,9 +51,6 @@ public:
     vector<int> i2cFileDescriptors;
     vector<response> responseVector;
     vector<SubsystemThread *> subsystems;
-
-private:
-    pthread_t _thread;
 
 public slots:
     void gpioCheckTasks();
