@@ -8,12 +8,12 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-//    this->myKeyboard = new widgetKeyBoard(false, nullptr, false); // false = alpha numeric keyboard, true = numeric keyboard
-//    this->myKeyboard->setZoomFacility(true);
-//    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
-//    this->myKeyboard->createKeyboard(); // only create keyboard
+    myKeyboard = new widgetKeyBoard(false, nullptr, false); // false = alpha numeric keyboard, true = numeric keyboard
+    myKeyboard->setZoomFacility(true);
+    myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
+    myKeyboard->createKeyboard(); // only create keyboard
 
-//    postProcessWindow = new postProcess;
+    postProcessWindow = new postProcess;
     kShow=false;
 
     central = new QWidget();
@@ -84,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString LabelFont = QString::number(stringSize);
     tabs->setStyleSheet("QTabBar::tab {font:"+LabelFont+"pt}");
     tabs->addTab(central,"General");
-//    tabs->addTab(postProcessWindow->central, "PostProcessing");
+    tabs->addTab(postProcessWindow->central, "PostProcessing");
     tabs->addTab(logWidget,"System Log");
     tabs->setFixedWidth(rect.width() - 18);
     tabs->setFixedHeight(rect.height() - 50);
@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
         edits.push_back(lineEdit);
         lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
         lineEdit->setAlignment(Qt::AlignCenter);
-        lineEdit->setReadOnly(true);
+//        lineEdit->setReadOnly(true);
         editTimers.push_back(checkTmr);
     }
 
@@ -122,8 +122,11 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(subs.at(i), SIGNAL(updateHealth()), this, SLOT(updateHealth()));
         connect(subs.at(i), SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
     }
+    connect(conf->dataCtrl, SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
+    connect(conf->dataCtrl, SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
+
     connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
-    connect(conf->dataCtrl, SIGNAL(updateEdits(meta *)), this, SLOT(updateEdits(meta *)));
+//    connect(conf->dataCtrl, SIGNAL(updateEdits(meta *)), this, SLOT(updateEdits(meta *)));
     connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(updateFSM(statemachine *)), this, SLOT(updateFSM_MW(statemachine *)));
     connect(conf->canInterface, SIGNAL(pushMsg(string)), this, SLOT(receiveMsg(string)));
@@ -136,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent) :
         addErrorMessage(QString::fromStdString(conf->configErrors.at(i)));
     }
 
-    if (conf->systemMode == CAR || conf->systemMode == CAR){
+    if (conf->systemMode == CAR || conf->systemMode == DYNO){
         conf->canInterface->enableCAN();
         conf->gpioInterface->setSamplingRate(conf->gpioRate);
         conf->gpioInterface->startGPIOCheck();
@@ -713,6 +716,7 @@ void MainWindow::updateFSM_MW(statemachine * currFSM){
 }
 
 void MainWindow::addErrorMessage(QString eMessage){
+    if (message->count() >= 500) message->takeItem(0);
     string time = conf->dataCtrl->getProgramTime();
     string msg = eMessage.toStdString();
     msg = time + ": " + msg;
@@ -756,10 +760,13 @@ int MainWindow::passive_dialog(string msg){
     QDialog dlg;
     QVBoxLayout la(&dlg);
     QLabel ed;
+    QString LabelFont = QString::number(stringSize*1.5);
+    ed.setStyleSheet("font:"+LabelFont+"pt;");
     ed.setText(QString::fromStdString(msg));
     la.addWidget(&ed);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok);
+    buttonBox->setStyleSheet("font:"+LabelFont+"pt;");
 
     connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(close()));
 
@@ -782,9 +789,12 @@ int MainWindow::active_dialog(string msg){
     QVBoxLayout la(&dlg);
     QLabel ed;
     ed.setText(QString::fromStdString(msg));
+    QString LabelFont = QString::number(stringSize*1.5);
+    ed.setStyleSheet("font:"+LabelFont+"pt;");
     la.addWidget(&ed);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    buttonBox->setStyleSheet("font:"+LabelFont+"pt;");
 
     connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
     connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
@@ -804,103 +814,55 @@ int MainWindow::active_dialog(string msg){
  * @brief MainWindow::info_dialog creates an interactive dialog on which the
  *  user can either accept or reject a request
  * @param msg message to be displayed on the dialog
- * @return either accepted or rejected
+ * @return user input string
  */
 string MainWindow::info_dialog(string msg){
-//    QDialog dlg;
-//    dlg.setFixedHeight(unitHeight*12);
-//    dlg.setFixedWidth(unitWidth*12);
-//    QLineEdit  edit;
-//    QVBoxLayout la(&dlg);
-//    QLabel ed;
-//    ed.setText(QString::fromStdString(msg));
-//    exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
-//    la.addWidget(&ed);
-////    la.addWidget(&edit);
-////    la.addWidget(focus);
-////    focus->setText("manaka");
-//    la.addWidget(focus);
+    QDialog dlg;
+    QLineEdit edit;
+    edit.setMinimumWidth(unitWidth);
+    edit.setStyleSheet("font:24pt;");
 
-//    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    QVBoxLayout la(&dlg);
+    QLabel ed;
+    ed.setAlignment(Qt::AlignCenter);
+    ed.setText(QString::fromStdString(msg));
+    QString LabelFont = QString::number(stringSize*1.5);
+    ed.setStyleSheet("font:"+LabelFont+"pt;");
+    exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
+    la.addWidget(&ed,Qt::AlignCenter);
+    la.addWidget(focus, Qt::AlignCenter);
 
-//    connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
-//    connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
-////    connect(focus, SIGNAL(focussed(bol)),this,SLOT(popKey(bol)));
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    buttonBox->setStyleSheet("font:"+LabelFont+"pt;");
 
-//    la.addWidget(buttonBox);
-//    la.addWidget(this->myKeyboard);
-//     this->myKeyboard->show(this, NULL, false);
-//    dlg.setLayout(&la);
+    connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
 
+    la.addWidget(myKeyboard, Qt::AlignCenter);
+    la.addWidget(buttonBox, Qt::AlignCenter);
+    myKeyboard->show(this, NULL, false);
+    la.setAlignment(Qt::AlignCenter);
+    dlg.setLayout(&la);
+    dlg.adjustSize();
 
+reprompt:
+    int result = dlg.exec();
 
-//    this->myKeyboard = new widgetKeyBoard(false, 0, false,&dlg); // false = alpha numeric keyboard, true = numeric keyboard
-//    this->myKeyboard->setZoomFacility(true);
-//    this->myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
-//    this->myKeyboard->createKeyboard();
-//    this->myKeyboard->show(this, NULL, false);
-//    this->myKeyboard->setFixedHeight(unitHeight*3);
-//    this->myKeyboard->setFixedHeight(unitWidth*6);
-//    this->myKeyboard->move(0,4);
-
-//reprompt:
-//    int result = dlg.exec();
-
-//    if(result == QDialog::Accepted){
-//        string str = focus->text().toStdString();
-//        if (str.compare("") == 0){
-//            goto reprompt;
-//        }
-//        str += ".db";
-//        return str;
-//    } else {
-//        return "0";
-//    }
-
-        QDialog dlg;
-        dlg.setFixedHeight(unitHeight*12);
-        dlg.setFixedWidth(unitWidth*12);
-       QLineEdit edit;
-       QVBoxLayout la(&dlg);
-       QLabel ed;
-       ed.setText(QString::fromStdString(msg));
-//        exampleMyFocus * focus = new exampleMyFocus(&edit,this->myKeyboard);
-       la.addWidget(&ed,Qt::AlignCenter);
-//       la.addWidget(focus);
-
-       QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-       connect(buttonBox, SIGNAL(accepted()), &dlg, SLOT(accept()));
-       connect(buttonBox, SIGNAL(rejected()), &dlg, SLOT(reject()));
-
-       la.addWidget(buttonBox);
-       la.addWidget(this->myKeyboard);
-       this->myKeyboard->show(this, NULL, false);
-//       QRect rec = QApplication::desktop()->screenGeometry();
-//       int height=rec.height();
-//       int width=rec.width();
-//       this->myKeyboard->setFixedHeight(height/5);
-//       this->myKeyboard->setFixedHeight(width);
-//       this->myKeyboard->move(0,4);
-       dlg.setLayout(&la);
-   reprompt:
-       int result = dlg.exec();
-
-//       if(result == QDialog::Accepted){
-//           string str = focus->text().toStdString();
-//           if (str.compare("") == 0){
-//               goto reprompt;
-//           }
-//           str += ".db";
-//           return str;
-//       } else {
-//           return "0";
-//       }
+    if(result == QDialog::Accepted){
+        string str = focus->text().toStdString();
+        if (str.compare("") == 0){
+            goto reprompt;
+        }
+        str += ".db";
+        return str;
+    } else {
+        return "0";
+    }
 }
 
 void MainWindow::shutdownSystem(){
     int confirmation = active_dialog("Save Session?");
-    string clearMsg = "Save session as?\n Please enter name without space characters";
+    string clearMsg = "Save session as?\nPlease enter name without space characters";
     string errMsg = "Name contains space characters. Please try again:";
     bool error = 0;
     string name = "";
@@ -923,16 +885,7 @@ repeat:
     } else {
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
     }
-    QFile file("../VSCADA/savedsessions/DataBase.txt");
-     file.open(QIODevice::WriteOnly | QIODevice::Append);
-     QTextStream out(&file);
-     QString db = QString::fromStdString(name);
-     out<<db<<endl;
-     file.flush();
-
-     file.close();
-//     delete conf;
-     this->close();
+    this->close();
 
 }
 

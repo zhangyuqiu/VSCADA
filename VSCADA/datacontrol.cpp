@@ -106,6 +106,7 @@ void DataControl::receive_sensor_data(meta * sensor){
             subsystems.at(i)->receiveData(sensor);
         }
     }
+//    receiveData(sensor);
 }
 
 /**
@@ -171,6 +172,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                         break;
                     }
                 }
+//                receiveData(currSensor);
             } else {
                 for (uint j = 0; j < subsystems.size(); j++){
                     if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
@@ -179,6 +181,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                         break;
                     }
                 }
+//                receiveData(currSensor);
             }
         }
     }
@@ -403,4 +406,77 @@ void DataControl::passI2cData(uint32_t data){
 
 void DataControl::passGPIOData(int pin, int value){
     emit pushGPIOData(pin,value);
+}
+
+void DataControl::receiveData(meta * currSensor){
+            calibrateData(currSensor);
+            checkThresholds(currSensor);
+            emit updateDisplay(currSensor);
+            logData(currSensor);
+}
+
+void DataControl::calibrateData(meta * currSensor){
+    currSensor->calData();
+    double data = 0;
+    vector<poly> pol = currSensor->calPolynomial;
+    if (pol.size() > 0){
+        for (uint i = 0; i < pol.size(); i++){
+            data += pol.at(i).coefficient*pow(currSensor->val,pol.at(i).exponent);
+        }
+        currSensor->calVal = data;
+    }
+}
+
+void DataControl::checkThresholds(meta * sensor){
+    string msg;
+    if (sensor->calVal >= sensor->maximum){
+        if (sensor->state != 1){
+            sensor->state = 1;
+            emit updateEditColor("red",sensor);
+            msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
+            emit pushMessage(msg);
+            if (sensor->normRxnCode != 0) executeRxn(sensor->maxRxnCode);
+            logMsg(msg);
+        }
+    } else if (sensor->calVal <= sensor->minimum){
+        if (sensor->state != -1){
+            sensor->state = -1;
+            emit updateEditColor("blue",sensor);
+            msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->minimum);
+            emit pushMessage(msg);
+            if (sensor->normRxnCode != 0) executeRxn(sensor->minRxnCode);
+            logMsg(msg);
+        }
+    } else {
+        if (sensor->state != 0){
+            sensor->state = 0;
+            emit updateEditColor("yellow",sensor);
+            if (sensor->normRxnCode != 0) executeRxn(sensor->normRxnCode);
+        }
+    }
+}
+
+void DataControl::logData(meta * currSensor){
+    vector<string> cols;
+    cols.push_back("time");
+    cols.push_back("sensorIndex");
+    cols.push_back("sensorName");
+    cols.push_back("value");
+    vector<string> rows;
+    string rawTable = currSensor->subsystem + "_rawdata";
+    string calTable = currSensor->subsystem + "_caldata";
+
+    rows.push_back(getProgramTime());
+    rows.push_back(currSensor->sensorName);
+    rows.push_back(currSensor->sensorName);
+    rows.push_back(to_string(currSensor->val));
+    dbase->insert_row(rawTable,cols,rows);
+
+    rows.clear();
+    rows.push_back(getProgramTime());
+    rows.push_back(to_string(currSensor->sensorIndex));
+    rows.push_back(currSensor->sensorName);
+    rows.push_back(to_string(currSensor->calVal));
+    dbase->insert_row(calTable,cols,rows);
+    return;
 }

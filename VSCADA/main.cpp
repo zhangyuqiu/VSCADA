@@ -58,8 +58,10 @@ int main(int argc, char *argv[])
     dashboard * d= new dashboard;
     //postProcess * p = new postProcess;
     //d->setWindowState((w->windowState()^Qt::WindowFullScreen));
-    w->setWindowState((w->windowState()^Qt::WindowFullScreen));
-    w->show();
+        //    w->setWindowState((w->windowState()^Qt::WindowFullScreen));
+        //    w->show();
+    w->showFullScreen();
+//    w->centralWidget()->releaseKeyboard();
 //    p->setWindowState((w->windowState()^Qt::WindowFullScreen));
 //    p->show();
 

@@ -20,6 +20,7 @@
 #include "subsystemthread.h"
 #include "detailpage.h"
 #include "postprocess.h"
+#include "examplemyfocus.h"
 
 
 namespace Ui {
@@ -42,11 +43,6 @@ public:
     void exit();
 
     postProcess * postProcessWindow;
-
-    vector<QLineEdit *> GLVEdits;
-    vector<QLineEdit *> TSIEdits;
-    vector<QLineEdit *> TSVEdits;
-    vector<QLineEdit *> COOLINGEdits;
 
     vector<QSlider *> controlSliders;
     vector<QPushButton *> controlButtons;
