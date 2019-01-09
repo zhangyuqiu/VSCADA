@@ -44,6 +44,7 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
 #endif
     QCoreApplication::processEvents();
     dbMutex.lock();
+    QCoreApplication::processEvents();
     int rc = sqlite3_open(db_file.c_str(), &db);
     rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     sqlite3_close(db);

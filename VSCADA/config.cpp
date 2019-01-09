@@ -545,9 +545,9 @@ bool Config::read_config_file_data(){
                     storedSensor->minimum = -1;
                     storedSensor->maximum = -1;
                     storedSensor->checkRate = -1;
-                    storedSensor->maxRxnCode = -1;
-                    storedSensor->minRxnCode = -1;
-                    storedSensor->normRxnCode = -1;
+                    storedSensor->maxRxnCode = 0;
+                    storedSensor->minRxnCode = 0;
+                    storedSensor->normRxnCode = 0;
                     storedSensor->primAddress = 1000;
                     storedSensor->auxAddress = 0;
                     storedSensor->offset = 0;

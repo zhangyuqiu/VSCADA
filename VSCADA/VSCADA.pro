@@ -40,7 +40,8 @@ SOURCES += \
     postprocess.cpp \
     QKeyPushButton.cpp \
     widgetKeyBoard.cpp \
-    traffictest.cpp
+    traffictest.cpp \
+    examplemyfocus.cpp
 
 HEADERS += \
     db_engine.h \
@@ -64,7 +65,8 @@ HEADERS += \
     postprocess.h \
     QKeyPushButton.h \
     widgetKeyBoard.h \
-    traffictest.h
+    traffictest.h \
+    examplemyfocus.h
 
 FORMS += \
         mainwindow.ui \

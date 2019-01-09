@@ -45,6 +45,11 @@ public:
     uint64_t LSBto64Spec(uint auxAddress, uint offset, uint64_t data);
     uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data, int endianness);
 
+    inline void receiveData(meta * currSensor);
+    inline void calibrateData(meta * currSensor);
+    inline void checkThresholds(meta * sensor);
+    inline void logData(meta * currSensor);
+
     // active submodule pointers
     DB_Engine * dbase;
     DataMonitor * monitor;
@@ -85,5 +90,8 @@ signals:
     void deactivateState(system_state * prevstate);
     void sendToUSB7204(uint8_t channel, float voltage, bool*);
     void updateEdits(meta *);
+
+    void updateEditColor(string color, meta *sensor);
+    void updateDisplay(meta * sensor);
 };
 #endif // DATACONTROL_H
