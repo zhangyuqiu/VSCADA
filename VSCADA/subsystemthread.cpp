@@ -142,7 +142,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 error = true;
                 emit updateHealth();
             }
-            msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
+            msg = sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
             emit pushErrMsg(msg);
             emit initiateRxn(sensor->maxRxnCode);
             logMsg(msg);
@@ -155,7 +155,7 @@ void SubsystemThread::checkThresholds(meta * sensor){
                 error = true;
                 emit updateHealth();
             }
-            msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->minimum);
+            msg = sensor->sensorName + " below lower threshold: " + to_string(sensor->minimum);
             emit pushErrMsg(msg);
             emit initiateRxn(sensor->minRxnCode);
             logMsg(msg);
@@ -193,6 +193,106 @@ void SubsystemThread::calibrateData(meta * currSensor){
             data += pol.at(i).coefficient*pow(currSensor->val,pol.at(i).exponent);
         }
         currSensor->calVal = data;
+    }
+    if (currSensor->senOperator > -1){
+        switch(currSensor->senOperator){
+        case SUM:   {
+                        currSensor->val = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->val += sen->val;
+                        }
+                        currSensor->calVal = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->calVal += sen->calVal;
+                        }
+                    }
+            break;
+        case DIFF:  {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->val = sen->val;
+                            else currSensor->val = abs(currSensor->val - sen->val);
+                        }
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->calVal = sen->calVal;
+                            else currSensor->calVal = abs(currSensor->calVal - sen->calVal);
+                        }
+                    }
+            break;
+        case MUL:   {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                          meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                          if (i == 0) currSensor->val = sen->val;
+                          else currSensor->val = currSensor->val*sen->val;
+                        }
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) {
+                                currSensor->calVal = sen->calVal;
+                            } else {
+                                currSensor->calVal = currSensor->calVal*sen->calVal;
+                            }
+                        }
+                    }
+            break;
+        case DIV:  {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->val = sen->val;
+                            else currSensor->val = currSensor->val/sen->val;
+                        }
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->calVal = sen->calVal;
+                            else currSensor->calVal = currSensor->calVal/sen->calVal;
+                        }
+                    }
+            break;
+        case AVG:   {
+                        currSensor->val = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->val += sen->val;
+                        }
+                        currSensor->val = currSensor->val/currSensor->opSensors.size();
+                        currSensor->calVal = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->calVal += sen->calVal;
+                        }
+                        currSensor->calVal = currSensor->calVal/currSensor->opSensors.size();
+                    }
+            break;
+        case MAX:   {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            } else if (sen->calVal > currSensor->calVal) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            }
+                        }
+        }
+            break;
+        case MIN:   {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            } else if (sen->calVal < currSensor->calVal) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            }
+                        }
+                    }
+            break;
+        }
     }
 }
 

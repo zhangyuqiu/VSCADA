@@ -16,7 +16,8 @@
  */
 DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_interface * usb, DB_Engine * db,
                          vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM,
-                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp, vector<bootloader> bootArgs){
+                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp,
+                         vector<bootloader> bootArgs){
 
     // set mode parameters
     systemMode = mode;
@@ -41,6 +42,8 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     systemTimer = new QTime;
     startSystemTimer();
 
+    
+    
     //signal-slot connections
     for (uint i = 0 ; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
@@ -94,7 +97,7 @@ int DataControl::change_sampling_rate(int rate){
 //        gpioInterface->setSamplingRate(rate);
 //        return 1;
 //    } catch (...) {
-//        logMsg("ERROR: Smapling Rate not changed");
+//        logMsg("ERROR: Sampling Rate not changed");
 //        return 0;
 //    }
 }
@@ -106,7 +109,15 @@ void DataControl::receive_sensor_data(meta * sensor){
             subsystems.at(i)->receiveData(sensor);
         }
     }
-//    receiveData(sensor);
+    for (uint i = 0; i < sensor->dependencies.size(); i++){
+        meta * depSensor = static_cast<meta *>(sensor->dependencies.at(i));
+        for (uint j = 0; j < subsystems.size(); j++){
+            QCoreApplication::processEvents();
+            if (depSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+                subsystems.at(j)->receiveData(depSensor);
+            }
+        }
+    }
 }
 
 /**
@@ -377,10 +388,8 @@ vector<controlSpec *> DataControl::get_control_specs(){
  * @param name : name of saved file
  */
 void DataControl::saveSession(string name){
-    string systemString = "mv system.db ./savedsessions/";
+    string systemString = "mv ./savedsessions/system.db ./savedsessions/";
     systemString += name;
-    system(systemString.c_str());
-    systemString = "rm system.db";
     system(systemString.c_str());
 }
 

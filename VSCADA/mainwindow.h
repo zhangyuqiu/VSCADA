@@ -35,11 +35,10 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void drawEdit(QLineEdit * edit, QString dataDisplay);
-    void addErrorMessage(QString message);
+    void logMessage(QString message);
     int active_dialog(string msg);
     int passive_dialog(string msg);
     string info_dialog(string msg);
-    void addPoint(double x, double y);
     void exit();
 
     postProcess * postProcessWindow;
@@ -85,14 +84,11 @@ public:
     QLabel * clock;
 
     QListWidget * message;
-    QCustomPlot * plot;
     QLabel * ctrlLabel;
 
     QLineEdit * lineEdit;
     QTimer * checkTmr;
 
-    int currentSystem;
-    int currentSubSystem;
     bool initialized = false;
     meta * plotSensor;
 
@@ -103,19 +99,9 @@ public:
     int unitWidth;
     int unitHeight;
     int stringSize;
-    QString fontSize;
-    int xinit;
-    int yinit;
     double graphMax =20;
     double graphMin = 0;
     int maxSensorRow;
-    bool detail;
-    bool kShow;
-
-
-     QVector<double> gx,gy;
-
-//    datapoint data;
 
     Config * conf;
 
@@ -124,15 +110,11 @@ signals:
     void openDetailPage(SubsystemThread * thread);
 
 private slots:
-    void plotGraph(QString sensorName);
     void update();
     void openDetailWindow(SubsystemThread *thread);
     void closeDetailPage();
-    void updateVals();
-    void updateGraph();
     void receiveMsg(string msg);
     void receiveErrMsg(string msg);
-    void getCurrentSystem(int i);
     void deactivateStateMW(system_state * prevstate);
     void activateStateMW(system_state * nextState);
     void updateFSM_MW(statemachine * currFSM);

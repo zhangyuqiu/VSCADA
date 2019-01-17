@@ -39,8 +39,11 @@ public:
     vector<QString> getTargetColumn(QString table, QString column, QString condit_col, QString condition);
 
     // global items
-    string db_file = "./system.db";
+    string db_file = "./savedsessions/system.db";
     sqlite3 * db;
     std::mutex dbMutex;
+
+    QSqlDatabase mydb;
+    bool connected = false;
 };
 #endif // DB_ENGINE_H

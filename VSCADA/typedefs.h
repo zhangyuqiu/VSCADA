@@ -7,11 +7,21 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+
 #define DYNO 0
 #define CAR 1
 #define TEST 2
+
 #define DASH_DISP 0
 #define BACK_DISP 1
+
+#define SUM 0
+#define DIFF 1
+#define MUL 2
+#define DIV 3
+#define AVG 4
+#define MAX 5
+#define MIN 6
 
 typedef struct{
     int exponent;
@@ -31,9 +41,7 @@ typedef struct{
     uint auxAddress;
     int i2cAddress;
     std::vector<uint32_t> i2cConfigs;
-    //uint8_t i2cConfigPointer;
     uint8_t i2cReadPointer;
-    //uint16_t i2cConfigData;
     int i2cReadDelay;
     int i2cDataField;
     int usbChannel;
@@ -42,6 +50,12 @@ typedef struct{
     double calConst;
     int sensorIndex;
     int normRxnCode;
+
+    int lutIndex;
+    int senOperator;
+    std::vector<std::string> opAliases;
+    std::vector<void *> opSensors;
+    std::vector<void *> dependencies;
     uint32_t primAddress;
     double calMultiplier;
     int state;
@@ -50,11 +64,13 @@ typedef struct{
     std::string unit;
     std::string subsystem;
     std::string sensorName;
+    std::string alias;
 
     void updateVal(int newVal)
     {
         val = newVal;
     }
+
     void calData(){
         calVal = static_cast<double>(val)*calMultiplier + calConst;
     }

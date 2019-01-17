@@ -2,12 +2,14 @@
 
 DB_Engine::DB_Engine()
 {
-//    rc = sqlite3_open(db_file.c_str(), &db);
+//    mydb = new QSqlDatabase();
+//    *mydb = QSqlDatabase::addDatabase("QSQLITE");
 }
 
 DB_Engine::~DB_Engine()
 {
-//    sqlite3_close(db);
+    QSqlDatabase::removeDatabase("QSQLITE");
+//    delete mydb;
 }
 
 /**
@@ -354,45 +356,46 @@ int DB_Engine::clear_table(string table){
 }
 
 void DB_Engine::setFile(string name){
-    this->db_file=name;
+    db_file = name;
 }
 
 vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, QString target, QString name){
+    if (!connected){
+        mydb = QSqlDatabase::addDatabase("QSQLITE");
+        connected = true;
+    }
     QString currentBase = QString::fromStdString(db_file);
-    QSqlDatabase mydb;
-    mydb=QSqlDatabase::addDatabase("QSQLITE");
-    if(0== currentBase.compare("./system.db")){
-          mydb.setDatabaseName(currentBase);//path of data base
-    }else{
-        mydb.setDatabaseName("../VSCADA/savedsessions/"+currentBase);//path of data base
-}
+    mydb.setDatabaseName("./savedsessions/" + currentBase); //path of data base
+
     QCoreApplication::processEvents();
     mydb.open();
 
-    QSqlQuery* qry = new QSqlQuery(mydb);
+    QSqlQuery * qry = new QSqlQuery(mydb);
     vector<QString> data;
-    if(0== target.compare(" ")){
-            QString selectName="SELECT "+read+" FROM "+currentTable;
-            qry->prepare(selectName);
-            qry->exec();
-            while(qry->next()){
-                  QString num =qry->value(0).toString();
-                  data.push_back(num);
+    if (target.compare(" ") == 0){
+        QString selectName = "SELECT " + read + " FROM "+currentTable;
+        qry->prepare(selectName);
+        dbMutex.lock();
+        qry->exec();
+        dbMutex.unlock();
+        while(qry->next()){
+            QString num =qry->value(0).toString();
+            data.push_back(num);
+        }
 
-                }
-
-}else{
-    QCoreApplication::processEvents();
-    QString selectName="SELECT "+read+" FROM "+currentTable+" WHERE "+target+"='"+name+"'";
-    qry->prepare(selectName);
-    qry->exec();
-    while(qry->next()){
+    } else {
         QCoreApplication::processEvents();
-          QString num =qry->value(0).toString();
-          data.push_back(num);
+        QString selectName="SELECT " + read + " FROM " + currentTable + " WHERE " + target + "='" + name + "'";
+        qry->prepare(selectName);
+        dbMutex.lock();
+        qry->exec();
+        dbMutex.unlock();
+        while(qry->next()){
+            QCoreApplication::processEvents();
+            QString num =qry->value(0).toString();
+            data.push_back(num);
         }
     }
-
     mydb.close();
     delete qry;
     return data;

@@ -50,6 +50,7 @@ bool Config::read_config_file_data(){
     vector<response> allResponses;
     vector<int> minrates;
     vector<logic *> logicVector;
+    vector<meta *> dependentSensors;
     gpioRate = 1000;
     usb7204Rate = 1000;
     canRate = 125000;
@@ -560,11 +561,15 @@ bool Config::read_config_file_data(){
                     storedSensor->i2cDataField = 16;
                     storedSensor->subsystem = subSystemId;
                     storedSensor->endianness = 1;
+                    storedSensor->senOperator = -1;
+                    storedSensor->lutIndex = -1;
                     QDomNode sensor = sensorsList.at(k);
                     QDomNodeList attributeList = sensor.childNodes();
                     for (int m = 0; m < attributeList.size(); m++){
                         if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
                             storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+                        } else if(attributeList.at(m).nodeName().toStdString().compare("alias") == 0){
+                            storedSensor->alias = attributeList.at(m).firstChild().nodeValue().toStdString();
                         } else if(attributeList.at(m).nodeName().toStdString().compare("unit") == 0){
                             storedSensor->unit = attributeList.at(m).firstChild().nodeValue().toStdString();
                         } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
@@ -647,7 +652,28 @@ bool Config::read_config_file_data(){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->i2cReadDelay = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor i2c read delay not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("calpoly") == 0){
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("lutindex") == 0){
+                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                                storedSensor->lutIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                            else configErrors.push_back("CONFIG ERROR: LUT index not an integer");
+                        } else if (attributeList.at(m).nodeName().toStdString().compare("sensoroperation") == 0){
+                            QDomNode opItem = attributeList.at(m);
+                            QDomNodeList opItemList = opItem.childNodes();
+                            for (int n = 0; n < opItemList.size(); n++){
+                                if (opItemList.at(n).nodeName().toStdString().compare("operation") == 0){
+                                    if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("SUM") == 0) storedSensor->senOperator = SUM;
+                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("DIFF") == 0) storedSensor->senOperator = DIFF;
+                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MUL") == 0) storedSensor->senOperator = MUL;
+                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("DIV") == 0) storedSensor->senOperator = DIV;
+                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("AVG") == 0) storedSensor->senOperator = AVG;
+                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MAX") == 0) storedSensor->senOperator = MAX;
+                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MIN") == 0) storedSensor->senOperator = MIN;
+                                } else if (opItemList.at(n).nodeName().toStdString().compare("opalias") == 0){
+                                    storedSensor->opAliases.push_back(opItemList.at(n).firstChild().nodeValue().toStdString());
+                                }
+                            }
+                            dependentSensors.push_back(storedSensor);
+                        }else if (attributeList.at(m).nodeName().toStdString().compare("calpoly") == 0){
                             QDomNode polyItem = attributeList.at(m);
                             QDomNodeList polyItemList = polyItem.childNodes();
                             int polyCount = 0;
@@ -673,8 +699,6 @@ bool Config::read_config_file_data(){
 
             }
         }
-
-//        bootConfigs.push_back(bootItem);
 
 #ifdef CONFIG_PRINT
     cout << "Boot Configuration: " << endl;
@@ -702,6 +726,18 @@ bool Config::read_config_file_data(){
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
+    }
+
+    cout << "****************** depsensors size: " << dependentSensors.size() << endl;
+    for (uint i = 0; i < dependentSensors.size(); i++){
+        for (uint j = 0; j < dependentSensors.at(i)->opAliases.size(); j++){
+            for (uint k = 0; k < storedSensors.size(); k++){
+                if (storedSensors.at(k)->alias.compare(dependentSensors.at(i)->opAliases.at(j)) == 0){
+                    storedSensors.at(k)->dependencies.push_back(dependentSensors.at(i));
+                    dependentSensors.at(i)->opSensors.push_back(storedSensors.at(k));
+                }
+            }
+        }
     }
 
     //********************************************************//
@@ -758,7 +794,7 @@ bool Config::read_config_file_data(){
     }
     dbScript.close();
 
-    system("rm system.db");
+    system("rm ./savedsessions/system.db");
 
     //run script
     dbase = new DB_Engine();
@@ -797,8 +833,8 @@ bool Config::read_config_file_data(){
     usb7204 = new usb7402_interface(usbSensors,subsystems);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
     canInterface = new canbus_interface(canRate);
-    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,
-                               FSMs,systemMode,controlSpecs,storedSensors,allResponses,bootConfigs);
+    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,FSMs,
+                               systemMode,controlSpecs,storedSensors,allResponses,bootConfigs);
     trafficTest = new TrafficTest(canSensors,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
 
     //********************************//
