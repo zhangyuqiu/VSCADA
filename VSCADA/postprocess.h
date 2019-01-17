@@ -28,7 +28,7 @@ public:
     explicit postProcess(QWidget *parent = nullptr);
     ~postProcess();
 
-    QGridLayout * mainLayout;
+    QVBoxLayout * mainLayout;
     QWidget * central;
     QLabel * label;
     QString ** systemName;
@@ -42,7 +42,7 @@ public:
     QStandardItemModel*  poModel;
     int maxSensorRow;
     QListWidget * message;
-    QPushButton * loadButton;
+    QPushButton * exportButton;
     QComboBox * dbBox;
     QString currentBase;
     QTableView * dataTable;
@@ -55,8 +55,6 @@ public:
     int rowNum;
     int columnNum;
 
-
-    bool raw;
     int unitWidth;
     int unitHeight;
     int stringSize;

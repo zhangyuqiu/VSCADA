@@ -13,23 +13,12 @@ MainWindow::MainWindow(QWidget *parent) :
     myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
     myKeyboard->createKeyboard(); // only create keyboard
 
-    postProcessWindow = new postProcess;
-    kShow=false;
-
     central = new QWidget();
     mainLayout = new QVBoxLayout();
     conf = new Config();
-    cout << "Initialized configuration" << endl;
+    postProcessWindow = new postProcess;
     timer = new QTimer();
-    currentSubSystem=0;
-    currentSystem=0;
-    detail=false;
 
-    plot = new QCustomPlot();
-    plot->addGraph();
-
-    xinit=0;
-    yinit=0;
     maxSensorRow = 0;
 
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
@@ -45,8 +34,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     stringSize = unitWidth/10;//10
 
-    fontSize = QString::number(stringSize);
-
     QRect rect = QApplication::desktop()->screenGeometry();
 
     //****************************************************//
@@ -61,21 +48,16 @@ MainWindow::MainWindow(QWidget *parent) :
     msgLayout->addWidget(msgLabel, Qt::AlignCenter);
 
     QFont font = QFont ("Courier");
-    if (!initialized){
-        message = new QListWidget();
-    }
-    QString  errorMessage;
-    errorMessage = "Starting Data Acquisition...";
-    addErrorMessage(errorMessage);
-    QString  messageFont = QString::number(stringSize*1.5);
+    QString startMessage = "Starting Data Acquisition...";
+    QString messageFont = QString::number(stringSize*1.5);
+    message = new QListWidget();
     message->setStyleSheet("font:"+messageFont+"pt;");
-    message->addItem("FontSize:"+fontSize);
     message->setFixedHeight(static_cast<int>(height*0.8));
     message->setFixedWidth(static_cast<int>(width*0.98));
     message->setFont(font);
     msgLayout->addWidget(message);
-
     logWidget->setLayout(msgLayout);
+    logMessage(startMessage);
     //****************************************************//
 
     QScrollArea *scrollArea = new QScrollArea();
@@ -136,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sendControlValue(int, controlSpec *)), conf->dataCtrl, SLOT(receive_control_val(int, controlSpec *)));
 
     for (uint i = 0; i < conf->configErrors.size(); i++){
-        addErrorMessage(QString::fromStdString(conf->configErrors.at(i)));
+        logMessage(QString::fromStdString(conf->configErrors.at(i)));
     }
 
     if (conf->systemMode == CAR || conf->systemMode == DYNO){
@@ -589,84 +571,8 @@ void MainWindow::drawEdit(QLineEdit * edit,QString dataDisplay ){
     edit->setStyleSheet("font:24pt;");
 }
 
-void MainWindow::plotGraph(QString sensorName){
-    vector<QString> timeData;
-    vector<QString> valueData;
-    xinit=0;
-    gx.clear();
-    gy.clear();
-
-    vector<meta *> subMeta = conf->mainSensors;
-    if (sensorName.toStdString().compare("None") == 0){
-        plot->clearGraphs();
-        plot->replot();
-        plot->update();
-        return;
-    }
-
-    plot->addGraph();
-
-    for (uint i = 0; i < subMeta.size(); i++){
-        if (subMeta.at(i)->sensorName.compare(sensorName.toStdString()) == 0){
-            plotSensor = subMeta.at(i);
-            graphMax = (plotSensor->maximum);
-            graphMin = (plotSensor->minimum);
-            for(uint i = 0; i < conf->subsystems.size(); i++){
-                vector<meta*> subSensors = conf->subsystems.at(i)->get_mainMeta();
-                for (uint j = 0; j < subSensors.size(); j++){
-                    if (plotSensor->sensorName.compare(subSensors.at(j)->sensorName) == 0){
-                        string tableName = conf->removeSpaces(conf->subsystems.at(i)->subsystemId) + "_caldata";
-                        vector<string>cols;
-                        cols.push_back("time");
-                        cols.push_back("value");
-                        vector<string>rows;
-                        timeData = conf->dbase->getTargetColumn(QString::fromStdString(tableName),"time","sensorname",QString::fromStdString(plotSensor->sensorName));
-                        valueData = conf->dbase->getTargetColumn(QString::fromStdString(tableName),"value","sensorname",QString::fromStdString(plotSensor->sensorName));
-                        while (valueData.size() > timeData.size()){
-                            valueData.pop_back();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    plot->setFixedHeight(unitHeight*6);
-    plot->setFixedWidth(unitWidth*7);
-    plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
-    plot->graph(0)->setLineStyle(QCPGraph::lsLine);
-
-    for(uint i = 0; i < timeData.size(); i++){
-        if (i == timeData.size() -1) plot->xAxis->setRange(0, -(timeData.at(i).toDouble()+1), Qt::AlignRight);
-        if (valueData.at(i).toDouble() > graphMax) graphMax = valueData.at(i).toDouble() + 5;
-        if (valueData.at(i).toDouble() < graphMin) graphMin = valueData.at(i).toDouble() - 1;
-        gx.append(timeData.at(i).toDouble());
-        gy.append(valueData.at(i).toDouble());
-        plot->graph(0)->setData(gx,gy);
-    }
-
-//    cout << "Graph Min: " << graphMin << " Graph Max: " << graphMax << endl;
-
-    plot->yAxis->setRange(graphMin, -(graphMax-graphMin), Qt::AlignRight);
-
-    plot->replot();
-    plot->update();
-}
-
 void MainWindow::receiveMsg(string msg){
-    addErrorMessage(QString::fromStdString(msg));
-}
-
-void MainWindow::addPoint(double x, double y){
-    plot->xAxis->setRange(0, -(x+1), Qt::AlignRight);
-    if (y > graphMax) graphMax = y + 5;
-    if (y < graphMin) graphMin = y - 1;
-    plot->yAxis->setRange(graphMin, -(graphMax-graphMin), Qt::AlignRight);
-    gx.append(x);
-    gy.append(y);
-    plot->graph(0)->setData(gx,gy);
-    plot->replot();
-    plot->update();
+    logMessage(QString::fromStdString(msg));
 }
 
 void MainWindow::detailButtonPushed(){
@@ -680,7 +586,7 @@ void MainWindow::detailButtonPushed(){
 
 void MainWindow::receiveErrMsg(string msg){
     QString str = QString::fromStdString(msg);
-    addErrorMessage(QString::fromStdString(msg));
+    logMessage(QString::fromStdString(msg));
 }
 
 void MainWindow::updateHealth(){
@@ -715,21 +621,13 @@ void MainWindow::updateFSM_MW(statemachine * currFSM){
     }
 }
 
-void MainWindow::addErrorMessage(QString eMessage){
+void MainWindow::logMessage(QString eMessage){
     if (message->count() >= 500) message->takeItem(0);
     string time = conf->dataCtrl->getProgramTime();
     string msg = eMessage.toStdString();
     msg = time + ": " + msg;
     message->addItem(QString::fromStdString(msg));
     message->scrollToBottom();
-}
-
-void MainWindow::updateVals(){
-
-}
-
-void MainWindow::getCurrentSystem(int i){
-    currentSystem=i;
 }
 
 void MainWindow::openDetailWindow(SubsystemThread *thread){
@@ -840,7 +738,7 @@ string MainWindow::info_dialog(string msg){
 
     la.addWidget(myKeyboard, Qt::AlignCenter);
     la.addWidget(buttonBox, Qt::AlignCenter);
-    myKeyboard->show(this, NULL, false);
+    myKeyboard->show(this, nullptr, false);
     la.setAlignment(Qt::AlignCenter);
     dlg.setLayout(&la);
     dlg.adjustSize();
@@ -938,18 +836,5 @@ void MainWindow::changeEditColor(string color, meta * sensor){
 void MainWindow::updateTab(int tabId){
     if (tabId == 0){
 
-    }
-}
-
-void MainWindow::updateGraph(){
-    meta * currSensor;
-    vector<meta *> mainSensors = conf->mainSensors;
-    string sensorName = plotComboBox->currentText().toStdString();
-    for (uint i = 0; i < mainSensors.size(); i++){
-        if (mainSensors.at(i)->sensorName.compare(sensorName) == 0){
-            currSensor = mainSensors.at(i);
-            double data = currSensor->calVal;
-            addPoint(stod(conf->dataCtrl->getProgramTime()),data);
-        }
     }
 }

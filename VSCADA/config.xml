@@ -509,6 +509,7 @@
 			<sensor>
 				<id>11</id>
 				<name>GLVCurrent</name>
+				<alias>GCUR</alias>
 				<i2caddress>64</i2caddress>
 				<i2creadpointer>4</i2creadpointer>
 				<i2cconfigdata>2572544</i2cconfigdata>
@@ -571,6 +572,7 @@
 			<sensor>
 				<id>15</id>
 				<name>GLVVoltage</name>
+				<alias>GVOL</alias>
 				<i2caddress>64</i2caddress>
 				<i2creadpointer>2</i2creadpointer>
 				<i2cconfigdata>2572544</i2cconfigdata>
@@ -602,7 +604,20 @@
                                 <maximum>20</maximum>
                                 <calmultiplier>0.025</calmultiplier>
                         </sensor>
-
+			<sensor>
+				<id>18</id>
+				<name>GLVPower_Cal</name>
+				<checkrate>5000</checkrate>
+				<main>1</main>
+				<minimum>0</minimum>
+				<maximum>40</maximum>
+				<unit>W</unit>
+				<sensoroperation>
+					<operation>AVG</operation>
+					<opalias>GCUR</opalias>
+					<opalias>GVOL</opalias>
+				</sensoroperation>
+			</sensor>
 		</sensors>
 	</subsystem>
 	<subsystem>
