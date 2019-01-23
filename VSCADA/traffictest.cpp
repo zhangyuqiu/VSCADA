@@ -1,12 +1,12 @@
 #include "traffictest.h"
 
-TrafficTest::TrafficTest(vector<meta*> can, vector<meta*> gpio, vector<meta*> i2c, vector<meta*> usb, int cRate, int gRate, int uRate, DataControl * ctrl)
+TrafficTest::TrafficTest(map<int,meta *> can, vector<meta*> gpio, vector<meta*> i2c, vector<meta*> usb, int cRate, int gRate, int uRate, DataControl * ctrl)
 {
-    canSensors = can;
+    canSensorMap = can;
     gpioSensors = gpio;
     i2cSensors = i2c;
     usbSensors = usb;
-    canRate = 500;
+    canRate = 1000;
     gpioRate = gRate;
     usbRate = uRate;
     dataCtrl = ctrl;
@@ -30,8 +30,11 @@ void TrafficTest::startTests(){
 void TrafficTest::sendCANItems(){
     int num = rand();
     uint64_t num64 = (static_cast<uint64_t>(num) << 32) + static_cast<uint64_t>(num);
-    for (uint i = 0; i < canSensors.size(); i++){
-        dataCtrl->receive_can_data(canSensors.at(i)->primAddress,num64);
+    map<int,meta *>::iterator it;
+
+    for ( it = canSensorMap.begin(); it != canSensorMap.end(); it++ ){
+        meta * sensor = it->second;
+        dataCtrl->receive_can_data(sensor->primAddress,num64);
     }
 }
 

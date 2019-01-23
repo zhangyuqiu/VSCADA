@@ -8,11 +8,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // set up virtual keyboard
     myKeyboard = new widgetKeyBoard(false, nullptr, false); // false = alpha numeric keyboard, true = numeric keyboard
     myKeyboard->setZoomFacility(true);
     myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
     myKeyboard->createKeyboard(); // only create keyboard
 
+    //initialize objects
     central = new QWidget();
     mainLayout = new QVBoxLayout();
     conf = new Config();
@@ -25,17 +27,18 @@ MainWindow::MainWindow(QWidget *parent) :
     central->setLayout(mainLayout);
     conf->read_config_file_data();
     cout << "Done configuring " << endl;
+
+    // set window dimensioning parameters
     QRect rec = QApplication::desktop()->screenGeometry();
     int height=rec.height();
     int width=rec.width();
-
-    unitWidth=width/20;//100
-    unitHeight=height/20;//56
-
-    stringSize = unitWidth/10;//10
-
+    unitWidth=width/20;
+    unitHeight=height/20;
+    stringSize = unitWidth/10;
     QRect rect = QApplication::desktop()->screenGeometry();
 
+    //****************************************************//
+    //              CREATE LOG TAB                        //
     //****************************************************//
     QScrollArea * logWidget = new QScrollArea;
     QString  butLabelFont = QString::number(stringSize*1.4);
@@ -60,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     logMessage(startMessage);
     //****************************************************//
 
+    // create tabs
     QScrollArea *scrollArea = new QScrollArea();
     tabs = new QTabWidget;
     tabs->setTabsClosable(true);
@@ -78,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     connect(tabs, SIGNAL(currentChanged(int)), this, SLOT(updateTab(int)));
 
+    // create timers to identify sensor timeouts
     for(uint i = 0; i < conf->mainSensors.size(); i++){
         lineEdit = new QLineEdit;
         checkTmr = new QTimer;
@@ -87,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
         edits.push_back(lineEdit);
         lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
         lineEdit->setAlignment(Qt::AlignCenter);
-//        lineEdit->setReadOnly(true);
+        lineEdit->setReadOnly(true);
         editTimers.push_back(checkTmr);
     }
 
@@ -95,20 +100,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     update();
 
+    // connect signals to slots
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
     for (uint i = 0; i < subs.size(); i++){
-        connect(subs.at(i), SIGNAL(pushErrMsg(string)), this, SLOT(receiveErrMsg(string)));
         connect(subs.at(i), SIGNAL(pushMessage(string)), this, SLOT(receiveMsg(string)));
         connect(subs.at(i), SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
         connect(subs.at(i), SIGNAL(updateHealth()), this, SLOT(updateHealth()));
         connect(subs.at(i), SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
     }
-    connect(conf->dataCtrl, SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
-    connect(conf->dataCtrl, SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
-
     connect(conf->dataCtrl, SIGNAL(deactivateState(system_state *)), this, SLOT(deactivateStateMW(system_state *)));
-//    connect(conf->dataCtrl, SIGNAL(updateEdits(meta *)), this, SLOT(updateEdits(meta *)));
     connect(conf->dataCtrl, SIGNAL(activateState(system_state *)), this, SLOT(activateStateMW(system_state *)));
     connect(conf->dataCtrl, SIGNAL(updateFSM(statemachine *)), this, SLOT(updateFSM_MW(statemachine *)));
     connect(conf->canInterface, SIGNAL(pushMsg(string)), this, SLOT(receiveMsg(string)));
@@ -214,7 +215,6 @@ void MainWindow::update(){
         fieldRowCount++;
 
         QPushButton * rebootBtn = new QPushButton;
-        rebootBtn->setStyleSheet("font:10pt;");
         rebootBtn->setText("Reboot");
         QPalette rebootPal = rebootBtn->palette();
         rebootPal.setColor(QPalette::Button, QColor(0,100,0));
@@ -223,7 +223,7 @@ void MainWindow::update(){
         QString  butLabelFont = QString::number(stringSize*1.4);
         rebootBtn->setStyleSheet("font:"+butLabelFont+"pt;");
         rebootBtn->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        rebootBtn->setFixedHeight(static_cast<int>(unitHeight*1.4));
+        rebootBtn->setFixedHeight(static_cast<int>(unitHeight));
         healthButtons.push_back(rebootBtn);
         subsystemSectionLayout->addWidget(rebootBtn,fieldRowCount,fieldColCount,Qt::AlignCenter);
         connect(rebootBtn, SIGNAL(clicked()), subs.at(i), SLOT(bootSubsystem()));
@@ -238,7 +238,7 @@ void MainWindow::update(){
         QString  detailLabelFont = QString::number(stringSize*1.4);
         detailButton->setStyleSheet("font:"+detailLabelFont+"pt;");
         detailButton->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        detailButton->setFixedHeight(static_cast<int>(unitHeight*1.4));
+        detailButton->setFixedHeight(static_cast<int>(unitHeight));
 
         connect(detailButton, SIGNAL(clicked()), this, SLOT(detailButtonPushed()));
 
@@ -271,7 +271,6 @@ void MainWindow::update(){
 
     QScrollArea * subsystemArea = new QScrollArea;
     subsystemArea->setFixedWidth(screenWidth-30);
-//    subsystemArea->setFixedHeight(subsystemWidget->height()-85);
     subsystemArea->setFixedHeight(static_cast<int>(subsystemWidget->height()*1.3));
     subsystemArea->setBackgroundRole(QPalette::Window);
     subsystemArea->setWidget(subsystemWidget);
@@ -291,24 +290,30 @@ void MainWindow::update(){
     QHBoxLayout * btnsLayout = new QHBoxLayout;
     btnsLayout->setAlignment(Qt::AlignCenter);
 
-    canResetButton =new QPushButton();
-    canResetButton->setText("CAN\nReset");
-    QPalette palCanRst = canResetButton->palette();
-    palCanRst.setColor(QPalette::Button, QColor(0,0,200));
-    canResetButton->setPalette(palCanRst);
-    canResetButton->setAutoFillBackground(true);
+    int btnWidth = static_cast<int>(unitWidth*1.2);
+    int btnHeight = static_cast<int>(unitHeight*1.8);
+    canResetButton =new QToolButton();
+    canResetButton->setText("CAN");
+    QPixmap canpixmap("reset_btn.png");
+    QIcon canButtonIcon(canpixmap);
+    canResetButton->setIcon(canButtonIcon);
+    canResetButton->setIconSize(QSize(btnWidth/1.6,btnHeight/1.6));
+    canResetButton->setAutoRaise(true);
+    canResetButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     canResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
-    canResetButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-    canResetButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+    canResetButton->setFixedWidth(btnWidth);
+    canResetButton->setFixedHeight(btnHeight);
     btnsLayout->addWidget(canResetButton,Qt::AlignCenter);
     QObject::connect(canResetButton, SIGNAL (clicked()), conf->canInterface , SLOT(rebootCAN()));
 
-    usbResetButton =new QPushButton();
-    usbResetButton->setText("USB7204\nReset");
-    QPalette palUSBRst = usbResetButton->palette();
-    palUSBRst.setColor(QPalette::Button, QColor(0,0,200));
-    usbResetButton->setPalette(palUSBRst);
-    usbResetButton->setAutoFillBackground(true);
+    usbResetButton =new QToolButton();
+    usbResetButton->setText("USB7204");
+    QPixmap usbpixmap("reset_btn.png");
+    QIcon usbButtonIcon(usbpixmap);
+    usbResetButton->setIcon(usbButtonIcon);
+    usbResetButton->setIconSize(QSize(btnWidth/1.6,btnHeight/1.6));
+    usbResetButton->setAutoRaise(true);
+    usbResetButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     usbResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
     usbResetButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
     usbResetButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
@@ -325,8 +330,9 @@ void MainWindow::update(){
     for(uint t = 0; t < conf->FSMs.size(); t++){
         QVBoxLayout * FSMLayout = new QVBoxLayout;
         QLabel * FSMLabel = new QLabel;
-        FSMLabel->setText(QString::fromStdString(conf->FSMs.at(t)->name));
+//        FSMLabel->setText(QString::fromStdString(conf->FSMs.at(t)->name));
         FSMLabel->setAlignment(Qt::AlignCenter);
+        FSMLabel->setText("Drive_States");
         FSMLayout->addWidget(FSMLabel, Qt::AlignCenter);
         stateButton = new QPushButton("---");
         QPalette palplot = stateButton->palette();
@@ -334,6 +340,8 @@ void MainWindow::update(){
         stateButton->setPalette(palplot);
         stateButton->setAutoFillBackground(true);
         stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
+        stateButton->setStyleSheet("background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 blue, stop: 1 green);"
+                                   "border-style: solid;border-color: blue;border-width: 2px;border-radius: 10px;");
         stateButton->setFixedWidth(static_cast<int>(unitWidth));
         stateButton->setFixedHeight(static_cast<int>(unitHeight*1.5));
         FSMButtons.push_back(stateButton);
@@ -359,7 +367,8 @@ void MainWindow::update(){
         stateFrame->setFrameShadow(QFrame::Raised);
         btnsLayout->addWidget(stateFrame, Qt::AlignCenter);
 
-        stateButton = new QPushButton(QString::fromStdString(conf->sysStates.at(s)->name));
+        stateButton = new QPushButton();
+        stateButton->setText(QString::fromStdString(conf->sysStates.at(s)->name));
         QPalette palplot = stateButton->palette();
         palplot.setColor(QPalette::Button, QColor(70,70,70));
         stateButton->setPalette(palplot);
@@ -373,12 +382,15 @@ void MainWindow::update(){
 
     stateButtonLayout->addLayout(btnsLayout,0,1,Qt::AlignCenter);
 
-    exitButton = new QPushButton();
-    exitButton->setText("EXIT");
-    QPalette palexit = exitButton->palette();
-    palexit.setColor(QPalette::Button, QColor(0,0,255));
-    exitButton->setPalette(palexit);
-    exitButton->setAutoFillBackground(true);
+    exitButton = new QToolButton();
+    exitButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    QPixmap pixmap("close_btn.png");
+    QIcon ButtonIcon(pixmap);
+    exitButton->setIcon(ButtonIcon);
+    //    conf->dbase->empty_buffer();
+    //    this->close();
+    exitButton->setIconSize(pixmap.rect().size());
+    exitButton->setAutoRaise(true);
     exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
     exitButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
     exitButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
@@ -417,7 +429,7 @@ void MainWindow::update(){
                 controlsLayout->addLayout(sliderLayout,Qt::AlignCenter);
                 controlSliders.push_back(sliderControl);
                 sliderCtrls.push_back(currSpec);
-                connect(sliderControl, SIGNAL(valueChanged(int)), this, SLOT(sliderValChanged(int)));
+                connect(sliderControl, SIGNAL(sliderReleased()), this, SLOT(sliderValChanged()));
             }
             if (currSpec->button){
                 buttonControl =new QPushButton();
@@ -504,11 +516,11 @@ void MainWindow::updateClock(){
     clock->setText(QString::fromStdString(updatedTime));
 }
 
-void MainWindow::sliderValChanged(int value){
-//    cout << "Current Value: " << value << endl;
+void MainWindow::sliderValChanged(){
     QObject* obj = sender();
     for (uint i = 0; i < controlSliders.size(); i++){
         if (obj == controlSliders.at(i)){
+            int value = controlSliders.at(i)->value();
             emit sendControlValue(value, sliderCtrls.at(i));
         }
     }
@@ -685,11 +697,18 @@ int MainWindow::passive_dialog(string msg){
 int MainWindow::active_dialog(string msg){
     QDialog dlg;
     QVBoxLayout la(&dlg);
+    QHBoxLayout la0;
     QLabel ed;
+    QLabel ed0;
+    QPixmap pixmap("warning.png");
+    pixmap.setDevicePixelRatio(20);
+    ed0.setPixmap(pixmap);
     ed.setText(QString::fromStdString(msg));
     QString LabelFont = QString::number(stringSize*1.5);
     ed.setStyleSheet("font:"+LabelFont+"pt;");
-    la.addWidget(&ed);
+    la0.addWidget(&ed0);
+    la0.addWidget(&ed);
+    la.addLayout(&la0);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     buttonBox->setStyleSheet("font:"+LabelFont+"pt;");
@@ -779,12 +798,14 @@ repeat:
             conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
             conf->dataCtrl->saveSession(name);
             passive_dialog("Saved!");
+            conf->dbase->empty_buffer();
+            this->close();
         }
-    } else {
+    } else if (confirmation == QDialog::Rejected){
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
+        conf->dbase->empty_buffer();
+        this->close();
     }
-    this->close();
-
 }
 
 /**

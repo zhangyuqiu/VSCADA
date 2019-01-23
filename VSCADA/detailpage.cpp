@@ -136,6 +136,10 @@ void detailPage::setCurrentSystem(SubsystemThread * subsystem){
     connect(currentSubSystem, SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
     connect(currentSubSystem, SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
     update();
+    vector<meta*> allSensors = currentSubSystem->get_metadata();
+    for(uint i = 0; i < allSensors.size(); i++){
+        allSensors.at(i)->state = 0;
+    }
 }
 
 
@@ -170,17 +174,13 @@ void detailPage::checkTimeout(){
 
 void detailPage::changeEditColor(string color, meta * sensor){
     vector<meta*> allSensors = currentSubSystem->get_metadata();
-    for(uint i = 0; i < allSensors.size(); i++){
-        if(color.compare("red") == 0){
-            if (allSensors.at(i) == sensor) {
+    for(uint i = 0; i < edits.size(); i++){
+        if (allSensors.at(i) == sensor) {
+            if(color.compare("red") == 0){
                 edits.at(i)->setStyleSheet("color: #FF0000");
-            }
-        } else if(color.compare("blue") == 0){
-            if (allSensors.at(i) == sensor) {
+            } else if(color.compare("blue") == 0){
                 edits.at(i)->setStyleSheet("color: #1E90FF");
-            }
-        } else if(color.compare("yellow") == 0){
-            if (allSensors.at(i) == sensor) {
+            } else if(color.compare("yellow") == 0){
                 edits.at(i)->setStyleSheet("color: #FFFF00");
             }
         }

@@ -54,10 +54,8 @@ public:
 
 public slots:
     void updateEdits(meta * currSensor);
-
-private slots:
-    void update();
     void changeEditColor(string color, meta *sensor);
+    void update();
     void checkTimeout();
 
 private:

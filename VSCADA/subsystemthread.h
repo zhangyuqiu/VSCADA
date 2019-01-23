@@ -90,11 +90,7 @@ public:
 
 public slots:
     void logData(meta * currSensor);                            //records sensor data in database
-//    void StartInternalThread();                                 //starts subsystem thread
-//    void updateEdits(meta *sensor);                             //updates LineEdit displays
     void checkThresholds(meta * sensor);                        //checks whether sensor value is within configured bounds
-//    void checkTimeout();                                        //check whether we haven't received some data
-//    void processData();
     void bootSubsystem();
     void subsystemCollectionTasks();
 
@@ -102,8 +98,6 @@ signals:                           //execute response to CAN
     void pushI2cData(uint32_t value);
     void pushGPIOData(int pin, int value);                            //execute response to GPIO
     void pushMessage(string msg);
-    void pushErrMsg(string msg);
-    void valueChanged(meta *);
     void initiateRxn(int rxnCode);                               //execute configured reaction
     void updateDisplay(meta * sensor);
     void sendCANData(int address, uint64_t data, int size);

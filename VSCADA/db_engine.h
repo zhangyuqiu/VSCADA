@@ -20,6 +20,7 @@ public:
     DB_Engine();
     ~DB_Engine();
 
+    int empty_buffer();
     string quote(const string &s);
     int number_of_rows(string table);
     int max_rowid(string table);
@@ -28,7 +29,7 @@ public:
     string sql_file_to_string(string fileName);
     int delete_item(string table, string condition, string condition_val);
     static int sql_get_rownum(void* data, int count, char** rows, char**);
-    int insert_row(string table, vector<string> column, vector<string> row);
+    int insert_row(string table, string column, string row);
     static int sql_get_rows(void *param, int argc, char **argv, char **azColName);
     vector<string> get_conditional_values(string table, vector<string> column, string condit_col, string condition);
     vector<string> get_row_values(string table, vector<string> column, int row_num);
@@ -42,6 +43,8 @@ public:
     string db_file = "./savedsessions/system.db";
     sqlite3 * db;
     std::mutex dbMutex;
+    vector<string> dbCmds;
+    int numCmds = 0;
 
     QSqlDatabase mydb;
     bool connected = false;

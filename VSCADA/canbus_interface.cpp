@@ -3,8 +3,14 @@
 /**
  * @brief canbus_interface::canbus_interface class constructor
  */
-canbus_interface::canbus_interface(int canRate) {
+canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs) {
+    subsystems = subs;
     bitrate = canRate;
+
+    for (uint i = 0; i < subsystems.size(); i++){
+        connect(subsystems.at(i), SIGNAL(sendCANData(int, uint64_t,int)), this,SLOT(sendDataByte(int, uint64_t,int)));
+    }
+
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     canconnect();
     rebootCAN();
@@ -108,7 +114,6 @@ void canbus_interface::rebootCAN(){
     system("sudo ip link set can0 down");
     std::string s = "sudo ip link set can0 up type can bitrate " + std::to_string(bitrate);
     const char * command = s.c_str();
-    printf("Reboot Command: %c", *command);
     system(command);
     if (canconnect()){
         emit pushMsg("CAN boot successful");

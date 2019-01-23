@@ -2,8 +2,8 @@
 	<mode>
 		<type>TEST</type>
 	</mode>
-	<gpiorate>500</gpiorate>
-	<usb7204rate>500</usb7204rate>
+	<gpiorate>1000</gpiorate>
+	<usb7204rate>1000</usb7204rate>
 	<canrate>125000</canrate>
 	<systemcontrols>
 		<control>

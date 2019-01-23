@@ -372,6 +372,7 @@ bool Config::read_config_file_data(){
                 else configErrors.push_back("CONFIG ERROR: CAN response value not an integer");
             }
         }
+        responseMap.insert(make_pair(thisRsp.responseIndex,thisRsp));
         allResponses.push_back(thisRsp);
     }
 
@@ -581,6 +582,16 @@ bool Config::read_config_file_data(){
                                 storedSensor->primAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor primary address not an integer");
                             canSensors.push_back(storedSensor);
+                            canSensorMap.insert(make_pair(storedSensor->primAddress+storedSensor->auxAddress, storedSensor));
+                            if ( canSensorGroup.find(storedSensor->primAddress) == canSensorGroup.end() ) {
+                                canVectorItem =  new vector<meta*>;
+                                canVectorItem->push_back(storedSensor);
+                                canSensorGroup.insert(make_pair(storedSensor->primAddress, canVectorItem));
+                            } else {
+                                uint32_t val = storedSensor->primAddress;
+                                vector<meta*> * item = canSensorGroup[val];
+                                item->push_back(storedSensor);
+                            }
                         } else if (attributeList.at(m).nodeName().toStdString().compare("auxaddress") == 0){
                             if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                                 storedSensor->auxAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
@@ -726,6 +737,7 @@ bool Config::read_config_file_data(){
         subsystems.push_back(thread);
         sensorVector.push_back(sensors);
         minrates.push_back(minrate);
+        subsystemMap.insert(make_pair(thread->subsystemId,thread));
     }
 
     cout << "****************** depsensors size: " << dependentSensors.size() << endl;
@@ -803,28 +815,13 @@ bool Config::read_config_file_data(){
     //****************************************//
     //*****record all sensors to database*****//
     //****************************************//
-    vector<string> cols;
-    cols.push_back("sensorindex");
-    cols.push_back("sensorname");
-    cols.push_back("subsystem");
-    cols.push_back("minthreshold");
-    cols.push_back("maxthreshold");
-    cols.push_back("maxresponseid");
-    cols.push_back("minresponseid");
-    cols.push_back("calconstant");
-    vector<string> rows;
+    string colString = "sensorindex,sensorname,subsystem,minthreshold,maxthreshold,maxresponseid,minresponseid,calconstant";
+    string rowString;
     for (uint n = 0; n < storedSensors.size(); n++){
-        rows.clear();
-        rows.push_back(to_string(storedSensors.at(n)->sensorIndex));
-        rows.push_back(storedSensors.at(n)->sensorName);
-        cout << "Sensor: " << storedSensors.at(n)->sensorName << " CANaddr: " << storedSensors.at(n)->primAddress << endl;
-        rows.push_back(storedSensors.at(n)->subsystem);
-        rows.push_back(to_string(storedSensors.at(n)->minimum));
-        rows.push_back(to_string(storedSensors.at(n)->maximum));
-        rows.push_back(to_string(storedSensors.at(n)->maxRxnCode));
-        rows.push_back(to_string(storedSensors.at(n)->minRxnCode));
-        rows.push_back(to_string(storedSensors.at(n)->calConst));
-        dbase->insert_row("sensors",cols,rows);
+        rowString = "'" + to_string(storedSensors.at(n)->sensorIndex) + "','" + storedSensors.at(n)->sensorName + "','" + storedSensors.at(n)->subsystem +
+            "','" + to_string(storedSensors.at(n)->minimum) + "','" + to_string(storedSensors.at(n)->maximum) + "','" + to_string(storedSensors.at(n)->maxRxnCode) +
+            "','" + to_string(storedSensors.at(n)->minRxnCode) + "','" + to_string(storedSensors.at(n)->calConst) + "'";
+        dbase->insert_row("sensors",colString,rowString);
     }
 
     //****************************************//
@@ -832,21 +829,18 @@ bool Config::read_config_file_data(){
     //****************************************//
     usb7204 = new usb7402_interface(usbSensors,subsystems);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(canRate);
-    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystems,sysStates,FSMs,
-                               systemMode,controlSpecs,storedSensors,allResponses,bootConfigs);
-    trafficTest = new TrafficTest(canSensors,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
+    canInterface = new canbus_interface(canRate, subsystems);
+    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystemMap,sysStates,FSMs,
+                               systemMode,controlSpecs,storedSensors,responseMap,bootConfigs,canSensorGroup);
+    trafficTest = new TrafficTest(canSensorMap,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
+
 
     //********************************//
     //*****initialize system info*****//
     //********************************//
-    cols.clear();
-    rows.clear();
-    cols.push_back("starttime");
-    cols.push_back("endtime");
-    rows.push_back(get_curr_time());
-    rows.push_back("0");
-    dbase->insert_row("system_info",cols,rows);
+    colString = "starttime,endtime";
+    rowString = "'" + get_curr_time() + "','0'";
+    dbase->insert_row("system_info",colString,rowString);
 
 
     //**********************************//
