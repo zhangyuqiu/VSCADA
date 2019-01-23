@@ -815,33 +815,12 @@ bool Config::read_config_file_data(){
     //****************************************//
     //*****record all sensors to database*****//
     //****************************************//
-//    vector<string> cols;
-//    cols.push_back("sensorindex");
-//    cols.push_back("sensorname");
-//    cols.push_back("subsystem");
-//    cols.push_back("minthreshold");
-//    cols.push_back("maxthreshold");
-//    cols.push_back("maxresponseid");
-//    cols.push_back("minresponseid");
-//    cols.push_back("calconstant");
     string colString = "sensorindex,sensorname,subsystem,minthreshold,maxthreshold,maxresponseid,minresponseid,calconstant";
     string rowString;
     for (uint n = 0; n < storedSensors.size(); n++){
-    rowString = "'" + to_string(storedSensors.at(n)->sensorIndex) + "','" + storedSensors.at(n)->sensorName + "','" + storedSensors.at(n)->subsystem +
+        rowString = "'" + to_string(storedSensors.at(n)->sensorIndex) + "','" + storedSensors.at(n)->sensorName + "','" + storedSensors.at(n)->subsystem +
             "','" + to_string(storedSensors.at(n)->minimum) + "','" + to_string(storedSensors.at(n)->maximum) + "','" + to_string(storedSensors.at(n)->maxRxnCode) +
             "','" + to_string(storedSensors.at(n)->minRxnCode) + "','" + to_string(storedSensors.at(n)->calConst) + "'";
-//    vector<string> rows;
-//    for (uint n = 0; n < storedSensors.size(); n++){
-//        rows.clear();
-//        rows.push_back(to_string(storedSensors.at(n)->sensorIndex));
-//        rows.push_back(storedSensors.at(n)->sensorName);
-//        cout << "Sensor: " << storedSensors.at(n)->sensorName << " CANaddr: " << storedSensors.at(n)->primAddress << endl;
-//        rows.push_back(storedSensors.at(n)->subsystem);
-//        rows.push_back(to_string(storedSensors.at(n)->minimum));
-//        rows.push_back(to_string(storedSensors.at(n)->maximum));
-//        rows.push_back(to_string(storedSensors.at(n)->maxRxnCode));
-//        rows.push_back(to_string(storedSensors.at(n)->minRxnCode));
-//        rows.push_back(to_string(storedSensors.at(n)->calConst));
         dbase->insert_row("sensors",colString,rowString);
     }
 
@@ -855,17 +834,12 @@ bool Config::read_config_file_data(){
                                systemMode,controlSpecs,storedSensors,responseMap,bootConfigs,canSensorGroup);
     trafficTest = new TrafficTest(canSensorMap,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
 
+
     //********************************//
     //*****initialize system info*****//
     //********************************//
-//    cols.clear();
-//    rows.clear();
-//    cols.push_back("starttime");
-//    cols.push_back("endtime");
     colString = "starttime,endtime";
     rowString = "'" + get_curr_time() + "','0'";
-//    rows.push_back(get_curr_time());
-//    rows.push_back("0");
     dbase->insert_row("system_info",colString,rowString);
 
 

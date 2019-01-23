@@ -49,15 +49,9 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     map<string, SubsystemThread *>::iterator it;
 
     for ( it = subsystemMap.begin(); it != subsystemMap.end(); it++ ){
-//        SubsystemThread * currSub = it->second;
         connect(it->second, SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
         it->second->setSystemTimer(systemTimer);
     }
-
-//    for (uint i = 0 ; i < subsystems.size(); i++){
-//        connect(subsystems.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
-//        subsystems.at(i)->setSystemTimer(systemTimer);
-//    }
 
     connect(this, SIGNAL(pushGPIOData(int,int)), gpioInterface,SLOT(GPIOWrite(int,int)));
     connect(this, SIGNAL(deactivateState(system_state *)), this,SLOT(deactivateLog(system_state *)));
@@ -166,39 +160,6 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
           }
       }
     }
-
-//    for(uint i = 0; i < sensorVector.size(); i++){
-//        QCoreApplication::processEvents();
-//        if(sensorVector.at(i)->primAddress == addr){
-//            meta * currSensor = sensorVector.at(i);
-////            if (abs(currSensor->val - static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness))) > 0.01){
-//                currSensor->val = static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
-//                for (uint j = 0; j < subsystems.size(); j++){
-//                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-//                        subsystems.at(j)->receiveData(currSensor);
-//                        break;
-//                    }
-//                }
-////            } else {
-////                for (uint j = 0; j < subsystems.size(); j++){
-////                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-////                        subsystems.at(j)->checkThresholds(currSensor);
-////                        emit updateEdits(currSensor);
-////                        break;
-////                    }
-////                }
-////            }
-//            for (uint i = 0; i < currSensor->dependencies.size(); i++){
-//                meta * depSensor = static_cast<meta *>(currSensor->dependencies.at(i));
-//                for (uint j = 0; j < subsystems.size(); j++){
-//                    QCoreApplication::processEvents();
-//                    if (depSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-//                        subsystems.at(j)->receiveData(depSensor);
-//                    }
-//                }
-//            }
-//        }
-//    }
 }
 
 /**
@@ -260,16 +221,8 @@ uint64_t DataControl::LSBto64Spec(uint auxAddress, uint offset, uint64_t data){
 int DataControl::change_system_state(system_state * newState){
     try{
     newState->active = true;
-//    vector<string> cols;
-//    cols.push_back("time");
-//    cols.push_back("state");
-//    cols.push_back("message");
     string colString = "time,state,message";
     string rowString = "'" + getProgramTime() + "','" + newState->name + "','Entered State'";
-//    vector<string> rows;
-//    rows.push_back(getProgramTime());
-//    rows.push_back(newState->name);
-//    rows.push_back("Entered State");
 
     //change state of system
     currState = newState->name;
@@ -291,16 +244,8 @@ int DataControl::change_system_state(system_state * newState){
  */
 void DataControl::deactivateLog(system_state *prevstate){
     prevstate->active = false;
-//    vector<string> cols;
-//    cols.push_back("time");
-//    cols.push_back("state");
-//    cols.push_back("message");
     string colString = "time,state,message";
     string rowString = "'" + getProgramTime() + "','" + prevstate->name + "','Exit State'";
-//    vector<string> rows;
-//    rows.push_back(getProgramTime());
-//    rows.push_back(prevstate->name);
-//    rows.push_back("Exit State");
     dbase->insert_row("system_states",colString,rowString);
 }
 
@@ -310,19 +255,10 @@ void DataControl::deactivateLog(system_state *prevstate){
  */
 void DataControl::executeRxn(int responseIndex){
     //print to logpushMessage
-//    vector<string> cols;
-//    vector<string> rows;
-//    cols.push_back("time");
-//    cols.push_back("reactionId");
-//    cols.push_back("message");
     string colString = "time,reactionId,message";
     string rowString = "'" + getProgramTime() + "','" + to_string(responseIndex) + "','" + responseMap[responseIndex].msg + "'";
-//    rows.push_back(getProgramTime());
-//    rows.push_back(to_string(responseIndex));
 
-//    for (uint i = 0; i < responseVector.size(); i++){
     response rsp = responseMap[responseIndex];
-//    logMsg(rsp.msg);
     if (rsp.primAddress >= 0){
         uint64_t fullData = static_cast<uint64_t>(rsp.canValue);
         fullData = LSBto64Spec(static_cast<uint>(rsp.auxAddress),static_cast<uint>(rsp.offset),fullData);
@@ -331,28 +267,8 @@ void DataControl::executeRxn(int responseIndex){
     if (rsp.gpioPin >= 0){
         emit pushGPIOData(rsp.gpioPin,rsp.gpioValue);
     }
-//        }
-//    }
     dbase->insert_row("system_log",colString,rowString);
 }
-
-///**
-// * @brief SubsystemThread::enqueueMsg - logs message in the database
-// * @param msg
-// */
-//void DataControl::logMsg(string msg){
-//    vector<string> cols;
-//    vector<string> rows;
-//    cols.push_back("time");
-//    cols.push_back("responseid");
-//    cols.push_back("message");
-//    string colString = "time,responseId"
-//    rows.push_back(getProgramTime());
-//    rows.push_back("console");
-//    rows.push_back(msg);
-//    dbase->insert_row("system_log",cols,rows);
-//    emit pushMessage(msg);
-//}
 
 /**
  * @brief DataControl::receive_control_val : receives control signal to be sent

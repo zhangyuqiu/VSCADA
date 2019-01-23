@@ -114,7 +114,6 @@ void canbus_interface::rebootCAN(){
     system("sudo ip link set can0 down");
     std::string s = "sudo ip link set can0 up type can bitrate " + std::to_string(bitrate);
     const char * command = s.c_str();
-    printf("Reboot Command: %c", *command);
     system(command);
     if (canconnect()){
         emit pushMsg("CAN boot successful");

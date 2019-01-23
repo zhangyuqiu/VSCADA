@@ -53,28 +53,11 @@ void SubsystemThread::setDB(DB_Engine * db){
  * @param currSensor
  */
 void SubsystemThread::logData(meta * currSensor){
-//    vector<string> cols;
-//    cols.push_back("time");
-//    cols.push_back("sensorIndex");
-//    cols.push_back("sensorName");
-//    cols.push_back("value");
     string colString = "time,sensorIndex,sensorName,value";
     string rowString = "'" + getProgramTime() + "','" + currSensor->sensorName + "','" + currSensor->sensorName + "','" + to_string(currSensor->val) + "'";
-//    vector<string> rows;
     string rawTable = subsystemId + "_rawdata";
     string calTable = subsystemId + "_caldata";
-
-//    rows.push_back(getProgramTime());
-//    rows.push_back(currSensor->sensorName);
-//    rows.push_back(currSensor->sensorName);
-//    rows.push_back(to_string(currSensor->val));
     dbase->insert_row(rawTable,colString,rowString);
-
-//    rows.clear();
-//    rows.push_back(getProgramTime());
-//    rows.push_back(to_string(currSensor->sensorIndex));
-//    rows.push_back(currSensor->sensorName);
-//    rows.push_back(to_string(currSensor->calVal));
     rowString = "'" + getProgramTime() + "','" + currSensor->sensorName + "','" + currSensor->sensorName + "','" + to_string(currSensor->calVal) + "'";
     dbase->insert_row(calTable,colString,rowString);
     return;
@@ -351,16 +334,8 @@ void SubsystemThread::checkLogic(meta * currSensor){
  * @param msg
  */
 void SubsystemThread::logMsg(string msg){
-//    vector<string> cols;
-//    vector<string> rows;
-//    cols.push_back("time");
-//    cols.push_back("reactionId");
-//    cols.push_back("message");
     string colString = "time,reactionId,message";
     string rowString = "'" + getProgramTime() + "','console','" + msg + "'";
-//    rows.push_back(getProgramTime());
-//    rows.push_back("console");
-//    rows.push_back(msg);
     dbase->insert_row("system_log",colString,rowString);
     pushMessage(msg);
 }

@@ -35,7 +35,6 @@ public:
 
     void setMode(int md);
     string get_curr_time();
-//    void logMsg(string msg);
     void startSystemTimer();
     string getProgramTime();
     void saveSession(string name);
@@ -57,7 +56,6 @@ public:
     canbus_interface * canInterface;
     map<int,response> responseMap;
     vector<controlSpec *> controlSpecs;
-//    vector<SubsystemThread *> subsystems;
     map<string, SubsystemThread *> subsystemMap;
     vector<bootloader> bootConfigs;
     map<uint32_t,vector<meta *> *> canSensorGroup;

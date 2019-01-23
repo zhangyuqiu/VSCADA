@@ -8,11 +8,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // set up virtual keyboard
     myKeyboard = new widgetKeyBoard(false, nullptr, false); // false = alpha numeric keyboard, true = numeric keyboard
     myKeyboard->setZoomFacility(true);
     myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
     myKeyboard->createKeyboard(); // only create keyboard
 
+    //initialize objects
     central = new QWidget();
     mainLayout = new QVBoxLayout();
     conf = new Config();
@@ -25,17 +27,18 @@ MainWindow::MainWindow(QWidget *parent) :
     central->setLayout(mainLayout);
     conf->read_config_file_data();
     cout << "Done configuring " << endl;
+
+    // set window dimensioning parameters
     QRect rec = QApplication::desktop()->screenGeometry();
     int height=rec.height();
     int width=rec.width();
-
-    unitWidth=width/20;//100
-    unitHeight=height/20;//56
-
-    stringSize = unitWidth/10;//10
-
+    unitWidth=width/20;
+    unitHeight=height/20;
+    stringSize = unitWidth/10;
     QRect rect = QApplication::desktop()->screenGeometry();
 
+    //****************************************************//
+    //              CREATE LOG TAB                        //
     //****************************************************//
     QScrollArea * logWidget = new QScrollArea;
     QString  butLabelFont = QString::number(stringSize*1.4);
@@ -60,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     logMessage(startMessage);
     //****************************************************//
 
+    // create tabs
     QScrollArea *scrollArea = new QScrollArea();
     tabs = new QTabWidget;
     tabs->setTabsClosable(true);
@@ -78,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     connect(tabs, SIGNAL(currentChanged(int)), this, SLOT(updateTab(int)));
 
+    // create timers to identify sensor timeouts
     for(uint i = 0; i < conf->mainSensors.size(); i++){
         lineEdit = new QLineEdit;
         checkTmr = new QTimer;
@@ -95,6 +100,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     update();
 
+    // connect signals to slots
     vector<SubsystemThread *> subs;
     subs = conf->subsystems;
     for (uint i = 0; i < subs.size(); i++){
@@ -209,8 +215,6 @@ void MainWindow::update(){
         fieldRowCount++;
 
         QPushButton * rebootBtn = new QPushButton;
-//        rebootBtn->setStyleSheet("border-top: 3px transparent;border-bottom: 3px transparent;"
-//                                 "border-right: 10px transparent;border-left: 10px transparent;");
         rebootBtn->setText("Reboot");
         QPalette rebootPal = rebootBtn->palette();
         rebootPal.setColor(QPalette::Button, QColor(0,100,0));
@@ -218,8 +222,6 @@ void MainWindow::update(){
         rebootBtn->setAutoFillBackground(true);
         QString  butLabelFont = QString::number(stringSize*1.4);
         rebootBtn->setStyleSheet("font:"+butLabelFont+"pt;");
-//        rebootBtn->setStyleSheet("border-top: 3px transparent;border-bottom: 3px transparent;"
-//                                 "border-right: 10px transparent;border-left: 10px transparent;");
         rebootBtn->setFixedWidth(static_cast<int>(unitWidth*1.5));
         rebootBtn->setFixedHeight(static_cast<int>(unitHeight*1.4));
         healthButtons.push_back(rebootBtn);
@@ -235,7 +237,6 @@ void MainWindow::update(){
         detailButton->setAutoFillBackground(true);
         QString  detailLabelFont = QString::number(stringSize*1.4);
         detailButton->setStyleSheet("font:"+detailLabelFont+"pt;");
-//        detailButton->setStyleSheet("border-style: solid;border-color: white;border-width: 2px;border-radius: 10px;background-color:rgb(0,100,255)");
         detailButton->setFixedWidth(static_cast<int>(unitWidth*1.5));
         detailButton->setFixedHeight(static_cast<int>(unitHeight*1.4));
 
@@ -270,7 +271,6 @@ void MainWindow::update(){
 
     QScrollArea * subsystemArea = new QScrollArea;
     subsystemArea->setFixedWidth(screenWidth-30);
-//    subsystemArea->setFixedHeight(subsystemWidget->height()-85);
     subsystemArea->setFixedHeight(static_cast<int>(subsystemWidget->height()*1.3));
     subsystemArea->setBackgroundRole(QPalette::Window);
     subsystemArea->setWidget(subsystemWidget);
