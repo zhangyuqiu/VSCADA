@@ -223,7 +223,7 @@ void MainWindow::update(){
         QString  butLabelFont = QString::number(stringSize*1.4);
         rebootBtn->setStyleSheet("font:"+butLabelFont+"pt;");
         rebootBtn->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        rebootBtn->setFixedHeight(static_cast<int>(unitHeight*1.4));
+        rebootBtn->setFixedHeight(static_cast<int>(unitHeight));
         healthButtons.push_back(rebootBtn);
         subsystemSectionLayout->addWidget(rebootBtn,fieldRowCount,fieldColCount,Qt::AlignCenter);
         connect(rebootBtn, SIGNAL(clicked()), subs.at(i), SLOT(bootSubsystem()));
@@ -238,7 +238,7 @@ void MainWindow::update(){
         QString  detailLabelFont = QString::number(stringSize*1.4);
         detailButton->setStyleSheet("font:"+detailLabelFont+"pt;");
         detailButton->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        detailButton->setFixedHeight(static_cast<int>(unitHeight*1.4));
+        detailButton->setFixedHeight(static_cast<int>(unitHeight));
 
         connect(detailButton, SIGNAL(clicked()), this, SLOT(detailButtonPushed()));
 

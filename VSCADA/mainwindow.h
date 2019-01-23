@@ -109,7 +109,7 @@ signals:
     void sendControlValue(int data, controlSpec * spec);
     void openDetailPage(SubsystemThread * thread);
 
-private slots:
+public slots:
     void update();
     void openDetailWindow(SubsystemThread *thread);
     void closeDetailPage();
