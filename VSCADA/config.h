@@ -8,6 +8,7 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
+#include <map>
 #include "typedefs.h"
 #include "datacontrol.h"
 #include "db_engine.h"
@@ -57,6 +58,13 @@ public:
     vector<string> configErrors;
     vector<meta *> storedSensors;
     vector<meta *> mainSensors;
+
+    map<int,meta *> canSensorMap;
+    vector<meta*> * canVectorItem;
+    map<string, SubsystemThread *> subsystemMap;
+    map<uint32_t,vector<meta *> *> canSensorGroup;
+    map<int,response> responseMap;
+
 
     vector<statemachine *> FSMs;
     vector<system_state *> sysStates;

@@ -1,6 +1,7 @@
 1234.db
 AABBCC.db
 anothertest.db
+ASSUMPTION.db
 avgtest.db
 ddw.db
 difftest.db
@@ -19,12 +20,16 @@ mult_test.db
 nothing.db
 not_important.db
 OU.db
+rubust.db
 sam2.db
+speedsolved.db
+styletest.db
 sumtest.db
 system.db
 test2.db
 test.db
 testingagain.db
+testingrobustness.db
 TESTINGTHIS.db
 testingthisthing.db
 TESTMODE.db

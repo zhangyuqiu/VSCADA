@@ -15,9 +15,9 @@
  * @param rsp : system responses
  */
 DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_interface * usb, DB_Engine * db,
-                         vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSM,
-                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp,
-                         vector<bootloader> bootArgs){
+                         map<string, SubsystemThread *> subMap, vector<system_state *> stts, vector<statemachine *> FSM,
+                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, map<int, response> rspMap,
+                         vector<bootloader> bootArgs, map<uint32_t, vector<meta *>*> canMap){
 
     // set mode parameters
     systemMode = mode;
@@ -33,25 +33,31 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     usb7204 = usb;
     states = stts;
     canInterface = can;
-    responseVector = rsp;
-    subsystems = threads;
+    responseMap = rspMap;
+    subsystemMap = subMap;
     gpioInterface = gpio;
     sensorVector = sensors;
     controlSpecs = ctrlSpecs;
     bootConfigs = bootArgs;
     systemTimer = new QTime;
+    canSensorGroup = canMap;
     startSystemTimer();
 
     
     
     //signal-slot connections
-    for (uint i = 0 ; i < subsystems.size(); i++){
-        connect(subsystems.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
-        connect(subsystems.at(i), SIGNAL(sendCANData(int, uint64_t,int)), this,SLOT(passCANData(int, uint64_t,int)));
-        connect(subsystems.at(i), SIGNAL(pushI2cData(uint32_t)), this,SLOT(passI2cData(uint32_t)));
-        connect(subsystems.at(i), SIGNAL(pushGPIOData(int, int)), this,SLOT(passGPIOData(int, int)));
-        subsystems.at(i)->setSystemTimer(systemTimer);
+    map<string, SubsystemThread *>::iterator it;
+
+    for ( it = subsystemMap.begin(); it != subsystemMap.end(); it++ ){
+//        SubsystemThread * currSub = it->second;
+        connect(it->second, SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
+        it->second->setSystemTimer(systemTimer);
     }
+
+//    for (uint i = 0 ; i < subsystems.size(); i++){
+//        connect(subsystems.at(i), SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
+//        subsystems.at(i)->setSystemTimer(systemTimer);
+//    }
 
     connect(this, SIGNAL(pushGPIOData(int,int)), gpioInterface,SLOT(GPIOWrite(int,int)));
     connect(this, SIGNAL(deactivateState(system_state *)), this,SLOT(deactivateLog(system_state *)));
@@ -85,38 +91,11 @@ string DataControl::getProgramTime(){
     return streamObj.str();
 }
 
-/**
- * @brief DataControl::change_sampling_rate changes the samplong rates of GPIO and USB interfaces
- * @param rate : new sampling rate
- * @return 0 on success, 0 otherwise
- */
-int DataControl::change_sampling_rate(int rate){
-    //change sampling rate for specific sensor(s)
-//    try {
-//        usb7204->setSamplingRate(rate);
-//        gpioInterface->setSamplingRate(rate);
-//        return 1;
-//    } catch (...) {
-//        logMsg("ERROR: Sampling Rate not changed");
-//        return 0;
-//    }
-}
-
 void DataControl::receive_sensor_data(meta * sensor){
-    for (uint i = 0; i < subsystems.size(); i++){
-        QCoreApplication::processEvents();
-        if (sensor->subsystem.compare(subsystems.at(i)->subsystemId) == 0){
-            subsystems.at(i)->receiveData(sensor);
-        }
-    }
+    subsystemMap[sensor->subsystem]->receiveData(sensor);
     for (uint i = 0; i < sensor->dependencies.size(); i++){
         meta * depSensor = static_cast<meta *>(sensor->dependencies.at(i));
-        for (uint j = 0; j < subsystems.size(); j++){
-            QCoreApplication::processEvents();
-            if (depSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-                subsystems.at(j)->receiveData(depSensor);
-            }
-        }
+        subsystemMap[depSensor->subsystem]->receiveData(depSensor);
     }
 }
 
@@ -153,7 +132,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
             }
 
             if (print){
-                logMsg(msg);
+                emit pushMessage(msg);
             }
 
             emit updateFSM(currFSM);
@@ -171,31 +150,55 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
     }
 
     //check whether address matches any sensor address
-    for(uint i = 0; i < sensorVector.size(); i++){
-        QCoreApplication::processEvents();
-        if(sensorVector.at(i)->primAddress == addr){
-            meta * currSensor = sensorVector.at(i);
-            if (abs(currSensor->val - static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness))) > 0.01){
-                currSensor->val = static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
-                for (uint j = 0; j < subsystems.size(); j++){
-                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-                        subsystems.at(j)->receiveData(currSensor);
-                        break;
-                    }
-                }
-//                receiveData(currSensor);
-            } else {
-                for (uint j = 0; j < subsystems.size(); j++){
-                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
-                        subsystems.at(j)->checkThresholds(currSensor);
-                        emit updateEdits(currSensor);
-                        break;
-                    }
-                }
-//                receiveData(currSensor);
-            }
-        }
+    if ( canSensorGroup.find(addr) == canSensorGroup.end() ) {
+        // not found
+    } else {
+      vector<meta *>* specSensors = canSensorGroup.at(addr);
+      for (uint i = 0; i < specSensors->size(); i++){
+          QCoreApplication::processEvents();
+          meta * currSensor = specSensors->at(i);
+          currSensor->val = static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
+          subsystemMap[currSensor->subsystem]->receiveData(currSensor);
+          QCoreApplication::processEvents();
+          for (uint i = 0; i < currSensor->dependencies.size(); i++){
+              meta * depSensor = static_cast<meta *>(currSensor->dependencies.at(i));
+              subsystemMap[depSensor->subsystem]->receiveData(depSensor);
+          }
+      }
     }
+
+//    for(uint i = 0; i < sensorVector.size(); i++){
+//        QCoreApplication::processEvents();
+//        if(sensorVector.at(i)->primAddress == addr){
+//            meta * currSensor = sensorVector.at(i);
+////            if (abs(currSensor->val - static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness))) > 0.01){
+//                currSensor->val = static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
+//                for (uint j = 0; j < subsystems.size(); j++){
+//                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+//                        subsystems.at(j)->receiveData(currSensor);
+//                        break;
+//                    }
+//                }
+////            } else {
+////                for (uint j = 0; j < subsystems.size(); j++){
+////                    if (currSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+////                        subsystems.at(j)->checkThresholds(currSensor);
+////                        emit updateEdits(currSensor);
+////                        break;
+////                    }
+////                }
+////            }
+//            for (uint i = 0; i < currSensor->dependencies.size(); i++){
+//                meta * depSensor = static_cast<meta *>(currSensor->dependencies.at(i));
+//                for (uint j = 0; j < subsystems.size(); j++){
+//                    QCoreApplication::processEvents();
+//                    if (depSensor->subsystem.compare(subsystems.at(j)->subsystemId) == 0){
+//                        subsystems.at(j)->receiveData(depSensor);
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 /**
@@ -257,20 +260,22 @@ uint64_t DataControl::LSBto64Spec(uint auxAddress, uint offset, uint64_t data){
 int DataControl::change_system_state(system_state * newState){
     try{
     newState->active = true;
-    vector<string> cols;
-    cols.push_back("time");
-    cols.push_back("state");
-    cols.push_back("message");
-    vector<string> rows;
-    rows.push_back(getProgramTime());
-    rows.push_back(newState->name);
-    rows.push_back("Entered State");
+//    vector<string> cols;
+//    cols.push_back("time");
+//    cols.push_back("state");
+//    cols.push_back("message");
+    string colString = "time,state,message";
+    string rowString = "'" + getProgramTime() + "','" + newState->name + "','Entered State'";
+//    vector<string> rows;
+//    rows.push_back(getProgramTime());
+//    rows.push_back(newState->name);
+//    rows.push_back("Entered State");
 
     //change state of system
     currState = newState->name;
 
     //update systems on database
-    dbase->insert_row("system_states",cols,rows);
+    dbase->insert_row("system_states",colString,rowString);
 
     //display change on back and front screen
     emit activateState(newState);
@@ -286,15 +291,17 @@ int DataControl::change_system_state(system_state * newState){
  */
 void DataControl::deactivateLog(system_state *prevstate){
     prevstate->active = false;
-    vector<string> cols;
-    cols.push_back("time");
-    cols.push_back("state");
-    cols.push_back("message");
-    vector<string> rows;
-    rows.push_back(getProgramTime());
-    rows.push_back(prevstate->name);
-    rows.push_back("Exit State");
-    dbase->insert_row("system_states",cols,rows);
+//    vector<string> cols;
+//    cols.push_back("time");
+//    cols.push_back("state");
+//    cols.push_back("message");
+    string colString = "time,state,message";
+    string rowString = "'" + getProgramTime() + "','" + prevstate->name + "','Exit State'";
+//    vector<string> rows;
+//    rows.push_back(getProgramTime());
+//    rows.push_back(prevstate->name);
+//    rows.push_back("Exit State");
+    dbase->insert_row("system_states",colString,rowString);
 }
 
 /**
@@ -303,48 +310,49 @@ void DataControl::deactivateLog(system_state *prevstate){
  */
 void DataControl::executeRxn(int responseIndex){
     //print to logpushMessage
-    vector<string> cols;
-    vector<string> rows;
-    cols.push_back("time");
-    cols.push_back("reactionId");
-    cols.push_back("message");
-    rows.push_back(getProgramTime());
-    rows.push_back(to_string(responseIndex));
+//    vector<string> cols;
+//    vector<string> rows;
+//    cols.push_back("time");
+//    cols.push_back("reactionId");
+//    cols.push_back("message");
+    string colString = "time,reactionId,message";
+    string rowString = "'" + getProgramTime() + "','" + to_string(responseIndex) + "','" + responseMap[responseIndex].msg + "'";
+//    rows.push_back(getProgramTime());
+//    rows.push_back(to_string(responseIndex));
 
-    for (uint i = 0; i < responseVector.size(); i++){
-        response rsp = responseVector.at(i);
-        if (rsp.responseIndex == responseIndex && responseIndex != 0){
-            rows.push_back(rsp.msg);
-            logMsg(rsp.msg);
-            if (rsp.primAddress >= 0){
-                uint64_t fullData = static_cast<uint64_t>(rsp.canValue);
-                fullData = LSBto64Spec(static_cast<uint>(rsp.auxAddress),static_cast<uint>(rsp.offset),fullData);
-                emit sendCANData(rsp.primAddress,fullData);
-            }
-            if (rsp.gpioPin >= 0){
-                emit pushGPIOData(rsp.gpioPin,rsp.gpioValue);
-            }
-        }
+//    for (uint i = 0; i < responseVector.size(); i++){
+    response rsp = responseMap[responseIndex];
+//    logMsg(rsp.msg);
+    if (rsp.primAddress >= 0){
+        uint64_t fullData = static_cast<uint64_t>(rsp.canValue);
+        fullData = LSBto64Spec(static_cast<uint>(rsp.auxAddress),static_cast<uint>(rsp.offset),fullData);
+        emit sendCANData(rsp.primAddress,fullData);
     }
-    dbase->insert_row("system_log",cols,rows);
+    if (rsp.gpioPin >= 0){
+        emit pushGPIOData(rsp.gpioPin,rsp.gpioValue);
+    }
+//        }
+//    }
+    dbase->insert_row("system_log",colString,rowString);
 }
 
-/**
- * @brief SubsystemThread::enqueueMsg - logs message in the database
- * @param msg
- */
-void DataControl::logMsg(string msg){
-    vector<string> cols;
-    vector<string> rows;
-    cols.push_back("time");
-    cols.push_back("responseid");
-    cols.push_back("message");
-    rows.push_back(getProgramTime());
-    rows.push_back("console");
-    rows.push_back(msg);
-    dbase->insert_row("system_log",cols,rows);
-    emit pushMessage(msg);
-}
+///**
+// * @brief SubsystemThread::enqueueMsg - logs message in the database
+// * @param msg
+// */
+//void DataControl::logMsg(string msg){
+//    vector<string> cols;
+//    vector<string> rows;
+//    cols.push_back("time");
+//    cols.push_back("responseid");
+//    cols.push_back("message");
+//    string colString = "time,responseId"
+//    rows.push_back(getProgramTime());
+//    rows.push_back("console");
+//    rows.push_back(msg);
+//    dbase->insert_row("system_log",cols,rows);
+//    emit pushMessage(msg);
+//}
 
 /**
  * @brief DataControl::receive_control_val : receives control signal to be sent
@@ -363,14 +371,14 @@ void DataControl::receive_control_val(int data, controlSpec * spec){
         s << showbase << internal << setfill('0');
         s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
         emit sendCANData(addr,spec->sentVal);
-        logMsg(s.str());
+        emit pushMessage(s.str());
     } else if (spec->usbChannel != -1){
         float usbData = static_cast<float>(data)*static_cast<float>(spec->multiplier);
         bool success = true;
         emit sendToUSB7204(static_cast<uint8_t>(spec->usbChannel),usbData, &success);
         if (success){
             s << "Value " << usbData << " written to usb out channel " << spec->usbChannel;
-            logMsg(s.str());
+            emit pushMessage(s.str());
         }
     }
 }
@@ -403,89 +411,4 @@ string DataControl::get_curr_time(){
     char buf[20];
     strftime(buf, sizeof(buf),"%D_%T",&now);
     return buf;
-}
-
-void DataControl::passCANData(int address, uint64_t data, int size){
-    emit sendCANDataByte(address, data, size);
-}
-
-void DataControl::passI2cData(uint32_t data){
-    emit pushI2cData(data);
-}
-
-void DataControl::passGPIOData(int pin, int value){
-    emit pushGPIOData(pin,value);
-}
-
-void DataControl::receiveData(meta * currSensor){
-            calibrateData(currSensor);
-            checkThresholds(currSensor);
-            emit updateDisplay(currSensor);
-            logData(currSensor);
-}
-
-void DataControl::calibrateData(meta * currSensor){
-    currSensor->calData();
-    double data = 0;
-    vector<poly> pol = currSensor->calPolynomial;
-    if (pol.size() > 0){
-        for (uint i = 0; i < pol.size(); i++){
-            data += pol.at(i).coefficient*pow(currSensor->val,pol.at(i).exponent);
-        }
-        currSensor->calVal = data;
-    }
-}
-
-void DataControl::checkThresholds(meta * sensor){
-    string msg;
-    if (sensor->calVal >= sensor->maximum){
-        if (sensor->state != 1){
-            sensor->state = 1;
-            emit updateEditColor("red",sensor);
-            msg = getProgramTime() + ": " + sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
-            emit pushMessage(msg);
-            if (sensor->normRxnCode != 0) executeRxn(sensor->maxRxnCode);
-            logMsg(msg);
-        }
-    } else if (sensor->calVal <= sensor->minimum){
-        if (sensor->state != -1){
-            sensor->state = -1;
-            emit updateEditColor("blue",sensor);
-            msg = getProgramTime() + ": " + sensor->sensorName + " below lower threshold: " + to_string(sensor->minimum);
-            emit pushMessage(msg);
-            if (sensor->normRxnCode != 0) executeRxn(sensor->minRxnCode);
-            logMsg(msg);
-        }
-    } else {
-        if (sensor->state != 0){
-            sensor->state = 0;
-            emit updateEditColor("yellow",sensor);
-            if (sensor->normRxnCode != 0) executeRxn(sensor->normRxnCode);
-        }
-    }
-}
-
-void DataControl::logData(meta * currSensor){
-    vector<string> cols;
-    cols.push_back("time");
-    cols.push_back("sensorIndex");
-    cols.push_back("sensorName");
-    cols.push_back("value");
-    vector<string> rows;
-    string rawTable = currSensor->subsystem + "_rawdata";
-    string calTable = currSensor->subsystem + "_caldata";
-
-    rows.push_back(getProgramTime());
-    rows.push_back(currSensor->sensorName);
-    rows.push_back(currSensor->sensorName);
-    rows.push_back(to_string(currSensor->val));
-    dbase->insert_row(rawTable,cols,rows);
-
-    rows.clear();
-    rows.push_back(getProgramTime());
-    rows.push_back(to_string(currSensor->sensorIndex));
-    rows.push_back(currSensor->sensorName);
-    rows.push_back(to_string(currSensor->calVal));
-    dbase->insert_row(calTable,cols,rows);
-    return;
 }

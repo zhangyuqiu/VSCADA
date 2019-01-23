@@ -7,6 +7,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
+#include <map>
 #include "datacontrol.h"
 //#include "canbus_interface.h"
 //#include "usb7402_interface.h"
@@ -19,7 +20,7 @@ class TrafficTest : public QObject
     Q_OBJECT
 
 public:
-    TrafficTest(vector<meta*> can, vector<meta*> gpio, vector<meta*> i2c, vector<meta *> usb, int cRate, int gRate, int uRate, DataControl * ctrl);
+    TrafficTest(map<int, meta *> can, vector<meta*> gpio, vector<meta*> i2c, vector<meta *> usb, int cRate, int gRate, int uRate, DataControl * ctrl);
     ~TrafficTest();
 
     void startTests();
@@ -35,7 +36,7 @@ public:
     int gpioRate;
     vector<meta*> gpioSensors;
     vector<meta*> usbSensors;
-    vector<meta*> canSensors;
+    map<int,meta *> canSensorMap;
     vector<meta*> i2cSensors;
 
 public slots:

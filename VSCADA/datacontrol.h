@@ -9,6 +9,7 @@
 #include <stack>
 #include <bitset>
 #include <iomanip>
+#include <map>
 #include "db_engine.h"
 #include "typedefs.h"
 #include "subsystemthread.h"
@@ -28,27 +29,21 @@ class DataControl : public QObject
 public:
     // Member function declarations
     DataControl(gpio_interface *gpio, canbus_interface *can, usb7402_interface * usb, DB_Engine * db,
-                vector<SubsystemThread *> threads, vector<system_state *> stts, vector<statemachine *> FSMs,
-                int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, vector<response> rsp, vector<bootloader> bootArgs);
+                map<string, SubsystemThread *> subMap, vector<system_state *> stts, vector<statemachine *> FSMs,
+                int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, map<int,response> rspMap, vector<bootloader> bootArgs, map<uint32_t, vector<meta *> *> canMap);
     ~DataControl();
 
     void setMode(int md);
     string get_curr_time();
-    void logMsg(string msg);
+//    void logMsg(string msg);
     void startSystemTimer();
     string getProgramTime();
     void saveSession(string name);
-    int change_sampling_rate(int rate);
     vector<controlSpec *> get_control_specs();
     void init_meta_vector(vector<meta> vctr);
     int change_system_state(system_state * newState);
     uint64_t LSBto64Spec(uint auxAddress, uint offset, uint64_t data);
     uint32_t isolateData64(uint auxAddress, uint offset, uint64_t data, int endianness);
-
-    inline void receiveData(meta * currSensor);
-    inline void calibrateData(meta * currSensor);
-    inline void checkThresholds(meta * sensor);
-    inline void logData(meta * currSensor);
 
     // active submodule pointers
     DB_Engine * dbase;
@@ -60,10 +55,12 @@ public:
     vector<system_state *> states;
     gpio_interface * gpioInterface;
     canbus_interface * canInterface;
-    vector<response> responseVector;
+    map<int,response> responseMap;
     vector<controlSpec *> controlSpecs;
-    vector<SubsystemThread *> subsystems;
+//    vector<SubsystemThread *> subsystems;
+    map<string, SubsystemThread *> subsystemMap;
     vector<bootloader> bootConfigs;
+    map<uint32_t,vector<meta *> *> canSensorGroup;
 
     // overall system status info
     int systemMode;
@@ -76,13 +73,9 @@ public slots:
     void deactivateLog(system_state * prevstate);
     void receive_can_data(uint32_t addr, uint64_t arr);
     void receive_control_val(int data, controlSpec * spec);
-    void passCANData(int address, uint64_t data, int size);
-    void passI2cData(uint32_t data);
-    void passGPIOData(int pin, int value);
 signals:
     void pushMessage(string msg);
     void pushGPIOData(int pin, int value);
-    void pushI2cData(uint32_t value);
     void updateFSM(statemachine * currFSM);
     void activateState(system_state * newState);
     void sendCANData(int address, uint64_t data);
@@ -90,8 +83,5 @@ signals:
     void deactivateState(system_state * prevstate);
     void sendToUSB7204(uint8_t channel, float voltage, bool*);
     void updateEdits(meta *);
-
-    void updateEditColor(string color, meta *sensor);
-    void updateDisplay(meta * sensor);
 };
 #endif // DATACONTROL_H

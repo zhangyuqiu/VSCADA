@@ -7,6 +7,7 @@
 #include <QString>
 #include <array>
 #include <vector>
+#include "subsystemthread.h"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface(int canRate);
+    canbus_interface(int canRate, vector<SubsystemThread *> subs);
     ~canbus_interface();
     void enableCAN();
 
@@ -22,6 +23,7 @@ public:
     bool canconnect();
     QCanBusDevice * can_bus = nullptr;
     int bitrate;
+    vector<SubsystemThread *> subsystems;
 
 signals:
     void process_can_data(uint32_t addr, uint64_t data);

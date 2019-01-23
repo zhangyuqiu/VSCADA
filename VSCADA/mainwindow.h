@@ -70,9 +70,9 @@ public:
     QComboBox * plotComboBox = new QComboBox;
     QLabel * currLabel;
     QPushButton * stateButton;
-    QPushButton * usbResetButton;
-    QPushButton * canResetButton;
-    QPushButton * exitButton;
+    QToolButton * usbResetButton;
+    QToolButton * canResetButton;
+    QToolButton * exitButton;
     QPushButton * plotButton;
     QPushButton * indiButton;
     QPushButton * buttonControl;
@@ -118,7 +118,7 @@ private slots:
     void deactivateStateMW(system_state * prevstate);
     void activateStateMW(system_state * nextState);
     void updateFSM_MW(statemachine * currFSM);
-    void sliderValChanged(int value);
+    void sliderValChanged();
     void ctrlButtonPressed();
     void ctrlButtonReleased();
     void editUpdated();

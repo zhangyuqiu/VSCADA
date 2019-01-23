@@ -21,35 +21,42 @@ DB_Engine::~DB_Engine()
  * @param row Vector of names of target rows
  * @return
  */
-int DB_Engine::insert_row(string table, vector<string> column, vector<string> row){
+int DB_Engine::insert_row(string table, string column, string row){
     //char * zErrMsg;
     //incatenate vector elements into a string
-    stringstream col_buf;
-    for (uint i = 0; i < column.size(); i++){
-        col_buf << column.at(i);
-        if(i != column.size()-1) col_buf << ", ";
-    }
+//    stringstream col_buf;
+//    for (uint i = 0; i < column.size(); i++){
+//        col_buf << column.at(i);
+//        if(i != column.size()-1) col_buf << ", ";
+//    }
     QCoreApplication::processEvents();
     //incatenate vector elements into a string
-    stringstream row_buf;
-    for (uint i = 0; i < row.size(); i++){
-        row_buf << quote(row.at(i));
-        if(i != row.size()-1) row_buf << ", ";
-    }
+//    stringstream row_buf;
+//    for (uint i = 0; i < row.size(); i++){
+//        row_buf << quote(row.at(i));
+//        if(i != row.size()-1) row_buf << ", ";
+//    }
     //run SQLite command
-    string sql = "INSERT INTO "+table+"(" + col_buf.str() + ")" +
-            " VALUES " + "(" + row_buf.str() + ");";
-#ifdef DEBUG
-    cout << endl;
-    cout << sql << endl;
-    cout << endl;
-#endif
-    QCoreApplication::processEvents();
     dbMutex.lock();
+    string sql = "INSERT INTO "+table+"(" + column + ")" +
+            " VALUES " + "(" + row + ");";
+    dbCmds.push_back(sql);
+    numCmds++;
+//    cout << numCmds << endl;
     QCoreApplication::processEvents();
-    int rc = sqlite3_open(db_file.c_str(), &db);
-    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
-    sqlite3_close(db);
+    int rc = 0;
+    if (numCmds >= 100){
+        rc = sqlite3_open(db_file.c_str(), &db);
+        sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
+        for (uint i = 0; i < dbCmds.size(); i++){
+//            cout << dbCmds.at(i) << endl;
+            sqlite3_exec(db, dbCmds.at(i).c_str(), nullptr, nullptr, nullptr);
+        }
+        sqlite3_exec(db, "END TRANSACTION;", nullptr, nullptr, nullptr);
+        sqlite3_close(db);
+        numCmds = 0;
+        dbCmds.clear();
+    }
     dbMutex.unlock();
     QCoreApplication::processEvents();
     if (rc != SQLITE_OK){
@@ -57,6 +64,28 @@ int DB_Engine::insert_row(string table, vector<string> column, vector<string> ro
         return 0;
     } else {
 //        cout << "Row inserted successfully" << endl;
+        return 1;
+    }
+}
+
+int DB_Engine::empty_buffer(){
+    dbMutex.lock();
+    QCoreApplication::processEvents();
+    int rc = sqlite3_open(db_file.c_str(), &db);
+    sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
+    for (uint i = 0; i < dbCmds.size(); i++){
+//        cout << dbCmds.at(i) << endl;
+        sqlite3_exec(db, dbCmds.at(i).c_str(), nullptr, nullptr, nullptr);
+    }
+    sqlite3_exec(db, "END TRANSACTION;", nullptr, nullptr, nullptr);
+    sqlite3_close(db);
+    numCmds = 0;
+    dbCmds.clear();
+    dbMutex.unlock();
+    QCoreApplication::processEvents();
+    if (rc != SQLITE_OK){
+        return 0;
+    } else {
         return 1;
     }
 }

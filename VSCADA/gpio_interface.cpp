@@ -56,6 +56,10 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
         }
     }
 
+    for (uint i = 0; i < subsystems.size(); i++){
+        connect(subsystems.at(i), SIGNAL(pushGPIOData(int, int)), this,SLOT(GPIOWrite(int, int)));
+    }
+
     connect(timer, SIGNAL(timeout()), this, SLOT(gpioCheckTasks()));
 }
 
