@@ -278,7 +278,7 @@ void DataControl::executeRxn(int responseIndex){
 void DataControl::receive_control_val(int data, controlSpec * spec){
     int addr = spec->primAddress;
     stringstream s;
-    if (addr != -1){
+    if (addr != 1000){
         data = static_cast<int>(data*spec->multiplier);
         uint64_t fullData = static_cast<uint64_t>(data);
         fullData = LSBto64Spec(static_cast<uint>(spec->auxAddress),static_cast<uint>(spec->offset),fullData);
