@@ -27,6 +27,7 @@ styletest.db
 sumtest.db
 system.db
 test2.db
+TEST44.db
 test.db
 testingagain.db
 testingrobustness.db
@@ -34,6 +35,7 @@ TESTINGTHIS.db
 testingthisthing.db
 TESTMODE.db
 testSession.db
+THFJ.db
 thissession.db
 TTT.db
 TUO.db

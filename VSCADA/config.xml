@@ -1,6 +1,6 @@
 <system>
 	<mode>
-		<type>TEST</type>
+		<type>DYNO</type>
 	</mode>
 	<gpiorate>1000</gpiorate>
 	<usb7204rate>1000</usb7204rate>

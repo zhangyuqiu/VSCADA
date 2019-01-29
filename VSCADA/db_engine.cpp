@@ -378,16 +378,16 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
     mydb.setDatabaseName("./savedsessions/" + currentBase); //path of data base
 
     QCoreApplication::processEvents();
+    dbMutex.lock();
     mydb.open();
-
     QSqlQuery * qry = new QSqlQuery(mydb);
     vector<QString> data;
     if (target.compare(" ") == 0){
         QString selectName = "SELECT " + read + " FROM "+currentTable;
         qry->prepare(selectName);
-        dbMutex.lock();
+//        dbMutex.lock();
         qry->exec();
-        dbMutex.unlock();
+//        dbMutex.unlock();
         while(qry->next()){
             QString num =qry->value(0).toString();
             data.push_back(num);
@@ -397,9 +397,9 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
         QCoreApplication::processEvents();
         QString selectName="SELECT " + read + " FROM " + currentTable + " WHERE " + target + "='" + name + "'";
         qry->prepare(selectName);
-        dbMutex.lock();
+//        dbMutex.lock();
         qry->exec();
-        dbMutex.unlock();
+//        dbMutex.unlock();
         while(qry->next()){
             QCoreApplication::processEvents();
             QString num =qry->value(0).toString();
@@ -407,6 +407,7 @@ vector<QString> DB_Engine::getTargetColumn(QString currentTable, QString read, Q
         }
     }
     mydb.close();
+    dbMutex.unlock();
     delete qry;
     return data;
 }
