@@ -61,6 +61,7 @@ public:
     widgetKeyBoard  *myKeyboard;
 
     QString ** systemName;
+    QString editFont;
 
 
     QVBoxLayout * mainLayout;
@@ -119,6 +120,7 @@ public slots:
     void activateStateMW(system_state * nextState);
     void updateFSM_MW(statemachine * currFSM);
     void sliderValChanged();
+    void sliderValChanged(int);
     void ctrlButtonPressed();
     void ctrlButtonReleased();
     void editUpdated();

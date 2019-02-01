@@ -12,14 +12,15 @@ int main(int argc, char *argv[])
     QApplication::setStyle(QStyleFactory::create("fusion"));
 
     QPalette palette;
-    palette.setColor(QPalette::Window, QColor(0,32,128));
+    palette.setColor(QPalette::Window, QColor(20,30,150));
+//    palette.setColor(QPalette::Window, QColor(160,82,45));
     palette.setColor(QPalette::WindowText, QColor(255,255,255));
     palette.setColor(QPalette::Base, QColor(15,15,15));
     palette.setColor(QPalette::AlternateBase, QColor(180,0,130));
     palette.setColor(QPalette::ToolTipBase, Qt::white);
     palette.setColor(QPalette::ToolTipText, Qt::white);
     palette.setColor(QPalette::Text, Qt::yellow);
-    palette.setColor(QPalette::Button, QColor(0,32,128));
+    palette.setColor(QPalette::Button, QColor(0,0,75));
     palette.setColor(QPalette::ButtonText, QColor(255,255,255));
     palette.setColor(QPalette::BrightText, Qt::red);
 

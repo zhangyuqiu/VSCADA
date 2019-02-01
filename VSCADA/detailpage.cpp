@@ -20,6 +20,7 @@ detailPage::detailPage(QWidget *parent) :
     unitHeight=height/20;//56
 
     stringSize = unitWidth/10;//10
+    editFont = QString::number(stringSize*2);
     fontSize = QString::number(stringSize);
 
 }
@@ -86,7 +87,6 @@ void detailPage::update(){
                     subsystemSectionLayout->addWidget(label,fieldRowCount,fieldColCount);
 
                     QLineEdit * edit = edits.at(k);
-                    QString  editFont = QString::number(stringSize*1.8);
                     edit->setStyleSheet("font:"+editFont+"pt;");
                     edit->setFixedWidth(static_cast<int>(unitWidth*2.5));
                     edit->setFixedHeight(static_cast<int>(unitHeight*0.8));
@@ -177,11 +177,11 @@ void detailPage::changeEditColor(string color, meta * sensor){
     for(uint i = 0; i < edits.size(); i++){
         if (allSensors.at(i) == sensor) {
             if(color.compare("red") == 0){
-                edits.at(i)->setStyleSheet("color: #FF0000");
+                edits.at(i)->setStyleSheet("color: #FF0000; font:"+editFont+"pt;");
             } else if(color.compare("blue") == 0){
-                edits.at(i)->setStyleSheet("color: #1E90FF");
+                edits.at(i)->setStyleSheet("color: #1E90FF; font:"+editFont+"pt;");
             } else if(color.compare("yellow") == 0){
-                edits.at(i)->setStyleSheet("color: #FFFF00");
+                edits.at(i)->setStyleSheet("color: #FFFF00; font:"+editFont+"pt;");
             }
         }
     }

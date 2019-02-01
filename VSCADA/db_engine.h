@@ -9,6 +9,7 @@
 #include <QString>
 #include <QtSql>
 #include <mutex>
+#include "typedefs.h"
 
 using namespace std;
 
