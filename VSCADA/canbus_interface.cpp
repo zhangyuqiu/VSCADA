@@ -52,7 +52,7 @@ bool canbus_interface::canconnect() {
  * @brief canbus_interface::recieve_frame signal triggered when CAN frame is received
  */
 void canbus_interface::recieve_frame() {
-    while (can_bus->framesAvailable()){
+    while (can_bus->framesAvailable() && can_bus->framesAvailable() <= CAN_FRAME_LIMIT){
         QCanBusFrame recframe = can_bus->readFrame();
         QByteArray b = recframe.payload();
         uint32_t a = recframe.frameId();
@@ -64,6 +64,13 @@ void canbus_interface::recieve_frame() {
         }
         QCoreApplication::processEvents();
         emit process_can_data(a,data);
+    }
+
+    if (can_bus->framesAvailable() > CAN_FRAME_LIMIT){
+        while (can_bus->framesAvailable()) {
+            can_bus->readFrame();
+        }
+        pushMsg("Frame Buffer Clogged... Frames Dumped");
     }
 }
 

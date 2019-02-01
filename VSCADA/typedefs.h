@@ -23,6 +23,9 @@
 #define MAX 5
 #define MIN 6
 
+#define DB_BUF_SIZE 100
+#define CAN_FRAME_LIMIT 20
+
 typedef struct{
     int exponent;
     double coefficient;

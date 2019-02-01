@@ -11,8 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // set up virtual keyboard
     myKeyboard = new widgetKeyBoard(false, nullptr, false); // false = alpha numeric keyboard, true = numeric keyboard
     myKeyboard->setZoomFacility(true);
-    myKeyboard->enableSwitchingEcho(true); // enable possibility to change echo through keyboard
-    myKeyboard->createKeyboard(); // only create keyboard
+    myKeyboard->enableSwitchingEcho(true);                  // enable possibility to change echo through keyboard
+    myKeyboard->createKeyboard();                           // only create keyboard
 
     //initialize objects
     central = new QWidget();
@@ -35,13 +35,14 @@ MainWindow::MainWindow(QWidget *parent) :
     unitWidth=width/20;
     unitHeight=height/20;
     stringSize = unitWidth/10;
+    editFont = QString::number(stringSize*2);
     QRect rect = QApplication::desktop()->screenGeometry();
 
     //****************************************************//
     //              CREATE LOG TAB                        //
     //****************************************************//
     QScrollArea * logWidget = new QScrollArea;
-    QString  butLabelFont = QString::number(stringSize*1.4);
+    QString  butLabelFont = QString::number(stringSize*3);
 
     QVBoxLayout * msgLayout = new QVBoxLayout;
     QLabel * msgLabel = new QLabel;
@@ -74,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
     tabs->addTab(logWidget,"System Log");
     tabs->setFixedWidth(rect.width() - 18);
     tabs->setFixedHeight(rect.height() - 50);
-    QString  myfont = QString::number(stringSize*1.5);
+    QString  myfont = QString::number(stringSize*2);
     tabs->setStyleSheet("font:"+myfont+"pt;");
     scrollArea->setWidgetResizable(true);
     scrollArea->setWidget(tabs);
@@ -91,6 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
         checkTmr->start(conf->mainSensors.at(i)->checkRate);
         edits.push_back(lineEdit);
         lineEdit->setStyleSheet("font: 20pt; color: #FFFF00");
+//        lineEdit->setStyleSheet("color: #FFFF00");
         lineEdit->setAlignment(Qt::AlignCenter);
         lineEdit->setReadOnly(true);
         editTimers.push_back(checkTmr);
@@ -166,14 +168,14 @@ void MainWindow::update(){
         SubsystemThread * currSub = subs.at(i);
         vector<meta *> subMeta = currSub->get_mainMeta();
 
-        QLabel * headerLabel = new QLabel;
+        QPushButton * headerLabel = new QPushButton;
         headerLabel->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        headerLabel->setFixedHeight(unitHeight*2);
+        headerLabel->setFixedHeight(unitHeight);
         headerLabel->setText(QString::fromStdString(currSub->subsystemId));
         QString  subLabelFont = QString::number(stringSize*3);
         headerLabel->setStyleSheet("font:"+subLabelFont+"pt;");
-        headerLabel->setAlignment(Qt::AlignCenter);
         headerLabel->setFixedWidth(400);
+        healthButtons.push_back(headerLabel);
         subsystemSectionLayout->addWidget(headerLabel,fieldRowCount,fieldColCount,1,2,Qt::AlignCenter);
         fieldRowCount++;
 
@@ -191,7 +193,6 @@ void MainWindow::update(){
                 for (uint k = 0; k < conf->mainSensors.size(); k++){
                     if (conf->mainSensors.at(k) == subMeta.at(j)){
                         QLineEdit * edit = edits.at(k);
-                        QString  editFont = QString::number(stringSize*1.8);
                         edit->setStyleSheet("font:"+editFont+"pt;");
                         edit->setFixedWidth(static_cast<int>(unitWidth*2.5));
                         edit->setFixedHeight(static_cast<int>(unitHeight*0.8));
@@ -217,14 +218,14 @@ void MainWindow::update(){
         QPushButton * rebootBtn = new QPushButton;
         rebootBtn->setText("Reboot");
         QPalette rebootPal = rebootBtn->palette();
-        rebootPal.setColor(QPalette::Button, QColor(0,100,0));
+        rebootPal.setColor(QPalette::Button, QColor(0,0,255));
         rebootBtn->setPalette(rebootPal);
         rebootBtn->setAutoFillBackground(true);
-        QString  butLabelFont = QString::number(stringSize*1.4);
+        QString  butLabelFont = QString::number(stringSize*2);
         rebootBtn->setStyleSheet("font:"+butLabelFont+"pt;");
         rebootBtn->setFixedWidth(static_cast<int>(unitWidth*1.5));
         rebootBtn->setFixedHeight(static_cast<int>(unitHeight));
-        healthButtons.push_back(rebootBtn);
+//        healthButtons.push_back(rebootBtn);
         subsystemSectionLayout->addWidget(rebootBtn,fieldRowCount,fieldColCount,Qt::AlignCenter);
         connect(rebootBtn, SIGNAL(clicked()), subs.at(i), SLOT(bootSubsystem()));
 
@@ -235,7 +236,7 @@ void MainWindow::update(){
         detailPal.setColor(QPalette::Button, QColor(0,0,255));
         detailButton->setPalette(detailPal);
         detailButton->setAutoFillBackground(true);
-        QString  detailLabelFont = QString::number(stringSize*1.4);
+        QString  detailLabelFont = QString::number(stringSize*2);
         detailButton->setStyleSheet("font:"+detailLabelFont+"pt;");
         detailButton->setFixedWidth(static_cast<int>(unitWidth*1.5));
         detailButton->setFixedHeight(static_cast<int>(unitHeight));
@@ -277,8 +278,8 @@ void MainWindow::update(){
 
     mainLayout->addWidget(subsystemArea);
 
-    QString  butLabelFont = QString::number(stringSize*1.3);
-    QString  labelFont = QString::number(stringSize*2);
+    QString  butLabelFont = QString::number(stringSize*2);
+    QString  labelFont = QString::number(stringSize*2.5);
     QGridLayout * stateButtonLayout = new QGridLayout;
 
     QLabel * label = new QLabel;
@@ -330,22 +331,18 @@ void MainWindow::update(){
     for(uint t = 0; t < conf->FSMs.size(); t++){
         QVBoxLayout * FSMLayout = new QVBoxLayout;
         QLabel * FSMLabel = new QLabel;
-//        FSMLabel->setText(QString::fromStdString(conf->FSMs.at(t)->name));
+        FSMLabel->setText(QString::fromStdString(conf->FSMs.at(t)->name));
         FSMLabel->setAlignment(Qt::AlignCenter);
-        FSMLabel->setText("Drive_States");
-        FSMLayout->addWidget(FSMLabel, Qt::AlignCenter);
         stateButton = new QPushButton("---");
         QPalette palplot = stateButton->palette();
-        palplot.setColor(QPalette::Button, QColor(70,70,70));
         stateButton->setPalette(palplot);
         stateButton->setAutoFillBackground(true);
         stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
-        stateButton->setStyleSheet("background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 blue, stop: 1 green);"
-                                   "border-style: solid;border-color: blue;border-width: 2px;border-radius: 10px;");
-        stateButton->setFixedWidth(static_cast<int>(unitWidth));
+        stateButton->setFixedWidth(static_cast<int>(unitWidth*2));
         stateButton->setFixedHeight(static_cast<int>(unitHeight*1.5));
         FSMButtons.push_back(stateButton);
         FSMLayout->addWidget(stateButton, Qt::AlignCenter);
+        FSMLayout->addWidget(FSMLabel, Qt::AlignCenter);
         FSMLayout->setAlignment(Qt::AlignCenter);
         btnsLayout->addLayout(FSMLayout,Qt::AlignCenter);
     }
@@ -387,8 +384,6 @@ void MainWindow::update(){
     QPixmap pixmap("close_btn.png");
     QIcon ButtonIcon(pixmap);
     exitButton->setIcon(ButtonIcon);
-    //    conf->dbase->empty_buffer();
-    //    this->close();
     exitButton->setIconSize(pixmap.rect().size());
     exitButton->setAutoRaise(true);
     exitButton->setStyleSheet("font:"+butLabelFont+"pt;");
@@ -430,6 +425,7 @@ void MainWindow::update(){
                 controlSliders.push_back(sliderControl);
                 sliderCtrls.push_back(currSpec);
                 connect(sliderControl, SIGNAL(sliderReleased()), this, SLOT(sliderValChanged()));
+                connect(sliderControl, SIGNAL(actionTriggered(int)), this, SLOT(sliderValChanged(int)));
             }
             if (currSpec->button){
                 buttonControl =new QPushButton();
@@ -526,6 +522,19 @@ void MainWindow::sliderValChanged(){
     }
 }
 
+void MainWindow::sliderValChanged(int val){
+    if (val == QAbstractSlider::SliderPageStepAdd || val == QAbstractSlider::SliderPageStepSub){
+        QObject* obj = sender();
+        for (uint i = 0; i < controlSliders.size(); i++){
+            if (obj == controlSliders.at(i)){
+                val = controlSliders.at(i)->value();
+                emit sendControlValue(val, sliderCtrls.at(i));
+            }
+
+        }
+    }
+}
+
 void MainWindow::ctrlButtonPressed(){
     QObject* obj = sender();
     for (uint i = 0; i < controlButtons.size(); i++){
@@ -606,11 +615,11 @@ void MainWindow::updateHealth(){
     for (uint i = 0; i < subs.size(); i++){
         if(subs.at(i)->error){
             QPalette palb = healthButtons.at(i)->palette();
-            palb.setColor(QPalette::Button, QColor(255,0,0));
+            palb.setColor(QPalette::Button, QColor(100,0,0));
             healthButtons.at(i)->setPalette(palb);
         } else {
             QPalette palb = healthButtons.at(i)->palette();
-            palb.setColor(QPalette::Button, QColor(0,100,0));
+            palb.setColor(QPalette::Button, QColor(0,0,75));
             healthButtons.at(i)->setPalette(palb);
         }
     }
@@ -840,15 +849,15 @@ void MainWindow::changeEditColor(string color, meta * sensor){
     for(uint i = 0; i < conf->mainSensors.size(); i++){
         if(color.compare("red") == 0){
             if (conf->mainSensors.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("color: #FF0000");
+                edits.at(i)->setStyleSheet("color: #FF0000; font:"+editFont+"pt;");
             }
         } else if(color.compare("blue") == 0){
             if (conf->mainSensors.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("color: #1E90FF");
+                edits.at(i)->setStyleSheet("color: #1E90FF; font:"+editFont+"pt;");
             }
         } else if(color.compare("yellow") == 0){
             if (conf->mainSensors.at(i) == sensor) {
-                edits.at(i)->setStyleSheet("color: #FFFF00");
+                edits.at(i)->setStyleSheet("color: #FFFF00; font:"+editFont+"pt;");
             }
         }
     }

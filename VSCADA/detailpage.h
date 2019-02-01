@@ -49,6 +49,7 @@ public:
     int unitHeight;
     int stringSize;
     QString fontSize;
+    QString editFont;
 
     Config * conf;
 

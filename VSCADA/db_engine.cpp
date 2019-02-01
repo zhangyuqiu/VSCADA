@@ -30,7 +30,7 @@ int DB_Engine::insert_row(string table, string column, string row){
     numCmds++;
     QCoreApplication::processEvents();
     int rc = 0;
-    if (numCmds >= 100){
+    if (numCmds >= DB_BUF_SIZE){
         rc = sqlite3_open(db_file.c_str(), &db);
         sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
         for (uint i = 0; i < dbCmds.size(); i++){
