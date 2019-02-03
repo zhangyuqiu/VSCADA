@@ -6,7 +6,7 @@ TrafficTest::TrafficTest(map<int,meta *> can, vector<meta*> gpio, vector<meta*> 
     gpioSensors = gpio;
     i2cSensors = i2c;
     usbSensors = usb;
-    canRate = 200;
+    canRate = 1000;
     gpioRate = gRate;
     usbRate = uRate;
     dataCtrl = ctrl;
