@@ -73,7 +73,7 @@ void canbus_interface::recieve_frame() {
             }
             pushMsg("Frame Buffer Clogged... Frames Dumped");
         }
-        usleep(1000);
+        usleep(50000);
         canMutex.unlock();
     }
 }
