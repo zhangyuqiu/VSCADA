@@ -7,6 +7,7 @@
 #include <QString>
 #include <array>
 #include <vector>
+#include <mutex>
 #include "subsystemthread.h"
 
 using namespace std;
@@ -24,6 +25,7 @@ public:
     QCanBusDevice * can_bus = nullptr;
     int bitrate;
     vector<SubsystemThread *> subsystems;
+    mutex canMutex;
 
 signals:
     void process_can_data(uint32_t addr, uint64_t data);
