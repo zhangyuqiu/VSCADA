@@ -60,6 +60,7 @@ public:
     vector<meta *> mainSensors;
 
     map<int,meta *> canSensorMap;
+    map<uint32_t, int> canAddressMap;
     vector<meta*> * canVectorItem;
     map<string, SubsystemThread *> subsystemMap;
     map<uint32_t,vector<meta *> *> canSensorGroup;
