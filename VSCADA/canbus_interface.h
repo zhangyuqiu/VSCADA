@@ -8,6 +8,7 @@
 #include <array>
 #include <vector>
 #include <mutex>
+#include <map>
 #include "subsystemthread.h"
 
 using namespace std;
@@ -16,7 +17,7 @@ class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface(int canRate, vector<SubsystemThread *> subs);
+    canbus_interface(int canRate, vector<SubsystemThread *> subs, map<uint32_t, int> addressMap);
     ~canbus_interface();
     void enableCAN();
 
@@ -26,6 +27,7 @@ public:
     int bitrate;
     vector<SubsystemThread *> subsystems;
     mutex canMutex;
+    map<uint32_t, int> canAddressMap;
 
 signals:
     void process_can_data(uint32_t addr, uint64_t data);

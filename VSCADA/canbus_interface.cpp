@@ -3,9 +3,10 @@
 /**
  * @brief canbus_interface::canbus_interface class constructor
  */
-canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs) {
+canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs, map<uint32_t, int> addressMap) {
     subsystems = subs;
     bitrate = canRate;
+    canAddressMap = addressMap;
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(sendCANData(int, uint64_t,int)), this,SLOT(sendDataByte(int, uint64_t,int)));
@@ -52,28 +53,36 @@ bool canbus_interface::canconnect() {
  * @brief canbus_interface::recieve_frame signal triggered when CAN frame is received
  */
 void canbus_interface::recieve_frame() {
-    if(canMutex.try_lock()){
-        while (can_bus->framesAvailable() && can_bus->framesAvailable() <= CAN_FRAME_LIMIT){
-            QCanBusFrame recframe = can_bus->readFrame();
-            QByteArray b = recframe.payload();
-            uint32_t a = recframe.frameId();
+    try {
+        if(canMutex.try_lock()){
+            while (can_bus->framesAvailable() && can_bus->framesAvailable() <= CAN_FRAME_LIMIT){
+                QCanBusFrame recframe = can_bus->readFrame();
+                QByteArray b = recframe.payload();
+                uint32_t a = recframe.frameId();
 
-            int64_t data = 0;
-    //        qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
-            for (int i = 0; i < b.size(); i++){
-                data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
+                int64_t data = 0;
+//                qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
+                for (int i = 0; i < b.size(); i++){
+                    data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
+                }
+                QCoreApplication::processEvents();
+                if ( canAddressMap.find(a) == canAddressMap.end() ) {
+                    // do nothing
+                } else {
+                    emit process_can_data(a,data);
+                }
             }
-            QCoreApplication::processEvents();
-            emit process_can_data(a,data);
-        }
 
-        if (can_bus->framesAvailable() > CAN_FRAME_LIMIT){
-            while (can_bus->framesAvailable()) {
-                can_bus->readFrame();
+            if (can_bus->framesAvailable() > CAN_FRAME_LIMIT){
+                while (can_bus->framesAvailable()) {
+                    can_bus->readFrame();
+                }
+                pushMsg("Frame Buffer Clogged... Frames Dumped");
             }
-            pushMsg("Frame Buffer Clogged... Frames Dumped");
+            canMutex.unlock();
         }
-        canMutex.unlock();
+    } catch (...) {
+        pushMsg("CRITICAL ERROR: Crash on receiver_frame message");
     }
 }
 

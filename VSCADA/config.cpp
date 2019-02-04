@@ -582,6 +582,11 @@ bool Config::read_config_file_data(){
                                 storedSensor->primAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
                             else configErrors.push_back("CONFIG ERROR: sensor primary address not an integer");
                             canSensors.push_back(storedSensor);
+                            if ( canAddressMap.find(storedSensor->primAddress) == canAddressMap.end() ) {
+                                canAddressMap.insert(make_pair(storedSensor->primAddress,1));
+                            } else {
+                              // found so skip
+                            }
                             canSensorMap.insert(make_pair(storedSensor->primAddress+storedSensor->auxAddress, storedSensor));
                             if ( canSensorGroup.find(storedSensor->primAddress) == canSensorGroup.end() ) {
                                 canVectorItem =  new vector<meta*>;
@@ -829,7 +834,7 @@ bool Config::read_config_file_data(){
     //****************************************//
     usb7204 = new usb7402_interface(usbSensors,subsystems);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(canRate, subsystems);
+    canInterface = new canbus_interface(canRate, subsystems, canAddressMap);
     dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystemMap,sysStates,FSMs,
                                systemMode,controlSpecs,storedSensors,responseMap,bootConfigs,canSensorGroup);
     trafficTest = new TrafficTest(canSensorMap,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
