@@ -75,6 +75,7 @@ void canbus_interface::recieve_frame() {
 
             if (can_bus->framesAvailable() > CAN_FRAME_LIMIT){
                 while (can_bus->framesAvailable()) {
+                    QCoreApplication::processEvents();
                     can_bus->readFrame();
                 }
                 pushMsg("Frame Buffer Clogged... Frames Dumped");
