@@ -290,7 +290,7 @@ void SubsystemThread::receiveData(meta * currSensor){
     calibrateData(currSensor);
     checkThresholds(currSensor);
     emit updateDisplay(currSensor);
-    logData(currSensor);
+//    logData(currSensor);
 }
 
 /**
