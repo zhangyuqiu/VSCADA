@@ -50,6 +50,12 @@ public:
     system_state * thisState;
     condition * thisCondition;
 
+    //dbase args strings
+    string sensorColString;
+    string sensorRowString;
+    string systemColString;
+    string systemRowString;
+
     //data vectors
     vector<meta *> canSensors;
     vector<meta *> usbSensors;
