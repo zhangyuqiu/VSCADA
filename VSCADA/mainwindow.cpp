@@ -150,9 +150,9 @@ MainWindow::MainWindow(QWidget *parent) :
             conf->usb7204->setSamplingRate(conf->usb7204Rate);
             conf->usb7204->startUSBCheck();
         }
-        for (uint i = 0 ; i < conf->subsystems.size(); i++){
-            conf->subsystems.at(i)->start();
-        }
+//        for (uint i = 0 ; i < conf->subsystems.size(); i++){
+//            conf->subsystems.at(i)->start();
+//        }
     } else if (conf->systemMode == TEST){
         conf->trafficTest->startTests();
     }
