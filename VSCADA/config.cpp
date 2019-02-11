@@ -855,7 +855,7 @@ bool Config::read_config_file_data(){
         thread->set_rate(minrates.at(i));
         thread->setDB(dbase);
         subsystems.at(i)->bootSubsystem();
-        subsystems.at(i)->start();
+//        subsystems.at(i)->start();
     }
 
     cout << "Returning from config" << endl;
