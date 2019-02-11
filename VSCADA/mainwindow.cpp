@@ -29,10 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
     cout << "Done configuring " << endl;
 
     // overwrite or keep previous data
-    int rsp = active_dialog("Press OK to keep previous unsaved data, otherwise press CANCEL");
-    if (rsp == QDialog::Accepted){
-        // do not clear dbase
-    } else {
+//    int rsp = active_dialog("Press OK to keep previous unsaved data, otherwise press CANCEL");
+//    if (rsp == QDialog::Accepted){
+//        // do not clear dbase
+//    } else {
         system("rm ./savedsessions/system.db");
         conf->dbase->runScript("script.sql");
         for (uint n = 0; n < conf->storedSensors.size(); n++){
@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
             conf->dbase->insert_row("sensors",conf->sensorColString,conf->sensorRowString);
         }
         conf->dbase->insert_row("system_info",conf->systemColString,conf->systemRowString);
-    }
+//    }
 
     // set window dimensioning parameters
     QRect rec = QApplication::desktop()->screenGeometry();
