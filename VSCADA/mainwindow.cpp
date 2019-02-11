@@ -33,15 +33,15 @@ MainWindow::MainWindow(QWidget *parent) :
 //    if (rsp == QDialog::Accepted){
 //        // do not clear dbase
 //    } else {
-        system("rm ./savedsessions/system.db");
-        conf->dbase->runScript("script.sql");
-        for (uint n = 0; n < conf->storedSensors.size(); n++){
-            conf->sensorRowString = "'" + to_string(conf->storedSensors.at(n)->sensorIndex) + "','" + conf->storedSensors.at(n)->sensorName + "','" + conf->storedSensors.at(n)->subsystem +
-                "','" + to_string(conf->storedSensors.at(n)->minimum) + "','" + to_string(conf->storedSensors.at(n)->maximum) + "','" + to_string(conf->storedSensors.at(n)->maxRxnCode) +
-                "','" + to_string(conf->storedSensors.at(n)->minRxnCode) + "','" + to_string(conf->storedSensors.at(n)->calConst) + "'";
-            conf->dbase->insert_row("sensors",conf->sensorColString,conf->sensorRowString);
-        }
-        conf->dbase->insert_row("system_info",conf->systemColString,conf->systemRowString);
+    //        system("rm ./savedsessions/system.db");
+    //        conf->dbase->runScript("script.sql");
+    //        for (uint n = 0; n < conf->storedSensors.size(); n++){
+    //            conf->sensorRowString = "'" + to_string(conf->storedSensors.at(n)->sensorIndex) + "','" + conf->storedSensors.at(n)->sensorName + "','" + conf->storedSensors.at(n)->subsystem +
+    //                "','" + to_string(conf->storedSensors.at(n)->minimum) + "','" + to_string(conf->storedSensors.at(n)->maximum) + "','" + to_string(conf->storedSensors.at(n)->maxRxnCode) +
+    //                "','" + to_string(conf->storedSensors.at(n)->minRxnCode) + "','" + to_string(conf->storedSensors.at(n)->calConst) + "'";
+    //            conf->dbase->insert_row("sensors",conf->sensorColString,conf->sensorRowString);
+    //        }
+    //        conf->dbase->insert_row("system_info",conf->systemColString,conf->systemRowString);
 //    }
 
     // set window dimensioning parameters
