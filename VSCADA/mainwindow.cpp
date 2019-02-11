@@ -28,6 +28,22 @@ MainWindow::MainWindow(QWidget *parent) :
     conf->read_config_file_data();
     cout << "Done configuring " << endl;
 
+    // overwrite or keep previous data
+    int rsp = active_dialog("Press OK to keep previous unsaved data, otherwise press CANCEL");
+    if (rsp == QDialog::Accepted){
+        // do not clear dbase
+    } else {
+        system("rm ./savedsessions/system.db");
+        conf->dbase->runScript("script.sql");
+        for (uint n = 0; n < conf->storedSensors.size(); n++){
+            conf->sensorRowString = "'" + to_string(conf->storedSensors.at(n)->sensorIndex) + "','" + conf->storedSensors.at(n)->sensorName + "','" + conf->storedSensors.at(n)->subsystem +
+                "','" + to_string(conf->storedSensors.at(n)->minimum) + "','" + to_string(conf->storedSensors.at(n)->maximum) + "','" + to_string(conf->storedSensors.at(n)->maxRxnCode) +
+                "','" + to_string(conf->storedSensors.at(n)->minRxnCode) + "','" + to_string(conf->storedSensors.at(n)->calConst) + "'";
+            conf->dbase->insert_row("sensors",conf->sensorColString,conf->sensorRowString);
+        }
+        conf->dbase->insert_row("system_info",conf->systemColString,conf->systemRowString);
+    }
+
     // set window dimensioning parameters
     QRect rec = QApplication::desktop()->screenGeometry();
     int height=rec.height();
@@ -120,10 +136,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(timer, SIGNAL(timeout()), this, SLOT(updateClock()));
     connect(this, SIGNAL(sendControlValue(int, controlSpec *)), conf->dataCtrl, SLOT(receive_control_val(int, controlSpec *)));
 
+    // display config errors
     for (uint i = 0; i < conf->configErrors.size(); i++){
         logMessage(QString::fromStdString(conf->configErrors.at(i)));
     }
 
+    // begin data collection
     if (conf->systemMode == CAR || conf->systemMode == DYNO){
         conf->canInterface->enableCAN();
         conf->gpioInterface->setSamplingRate(conf->gpioRate);
@@ -131,6 +149,9 @@ MainWindow::MainWindow(QWidget *parent) :
         if (conf->usb7204->isActive) {
             conf->usb7204->setSamplingRate(conf->usb7204Rate);
             conf->usb7204->startUSBCheck();
+        }
+        for (uint i = 0 ; i < conf->subsystems.size(); i++){
+            conf->subsystems.at(i)->start();
         }
     } else if (conf->systemMode == TEST){
         conf->trafficTest->startTests();

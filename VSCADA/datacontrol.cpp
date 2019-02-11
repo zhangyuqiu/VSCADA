@@ -86,10 +86,14 @@ string DataControl::getProgramTime(){
 }
 
 void DataControl::receive_sensor_data(meta * sensor){
-    subsystemMap[sensor->subsystem]->receiveData(sensor);
-    for (uint i = 0; i < sensor->dependencies.size(); i++){
-        meta * depSensor = static_cast<meta *>(sensor->dependencies.at(i));
-        subsystemMap[depSensor->subsystem]->receiveData(depSensor);
+    try{
+        subsystemMap[sensor->subsystem]->receiveData(sensor);
+        for (uint i = 0; i < sensor->dependencies.size(); i++){
+            meta * depSensor = static_cast<meta *>(sensor->dependencies.at(i));
+            subsystemMap[depSensor->subsystem]->receiveData(depSensor);
+        }
+    } catch (...) {
+        pushMessage("CRITICAL ERROR: Crash on receiving sensor data");
     }
 }
 
@@ -99,66 +103,70 @@ void DataControl::receive_sensor_data(meta * sensor){
  * @param data : data transmitted
  */
 void DataControl::receive_can_data(uint32_t addr, uint64_t data){
-    bool print = false;
-    string msg;
-    //check whether address matches any state machine address
-    for (uint i = 0; i < FSMs.size(); i++){
-        statemachine * currFSM = FSMs.at(i);
-        QCoreApplication::processEvents();
-        if (currFSM->primAddress == static_cast<int>(addr)){
-            for (uint j = 0; j < currFSM->states.size(); j++){
-                QCoreApplication::processEvents();
-                system_state * currState = currFSM->states.at(j);
-                if(currState->value == static_cast<int>(isolateData64(static_cast<uint>(currState->auxAddress),static_cast<uint>(currState->offset),data,currState->endianness))){
-                    change_system_state(currState);
-                } else if (currState->active){
-                    deactivateLog(currState);
+    try{
+        bool print = false;
+        string msg;
+        //check whether address matches any state machine address
+        for (uint i = 0; i < FSMs.size(); i++){
+            statemachine * currFSM = FSMs.at(i);
+            QCoreApplication::processEvents();
+            if (currFSM->primAddress == static_cast<int>(addr)){
+                for (uint j = 0; j < currFSM->states.size(); j++){
+                    QCoreApplication::processEvents();
+                    system_state * currState = currFSM->states.at(j);
+                    if(currState->value == static_cast<int>(isolateData64(static_cast<uint>(currState->auxAddress),static_cast<uint>(currState->offset),data,currState->endianness))){
+                        change_system_state(currState);
+                    } else if (currState->active){
+                        deactivateLog(currState);
+                    }
                 }
-            }
 
-            for (uint j = 0; j < currFSM->conditions.size(); j++){
-                condition * currCondition = currFSM->conditions.at(j);
-                if (currCondition->value != static_cast<int>(isolateData64(static_cast<uint>(currCondition->auxAddress),static_cast<uint>(currCondition->offset),data,currFSM->endianness))){
-                    currCondition->value = static_cast<int>(isolateData64(static_cast<uint>(currCondition->auxAddress),static_cast<uint>(currCondition->offset),data,currFSM->endianness));
-                    print = true;
+                for (uint j = 0; j < currFSM->conditions.size(); j++){
+                    condition * currCondition = currFSM->conditions.at(j);
+                    if (currCondition->value != static_cast<int>(isolateData64(static_cast<uint>(currCondition->auxAddress),static_cast<uint>(currCondition->offset),data,currFSM->endianness))){
+                        currCondition->value = static_cast<int>(isolateData64(static_cast<uint>(currCondition->auxAddress),static_cast<uint>(currCondition->offset),data,currFSM->endianness));
+                        print = true;
+                    }
+                    msg += currCondition->name + "->" + to_string(currCondition->value) ;
                 }
-                msg += currCondition->name + "->" + to_string(currCondition->value) ;
+
+                if (print){
+                    emit pushMessage(msg);
+                }
+
+                emit updateFSM(currFSM);
             }
+        }
 
-            if (print){
-                emit pushMessage(msg);
+        //check whether address matches any status address
+        for (uint i = 0; i < states.size(); i++){
+            QCoreApplication::processEvents();
+            if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data,states.at(i)->endianness)){
+                change_system_state(states.at(i));
+            } else if (states.at(i)->primAddress == static_cast<int>(addr)){
+                emit deactivateState(states.at(i));
             }
-
-            emit updateFSM(currFSM);
         }
-    }
 
-    //check whether address matches any status address
-    for (uint i = 0; i < states.size(); i++){
-        QCoreApplication::processEvents();
-        if(states.at(i)->primAddress == addr && states.at(i)->value == isolateData64(states.at(i)->auxAddress,states.at(i)->offset,data,states.at(i)->endianness)){
-            change_system_state(states.at(i));
-        } else if (states.at(i)->primAddress == static_cast<int>(addr)){
-            emit deactivateState(states.at(i));
-        }
-    }
-
-    //check whether address matches any sensor address
-    if ( canSensorGroup.find(addr) == canSensorGroup.end() ) {
-        // not found
-    } else {
-      vector<meta *>* specSensors = canSensorGroup.at(addr);
-      for (uint i = 0; i < specSensors->size(); i++){
-          QCoreApplication::processEvents();
-          meta * currSensor = specSensors->at(i);
-          currSensor->val = static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
-          subsystemMap[currSensor->subsystem]->receiveData(currSensor);
-          QCoreApplication::processEvents();
-          for (uint i = 0; i < currSensor->dependencies.size(); i++){
-              meta * depSensor = static_cast<meta *>(currSensor->dependencies.at(i));
-              subsystemMap[depSensor->subsystem]->receiveData(depSensor);
+        //check whether address matches any sensor address
+        if ( canSensorGroup.find(addr) == canSensorGroup.end() ) {
+            // not found
+        } else {
+          vector<meta *>* specSensors = canSensorGroup.at(addr);
+          for (uint i = 0; i < specSensors->size(); i++){
+              QCoreApplication::processEvents();
+              meta * currSensor = specSensors->at(i);
+              currSensor->val = static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
+              subsystemMap[currSensor->subsystem]->receiveData(currSensor);
+              QCoreApplication::processEvents();
+              for (uint i = 0; i < currSensor->dependencies.size(); i++){
+                  meta * depSensor = static_cast<meta *>(currSensor->dependencies.at(i));
+                  subsystemMap[depSensor->subsystem]->receiveData(depSensor);
+              }
           }
-      }
+        }
+    } catch (...) {
+        pushMessage("CRITICAL ERROR: Crash on receiving CAN data");
     }
 }
 
@@ -255,19 +263,23 @@ void DataControl::deactivateLog(system_state *prevstate){
  */
 void DataControl::executeRxn(int responseIndex){
     //print to logpushMessage
-    string colString = "time,reactionId,message";
-    string rowString = "'" + getProgramTime() + "','" + to_string(responseIndex) + "','" + responseMap[responseIndex].msg + "'";
+    try{
+        string colString = "time,reactionId,message";
+        string rowString = "'" + getProgramTime() + "','" + to_string(responseIndex) + "','" + responseMap[responseIndex].msg + "'";
 
-    response rsp = responseMap[responseIndex];
-    if (rsp.primAddress >= 0){
-        uint64_t fullData = static_cast<uint64_t>(rsp.canValue);
-        fullData = LSBto64Spec(static_cast<uint>(rsp.auxAddress),static_cast<uint>(rsp.offset),fullData);
-        emit sendCANData(rsp.primAddress,fullData);
+        response rsp = responseMap[responseIndex];
+        if (rsp.primAddress >= 0){
+            uint64_t fullData = static_cast<uint64_t>(rsp.canValue);
+            fullData = LSBto64Spec(static_cast<uint>(rsp.auxAddress),static_cast<uint>(rsp.offset),fullData);
+            emit sendCANData(rsp.primAddress,fullData);
+        }
+        if (rsp.gpioPin >= 0){
+            emit pushGPIOData(rsp.gpioPin,rsp.gpioValue);
+        }
+        dbase->insert_row("system_log",colString,rowString);
+    } catch (...) {
+        pushMessage("CRITICAL ERROR: Crash on executing reaction to data");
     }
-    if (rsp.gpioPin >= 0){
-        emit pushGPIOData(rsp.gpioPin,rsp.gpioValue);
-    }
-    dbase->insert_row("system_log",colString,rowString);
 }
 
 /**
@@ -276,26 +288,30 @@ void DataControl::executeRxn(int responseIndex){
  * @param spec : specifications of control signal
  */
 void DataControl::receive_control_val(int data, controlSpec * spec){
-    int addr = spec->primAddress;
-    stringstream s;
-    if (addr != 1000){
-        data = static_cast<int>(data*spec->multiplier);
-        uint64_t fullData = static_cast<uint64_t>(data);
-        fullData = LSBto64Spec(static_cast<uint>(spec->auxAddress),static_cast<uint>(spec->offset),fullData);
-        spec->sentVal = spec->sentVal & ~LSBto64Spec(static_cast<uint>(spec->auxAddress),static_cast<uint>(spec->offset),0xFFFFFFFF);
-        spec->sentVal = spec->sentVal | fullData;
-        s << showbase << internal << setfill('0');
-        s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
-        emit sendCANData(addr,spec->sentVal);
-        emit pushMessage(s.str());
-    } else if (spec->usbChannel != -1){
-        float usbData = static_cast<float>(data)*static_cast<float>(spec->multiplier);
-        bool success = true;
-        emit sendToUSB7204(static_cast<uint8_t>(spec->usbChannel),usbData, &success);
-        if (success){
-            s << "Value " << usbData << " written to usb out channel " << spec->usbChannel;
+    try{
+        int addr = spec->primAddress;
+        stringstream s;
+        if (addr != 1000){
+            data = static_cast<int>(data*spec->multiplier);
+            uint64_t fullData = static_cast<uint64_t>(data);
+            fullData = LSBto64Spec(static_cast<uint>(spec->auxAddress),static_cast<uint>(spec->offset),fullData);
+            spec->sentVal = spec->sentVal & ~LSBto64Spec(static_cast<uint>(spec->auxAddress),static_cast<uint>(spec->offset),0xFFFFFFFF);
+            spec->sentVal = spec->sentVal | fullData;
+            s << showbase << internal << setfill('0');
+            s << "Data " << std::hex << setw(16) << fullData << " sent to address " << addr;
+            emit sendCANData(addr,spec->sentVal);
             emit pushMessage(s.str());
+        } else if (spec->usbChannel != -1){
+            float usbData = static_cast<float>(data)*static_cast<float>(spec->multiplier);
+            bool success = true;
+            emit sendToUSB7204(static_cast<uint8_t>(spec->usbChannel),usbData, &success);
+            if (success){
+                s << "Value " << usbData << " written to usb out channel " << spec->usbChannel;
+                emit pushMessage(s.str());
+            }
         }
+    } catch (...) {
+        pushMessage("CRITICAL ERROR: Crash on receiving control data");
     }
 }
 

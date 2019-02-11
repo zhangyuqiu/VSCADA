@@ -93,18 +93,22 @@ void canbus_interface::recieve_frame() {
  * @param data : data to be sent
  */
 void canbus_interface::sendData(int addr, uint64_t data){
-    QByteArray byteArr;
-    char * charData = static_cast<char*>(static_cast<void*>(&data));
-    for(int i = sizeof(data)-1; i >= 0; i--){
-        byteArr.append(charData[i]);
-    }
-//    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
-    QCanBusFrame * outFrame = new QCanBusFrame;
-    outFrame->setFrameId(static_cast<quint32>(addr));
-    outFrame->setPayload(byteArr);
-    can_bus->writeFrame(*outFrame);
+    try{
+        QByteArray byteArr;
+        char * charData = static_cast<char*>(static_cast<void*>(&data));
+        for(int i = sizeof(data)-1; i >= 0; i--){
+            byteArr.append(charData[i]);
+        }
+    //    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
+        QCanBusFrame * outFrame = new QCanBusFrame;
+        outFrame->setFrameId(static_cast<quint32>(addr));
+        outFrame->setPayload(byteArr);
+        can_bus->writeFrame(*outFrame);
 
-    delete outFrame;
+        delete outFrame;
+    } catch (...) {
+        pushMsg("CRITICAL ERROR: Crash on sending CAN data");
+    }
 }
 
 /**
@@ -113,32 +117,40 @@ void canbus_interface::sendData(int addr, uint64_t data){
  * @param data : data to be sent
  */
 void canbus_interface::sendDataByte(int addr, uint64_t data, int bytes){
-    QByteArray byteArr;
-    char * charData = static_cast<char*>(static_cast<void*>(&data));
-    for(int i = bytes-1; i >= 0; i--){
-        byteArr.append(charData[i]);
-    }
-//    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
-    QCanBusFrame * outFrame = new QCanBusFrame;
-    outFrame->setFrameId(static_cast<quint32>(addr));
-    outFrame->setPayload(byteArr);
-    can_bus->writeFrame(*outFrame);
+    try{
+        QByteArray byteArr;
+        char * charData = static_cast<char*>(static_cast<void*>(&data));
+        for(int i = bytes-1; i >= 0; i--){
+            byteArr.append(charData[i]);
+        }
+    //    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
+        QCanBusFrame * outFrame = new QCanBusFrame;
+        outFrame->setFrameId(static_cast<quint32>(addr));
+        outFrame->setPayload(byteArr);
+        can_bus->writeFrame(*outFrame);
 
-    delete outFrame;
+        delete outFrame;
+    } catch (...) {
+        pushMsg("CRITICAL ERROR: Crash on sending CAN data");
+    }
 }
 
 /**
  * @brief canbus_interface::rebootCAN resets CAN network and sets bitrate
  */
 void canbus_interface::rebootCAN(){
-    system("sudo ip link set can0 down");
-    std::string s = "sudo ip link set can0 up type can bitrate " + std::to_string(bitrate);
-    const char * command = s.c_str();
-    system(command);
-    if (canconnect()){
-        emit pushMsg("CAN boot successful");
-    } else {
-        emit pushMsg("ERROR: CAN boot failed");
+    try{
+        system("sudo ip link set can0 down");
+        std::string s = "sudo ip link set can0 up type can bitrate " + std::to_string(bitrate);
+        const char * command = s.c_str();
+        system(command);
+        if (canconnect()){
+            emit pushMsg("CAN boot successful");
+        } else {
+            emit pushMsg("ERROR: CAN boot failed");
+        }
+    } catch (...) {
+        pushMsg("CRITICAL ERROR: Crash on CAN reboot");
     }
 }
 

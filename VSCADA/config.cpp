@@ -811,23 +811,22 @@ bool Config::read_config_file_data(){
     }
     dbScript.close();
 
-    system("rm ./savedsessions/system.db");
+//    system("rm ./savedsessions/system.db");
 
     //run script
     dbase = new DB_Engine();
-    dbase->runScript("script.sql");
+//    dbase->runScript("script.sql");
 
     //****************************************//
     //*****record all sensors to database*****//
     //****************************************//
-    string colString = "sensorindex,sensorname,subsystem,minthreshold,maxthreshold,maxresponseid,minresponseid,calconstant";
-    string rowString;
-    for (uint n = 0; n < storedSensors.size(); n++){
-        rowString = "'" + to_string(storedSensors.at(n)->sensorIndex) + "','" + storedSensors.at(n)->sensorName + "','" + storedSensors.at(n)->subsystem +
-            "','" + to_string(storedSensors.at(n)->minimum) + "','" + to_string(storedSensors.at(n)->maximum) + "','" + to_string(storedSensors.at(n)->maxRxnCode) +
-            "','" + to_string(storedSensors.at(n)->minRxnCode) + "','" + to_string(storedSensors.at(n)->calConst) + "'";
-        dbase->insert_row("sensors",colString,rowString);
-    }
+    sensorColString = "sensorindex,sensorname,subsystem,minthreshold,maxthreshold,maxresponseid,minresponseid,calconstant";
+//    for (uint n = 0; n < storedSensors.size(); n++){
+//        sensorRowString = "'" + to_string(storedSensors.at(n)->sensorIndex) + "','" + storedSensors.at(n)->sensorName + "','" + storedSensors.at(n)->subsystem +
+//            "','" + to_string(storedSensors.at(n)->minimum) + "','" + to_string(storedSensors.at(n)->maximum) + "','" + to_string(storedSensors.at(n)->maxRxnCode) +
+//            "','" + to_string(storedSensors.at(n)->minRxnCode) + "','" + to_string(storedSensors.at(n)->calConst) + "'";
+//        dbase->insert_row("sensors",sensorColString,sensorRowString);
+//    }
 
     //****************************************//
     //*****launch internal worker modules*****//
@@ -843,9 +842,9 @@ bool Config::read_config_file_data(){
     //********************************//
     //*****initialize system info*****//
     //********************************//
-    colString = "starttime,endtime";
-    rowString = "'" + get_curr_time() + "','0'";
-    dbase->insert_row("system_info",colString,rowString);
+    systemColString = "starttime,endtime";
+    systemRowString = "'" + get_curr_time() + "','0'";
+//    dbase->insert_row("system_info",systemColString,systemRowString);
 
 
     //**********************************//
@@ -856,7 +855,7 @@ bool Config::read_config_file_data(){
         thread->set_rate(minrates.at(i));
         thread->setDB(dbase);
         subsystems.at(i)->bootSubsystem();
-        subsystems.at(i)->start();
+//        subsystems.at(i)->start();
     }
 
     cout << "Returning from config" << endl;
