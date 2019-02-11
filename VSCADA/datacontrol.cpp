@@ -156,7 +156,7 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
           for (uint i = 0; i < specSensors->size(); i++){
               QCoreApplication::processEvents();
               meta * currSensor = specSensors->at(i);
-              currSensor->val = static_cast<double>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
+              currSensor->val = static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
               subsystemMap[currSensor->subsystem]->receiveData(currSensor);
               QCoreApplication::processEvents();
               for (uint i = 0; i < currSensor->dependencies.size(); i++){
