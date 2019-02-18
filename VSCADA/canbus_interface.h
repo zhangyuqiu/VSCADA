@@ -17,7 +17,7 @@ class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface(int canRate, vector<SubsystemThread *> subs, map<uint32_t, int> addressMap);
+    canbus_interface(int canRate, vector<SubsystemThread *> subs, vector<meta*> sensorVector);
     ~canbus_interface();
     void enableCAN();
 

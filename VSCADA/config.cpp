@@ -833,7 +833,7 @@ bool Config::read_config_file_data(){
     //****************************************//
     usb7204 = new usb7402_interface(usbSensors,subsystems);
     gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(canRate, subsystems, canAddressMap);
+    canInterface = new canbus_interface(canRate, subsystems, canSensors);
     dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystemMap,sysStates,FSMs,
                                systemMode,controlSpecs,storedSensors,responseMap,bootConfigs,canSensorGroup);
     trafficTest = new TrafficTest(canSensorMap,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);

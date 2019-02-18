@@ -3,16 +3,26 @@
 /**
  * @brief canbus_interface::canbus_interface class constructor
  */
-canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs, map<uint32_t, int> addressMap) {
+canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs, vector<meta*> sensorVector) {
     subsystems = subs;
     bitrate = canRate;
-    canAddressMap = addressMap;
 
     for (uint i = 0; i < subsystems.size(); i++){
         connect(subsystems.at(i), SIGNAL(sendCANData(int, uint64_t,int)), this,SLOT(sendDataByte(int, uint64_t,int)));
     }
 
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
+    QList<QCanBusDevice::Filter> filterList;
+
+    for (uint i = 0; i < sensorVector.size(); i++){
+        QCanBusDevice::Filter filter;
+        filter.frameId = sensorVector.at(i)->primAddress;
+        filter.frameIdMask = 0xFFFF;
+        filter.format = QCanBusDevice::Filter::MatchBaseFormat;
+        filterList.append(filter);
+    }
+    can_bus->setConfigurationParameter(QCanBusDevice::RawFilterKey, QVariant::fromValue(filterList));
+
     canconnect();
     rebootCAN();
 }
