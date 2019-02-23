@@ -17,7 +17,7 @@ canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs, 
     for (uint i = 0; i < sensorVector.size(); i++){
         QCanBusDevice::Filter filter;
         filter.frameId = sensorVector.at(i)->primAddress;
-        filter.frameIdMask = 0xFFFF;
+        filter.frameIdMask = 0xFFFu;
         filter.format = QCanBusDevice::Filter::MatchBaseFormat;
         filterList.append(filter);
     }
