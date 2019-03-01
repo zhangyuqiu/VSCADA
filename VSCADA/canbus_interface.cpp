@@ -15,15 +15,12 @@ canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs, 
     QList<QCanBusDevice::Filter> filterList;
 
     for (uint i = 0; i < sensorVector.size(); i++){
-        if (sensorVector.at(i)->primAddress != 385){
             QCanBusDevice::Filter filter;
             filter.frameId = sensorVector.at(i)->primAddress;
             filter.frameIdMask = 0xFFFFu;
             filter.format = QCanBusDevice::Filter::MatchBaseFormat;
             filter.type = QCanBusFrame::InvalidFrame;
             filterList.append(filter);
-            cout << "Filter frameID: " << filter.frameId << endl;
-        }
     }
     can_bus->setConfigurationParameter(QCanBusDevice::RawFilterKey, QVariant::fromValue(filterList));
 
