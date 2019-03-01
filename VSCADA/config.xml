@@ -1,6 +1,6 @@
 <system>
 	<mode>
-		<type>TEST</type>
+		<type>DYNO</type>
 	</mode>
 	<gpiorate>1000</gpiorate>
 	<usb7204rate>1000</usb7204rate>
@@ -11,7 +11,7 @@
 			<type>slider</type>
 			<minrange>0</minrange>
 			<maxrange>100</maxrange>
-			<multiplier>0.04</multiplier>
+			<multiplier>0.05</multiplier>
 			<usbchannel>0</usbchannel>
 		</control>
 		<control>
@@ -128,8 +128,8 @@
 	</logic>
 	<subsystem>
 		<name>MOTOR_CONTROLLER</name>
-		<maxrate>500</maxrate>
-		<minrate>500</minrate>
+		<maxrate>1000</maxrate>
+		<minrate>1000</minrate>
 		<canbroadcast>
 			<address>128</address>
 			<data>0</data>
@@ -336,7 +336,7 @@
                         </bootcan>
 		</bootsequence>
 		<statemachine>
-			<name>Drive States</name>
+			<name> Drive States </name>
             <primaddress>1024</primaddress>
             <auxaddress>48</auxaddress>
             <offset>8</offset>
@@ -416,7 +416,7 @@
                 <main>1</main>
                 <unit>V</unit>
                 <minimum>-1</minimum>
-                <maximum>24</maximum>
+                <maximum>25</maximum>
                 <minresponse>0</minresponse>
                 <maxresponse>0</maxresponse>
                 <calmultiplier>1</calmultiplier>
@@ -458,6 +458,28 @@
 			<coef>0.0000002</coef>
                 </calpoly>
             </sensor>
+            <!--sensor>
+                <id>3</id>
+                <name>Cooling Temp2</name>
+                <primaddress>1024</primaddress>
+                <auxaddress>32</auxaddress>
+                <offset>8</offset>
+                <checkrate>4000</checkrate>
+                <main>1</main>
+                <unit>C</unit>
+                <minimum>0</minimum>
+                <maximum>70</maximum>
+                <minresponse>0</minresponse>
+                <maxresponse>0</maxresponse>
+                <calmultiplier>1</calmultiplier>
+		<calpoly>
+                        <coef>14.797</coef>
+                        <coef>-1.097</coef>
+                        <coef>0.0191</coef>
+                        <coef>-0.0001</coef>
+                        <coef>0.0000002</coef>
+                </calpoly>
+            </sensor-->
 		<sensor>
 			<id>3</id>
 			<name>Flow Rate</name>
@@ -509,7 +531,6 @@
 			<sensor>
 				<id>11</id>
 				<name>GLVCurrent</name>
-				<alias>GCUR</alias>
 				<i2caddress>64</i2caddress>
 				<i2creadpointer>4</i2creadpointer>
 				<i2cconfigdata>2572544</i2cconfigdata>
@@ -572,7 +593,6 @@
 			<sensor>
 				<id>15</id>
 				<name>GLVVoltage</name>
-				<alias>GVOL</alias>
 				<i2caddress>64</i2caddress>
 				<i2creadpointer>2</i2creadpointer>
 				<i2cconfigdata>2572544</i2cconfigdata>
@@ -604,20 +624,7 @@
                                 <maximum>20</maximum>
                                 <calmultiplier>0.025</calmultiplier>
                         </sensor>
-			<sensor>
-				<id>18</id>
-				<name>GLVPower_Cal</name>
-				<checkrate>5000</checkrate>
-				<main>1</main>
-				<minimum>0</minimum>
-				<maximum>40</maximum>
-				<unit>W</unit>
-				<sensoroperation>
-					<operation>AVG</operation>
-					<opalias>GCUR</opalias>
-					<opalias>GVOL</opalias>
-				</sensoroperation>
-			</sensor>
+
 		</sensors>
 	</subsystem>
 	<subsystem>
@@ -633,11 +640,21 @@
 				<minimum>0</minimum>
 				<maximum>40</maximum>
 				<unit>ftLbs</unit>
-				<calmultiplier>-75.018</calmultiplier>
-				<calconstant>-107.33</calconstant>
+				<calmultiplier>75.018</calmultiplier>
+				<calconstant>107.33</calconstant>
 				<usbchannel>1</usbchannel>
 			</sensor>
+			<!--sensor>
+				<id>18</id>
+				<name>RPM</name>
+				<checkrate>5000</checkrate>
+				<main>1</main>
+				<usbchannel>0</usbchannel>
+				<unit>RPM</unit>
+				<minimum>0</minimum>
+				<maximum>200</maximum>
+				<calmultiplier>-200</calmultiplier>
+			</sensor-->
 		</sensors>
 	</subsystem>
 </system>
-

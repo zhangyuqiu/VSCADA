@@ -35,6 +35,17 @@ void TrafficTest::sendCANItems(){
     for ( it = canSensorMap.begin(); it != canSensorMap.end(); it++ ){
         meta * sensor = it->second;
         dataCtrl->receive_can_data(sensor->primAddress,num64);
+//        QByteArray byteArr;
+//        char * charData = static_cast<char*>(static_cast<void*>(&num64));
+//        for(int i = sizeof(num64)-1; i >= 0; i--){
+//            byteArr.append(charData[i]);
+//        }
+//        QCanBusFrame * outFrame = new QCanBusFrame;
+//        outFrame->setFrameId(static_cast<quint32>(sensor->primAddress));
+//        outFrame->setPayload(byteArr);
+//        dataCtrl->canInterface->can_bus->writeFrame(*outFrame);
+
+//        delete outFrame;
     }
 }
 

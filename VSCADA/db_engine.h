@@ -46,6 +46,7 @@ public:
     std::mutex dbMutex;
     vector<string> dbCmds;
     int numCmds = 0;
+    bool empty_DB = false;
 
     QSqlDatabase mydb;
     bool connected = false;
