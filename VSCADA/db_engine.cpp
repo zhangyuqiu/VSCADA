@@ -23,14 +23,16 @@ int DB_Engine::insert_row(string table, string column, string row){
     QCoreApplication::processEvents();
 
     //run SQLite command
-    dbMutex.lock();
     string sql = "INSERT INTO "+table+"(" + column + ")" +
             " VALUES " + "(" + row + ");";
     dbCmds.push_back(sql);
     numCmds++;
     QCoreApplication::processEvents();
     int rc = 0;
-    if (numCmds >= DB_BUF_SIZE){
+    if (numCmds >= DB_BUF_SIZE) empty_DB = true;
+    if (empty_DB){
+        empty_DB = false;
+        dbMutex.try_lock();
         rc = sqlite3_open(db_file.c_str(), &db);
         sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
         for (uint i = 0; i < dbCmds.size(); i++){
@@ -40,8 +42,8 @@ int DB_Engine::insert_row(string table, string column, string row){
         sqlite3_close(db);
         numCmds = 0;
         dbCmds.clear();
+        dbMutex.unlock();
     }
-    dbMutex.unlock();
     QCoreApplication::processEvents();
     if (rc != SQLITE_OK){
         return 0;

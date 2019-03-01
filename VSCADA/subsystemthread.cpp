@@ -287,10 +287,20 @@ void SubsystemThread::calibrateData(meta * currSensor){
  * @param currSensor
  */
 void SubsystemThread::receiveData(meta * currSensor){
+    cout << "calibrating data: " << currSensor->sensorName << ", " << currSensor->primAddress << endl;
+    fflush(stdout);
     calibrateData(currSensor);
+    cout << "checking thresholds: " << currSensor->sensorName << ", " << currSensor->primAddress << endl;
+    fflush(stdout);
     checkThresholds(currSensor);
+    cout << "updating display: " << currSensor->sensorName << ", " << currSensor->primAddress << endl;
+    fflush(stdout);
     emit updateDisplay(currSensor);
+    cout << "logging data: " << currSensor->sensorName << ", " << currSensor->primAddress << endl;
+    fflush(stdout);
     logData(currSensor);
+    cout << "done processing sensor data: " << currSensor->sensorName << ", " << currSensor->primAddress << endl;
+    fflush(stdout);
 }
 
 /**

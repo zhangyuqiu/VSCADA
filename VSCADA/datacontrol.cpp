@@ -156,16 +156,24 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
           for (uint i = 0; i < specSensors->size(); i++){
               QCoreApplication::processEvents();
               meta * currSensor = specSensors->at(i);
+              cout << "Isolating data: " << addr << endl;
+              fflush(stdout);
               currSensor->val = static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
+              cout << "Sending to subsystem: " << addr << endl;
+              fflush(stdout);
               subsystemMap[currSensor->subsystem]->receiveData(currSensor);
               QCoreApplication::processEvents();
+              cout << "Processing dependencies: " << addr << endl;
+              fflush(stdout);
               for (uint i = 0; i < currSensor->dependencies.size(); i++){
                   meta * depSensor = static_cast<meta *>(currSensor->dependencies.at(i));
                   subsystemMap[depSensor->subsystem]->receiveData(depSensor);
               }
           }
+//          cout << "Done processing CAN data address: " << addr << endl;
         }
     } catch (...) {
+        cout << "CRITICAL ERROR: Crash on receiving CAN data" << endl;
         pushMessage("CRITICAL ERROR: Crash on receiving CAN data");
     }
 }

@@ -75,16 +75,17 @@ void canbus_interface::recieve_frame() {
                 uint32_t a = recframe.frameId();
 
                 int64_t data = 0;
-//                qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
+                qDebug() << "CAN address: " << a << ", QByteArray: " << b << endl;
                 for (int i = 0; i < b.size(); i++){
                     data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
                 }
                 QCoreApplication::processEvents();
-                if ( canAddressMap.find(a) == canAddressMap.end() ) {
-                    // do nothing
-                } else {
+//                if ( canAddressMap.find(a) == canAddressMap.end() ) {
+//                    // do nothing
+//                } else {
+                    cout << "CAN address " << a << "sent to processing" << endl;
                     emit process_can_data(a,data);
-                }
+//                }
             }
 
             if (can_bus->framesAvailable() > CAN_FRAME_LIMIT){
