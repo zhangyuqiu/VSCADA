@@ -3,13 +3,8 @@
 /**
  * @brief canbus_interface::canbus_interface class constructor
  */
-canbus_interface::canbus_interface(int canRate, vector<SubsystemThread *> subs, vector<meta*> sensorVector) {
-    subsystems = subs;
+canbus_interface::canbus_interface(int canRate, vector<meta*> sensorVector) {
     bitrate = canRate;
-
-    for (uint i = 0; i < subsystems.size(); i++){
-        connect(subsystems.at(i), SIGNAL(sendCANData(int, uint64_t,int)), this,SLOT(sendDataByte(int, uint64_t,int)));
-    }
 
     can_bus = QCanBus::instance()->createDevice(QStringLiteral("socketcan"),QStringLiteral("can0"),&errmsg);
     QList<QCanBusDevice::Filter> filterList;
@@ -77,12 +72,7 @@ void canbus_interface::recieve_frame() {
                     data = data + ((static_cast<uint64_t>(b[i]) & 0xFF) << ((b.size()-1)*8 - i*8));
                 }
                 QCoreApplication::processEvents();
-//                if ( canAddressMap.find(a) == canAddressMap.end() ) {
-//                    // do nothing
-//                } else {
-                    cout << "CAN address " << a << "sent to processing" << endl;
-                    emit process_can_data(a,data);
-//                }
+                emit process_can_data(a,data);
             }
 
             if (can_bus->framesAvailable() > CAN_FRAME_LIMIT){
@@ -135,7 +125,7 @@ void canbus_interface::sendDataByte(int addr, uint64_t data, int bytes){
         for(int i = bytes-1; i >= 0; i--){
             byteArr.append(charData[i]);
         }
-    //    qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
+//        qDebug() << "Address: " << addr << " Value: " << byteArr << endl;
         QCanBusFrame * outFrame = new QCanBusFrame;
         outFrame->setFrameId(static_cast<quint32>(addr));
         outFrame->setPayload(byteArr);

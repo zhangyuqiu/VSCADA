@@ -8,9 +8,8 @@
 #include <iostream>
 #include <fstream>
 
-#define DYNO 0
-#define CAR 1
-#define TEST 2
+#define RUN 0
+#define TEST 1
 
 #define DASH_DISP 0
 #define BACK_DISP 1
@@ -22,6 +21,8 @@
 #define AVG 4
 #define MAX 5
 #define MIN 6
+
+#define WATCHDOG_PERIOD 10
 
 #define DB_BUF_SIZE 100
 #define CAN_FRAME_LIMIT 20
@@ -63,9 +64,9 @@ typedef struct{
     double calMultiplier;
     int state;
     std::vector<poly> calPolynomial;
+    std::vector<std::string> groups;
 
     std::string unit;
-    std::string subsystem;
     std::string sensorName;
     std::string alias;
 
@@ -155,18 +156,38 @@ typedef struct{
     int address;
     uint64_t data;
     int dataSize;
+    int rate_ms;
 }canItem;
 
 typedef struct{
     int pin;
     int value;
     int mode;
+    int rate_ms;
 }gpioItem;
+
+typedef struct{
+    int address;
+    int data;
+    int rate_ms;
+}i2cItem;
 
 typedef struct{
     std::vector<canItem> bootCanCmds;
     std::vector<uint32_t> bootI2cCmds;
     std::vector<gpioItem> bootGPIOCmds;
 } bootloader;
+
+typedef struct{
+    std::vector<int> sensorIds;
+    int triggerSensor;
+    std::string triggerFSM;
+    std::string triggerState;
+    int startVal;
+    int stopVal;
+    std::string savePath;
+    std::string prefix;
+    bool active;
+} recordwindow;
 
 #endif // TYPEDEFS_H

@@ -31,7 +31,7 @@ detailPage::~detailPage()
 }
 
 void detailPage::update(){
-    vector<meta *> allSensors = currentSubSystem->get_metadata();
+    vector<meta *> allSensors = currentGroup->get_metadata();
 
     for(uint i = 0; i < allSensors.size(); i++){
         lineEdit = new QLineEdit;
@@ -52,17 +52,17 @@ void detailPage::update(){
     int fieldColCount = 0;
     int fieldRowCount = 0;
 
-    vector<SubsystemThread *> subs;
-    subs = conf->subsystems;
+    vector<Group *> grps;
+    grps = conf->subsystems;
 
     QGridLayout * subsystemSectionLayout = new QGridLayout;
 
-    vector<meta *> subMeta = currentSubSystem->get_metadata();
+    vector<meta *> subMeta = currentGroup->get_metadata();
 
     QLabel * headerLabel = new QLabel;
     headerLabel->setFixedWidth(static_cast<int>(unitWidth*1.5));
     headerLabel->setFixedHeight(unitHeight*2);
-    headerLabel->setText(QString::fromStdString(currentSubSystem->subsystemId));
+    headerLabel->setText(QString::fromStdString(currentGroup->groupId));
     QString  subLabelFont = QString::number(stringSize*3);
     headerLabel->setStyleSheet("font:"+subLabelFont+"pt;");
     headerLabel->setFixedWidth(screenWidth - 50);
@@ -131,12 +131,12 @@ void detailPage::setConfObject(Config * config){
     connect(conf->dataCtrl, SIGNAL(updateEdits(meta *)), this, SLOT(updateEdits(meta *)));
 }
 
-void detailPage::setCurrentSystem(SubsystemThread * subsystem){
-    currentSubSystem = subsystem;
-    connect(currentSubSystem, SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
-    connect(currentSubSystem, SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
+void detailPage::setCurrentSystem(Group * subsystem){
+    currentGroup = subsystem;
+    connect(currentGroup, SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
+    connect(currentGroup, SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
     update();
-    vector<meta*> allSensors = currentSubSystem->get_metadata();
+    vector<meta*> allSensors = currentGroup->get_metadata();
     for(uint i = 0; i < allSensors.size(); i++){
         allSensors.at(i)->state = 0;
     }
@@ -144,10 +144,10 @@ void detailPage::setCurrentSystem(SubsystemThread * subsystem){
 
 
 /**
- * @brief SubsystemThread::updateEdits - updates text edit fields
+ * @brief detailPage::updateEdits - updates text edit fields
  */
 void detailPage::updateEdits(meta * currSensor){
-    vector<meta*> allSensors = currentSubSystem->get_metadata();
+    vector<meta*> allSensors = currentGroup->get_metadata();
     for(uint i = 0; i < edits.size(); i++){
         if(allSensors.at(i) == currSensor){
             double num = currSensor->calVal;
@@ -164,7 +164,7 @@ void detailPage::updateEdits(meta * currSensor){
 }
 
 /**
- * @brief SubsystemThread::checkTimeout - checks whether any lineEdit hasn't received updates
+ * @brief detailPage::checkTimeout - checks whether any lineEdit hasn't received updates
  */
 void detailPage::checkTimeout(){
     for(uint i = 0; i < edits.size(); i++){
@@ -173,7 +173,7 @@ void detailPage::checkTimeout(){
 }
 
 void detailPage::changeEditColor(string color, meta * sensor){
-    vector<meta*> allSensors = currentSubSystem->get_metadata();
+    vector<meta*> allSensors = currentGroup->get_metadata();
     for(uint i = 0; i < edits.size(); i++){
         if (allSensors.at(i) == sensor) {
             if(color.compare("red") == 0){

@@ -13,11 +13,12 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QKeyEvent>
+#include <signal.h>
 #include "widgetKeyBoard.h"
 #include "config.h"
 #include "typedefs.h"
 #include "canbus_interface.h"
-#include "subsystemthread.h"
+#include "group.h"
 #include "detailpage.h"
 #include "postprocess.h"
 #include "examplemyfocus.h"
@@ -52,12 +53,12 @@ public:
     vector<controlSpec *> editCtrls;
 
     vector<QComboBox *> systemBox;
-    vector<QPushButton *> healthButtons;
-    vector<QPushButton *> detailButtons;
+    map<string,QPushButton *> healthButtons;
+    map<string,QPushButton *> detailButtons;
     vector<QPushButton *> stateButtons;
     vector<QPushButton *> FSMButtons;
-    vector<QLineEdit *> edits;
-    vector<QTimer *> editTimers;
+    map<int, QLineEdit *> edits;
+    map<int, QTimer *> editTimers;
     widgetKeyBoard  *myKeyboard;
 
     QString ** systemName;
@@ -108,11 +109,11 @@ public:
 
 signals:
     void sendControlValue(int data, controlSpec * spec);
-    void openDetailPage(SubsystemThread * thread);
+    void openDetailPage(Group * grp);
 
 public slots:
     void update();
-    void openDetailWindow(SubsystemThread *thread);
+    void openDetailWindow(Group * grp);
     void closeDetailPage();
     void receiveMsg(string msg);
     void receiveErrMsg(string msg);

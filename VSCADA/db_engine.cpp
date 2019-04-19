@@ -1,7 +1,8 @@
 #include "db_engine.h"
 
-DB_Engine::DB_Engine()
+DB_Engine::DB_Engine(string dbName)
 {
+    db_file = dbName;
 }
 
 DB_Engine::~DB_Engine()
@@ -29,7 +30,7 @@ int DB_Engine::insert_row(string table, string column, string row){
     numCmds++;
     QCoreApplication::processEvents();
     int rc = 0;
-    if (numCmds >= DB_BUF_SIZE) empty_DB = true;
+    if (numCmds >= 1) empty_DB = true;
     if (empty_DB){
         empty_DB = false;
         dbMutex.try_lock();
@@ -130,7 +131,7 @@ int DB_Engine::max_rowid(string table){
     //char * zErrMsg;
     int count = 0;
 
-    string sql = "SELECT marowid) FROM "+table;
+    string sql = "SELECT max(rowid) FROM "+table;
 #ifdef DEBUG
     cout << sql << endl;
 #endif
@@ -243,9 +244,7 @@ vector<string> DB_Engine::get_row_values(string table, vector<string> column, in
 
     //run SQLite command
     sql = "SELECT "+col_buf.str()+" FROM "+table+" WHERE rowid ="+to_string(row_num);
-#ifdef DEBUG
-    cout << sql << endl;
-#endif
+
     rc = sqlite3_exec(db, sql.c_str(), sql_get_rows, &holder, nullptr);
 //#ifdef DEBUG
     if (rc != SQLITE_OK){

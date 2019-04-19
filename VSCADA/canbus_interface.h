@@ -9,7 +9,7 @@
 #include <vector>
 #include <mutex>
 #include <map>
-#include "subsystemthread.h"
+#include "typedefs.h"
 
 using namespace std;
 
@@ -17,7 +17,7 @@ class canbus_interface : public QObject
 {
     Q_OBJECT
 public:
-    canbus_interface(int canRate, vector<SubsystemThread *> subs, vector<meta*> sensorVector);
+    canbus_interface(int canRate, vector<meta*> sensorVector);
     ~canbus_interface();
     void enableCAN();
 
@@ -25,7 +25,6 @@ public:
     bool canconnect();
     QCanBusDevice * can_bus = nullptr;
     int bitrate;
-    vector<SubsystemThread *> subsystems;
     mutex canMutex;
     map<uint32_t, int> canAddressMap;
 

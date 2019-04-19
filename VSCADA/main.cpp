@@ -4,9 +4,15 @@
 #include "config.h"
 #include "dashboard.h"
 #include "postprocess.h"
+#include "watchdog.h"
 
 int main(int argc, char *argv[])
 {
+    pid_t pid = fork();
+    if (pid == 0){
+        Watchdog * watchdog = new Watchdog(5000,getppid());
+    }
+
     QApplication a(argc, argv);
 
     QApplication::setStyle(QStyleFactory::create("fusion"));

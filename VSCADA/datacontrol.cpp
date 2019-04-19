@@ -15,9 +15,10 @@
  * @param rsp : system responses
  */
 DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_interface * usb, DB_Engine * db,
-                         map<string, SubsystemThread *> subMap, vector<system_state *> stts, vector<statemachine *> FSM,
-                         int mode, vector<controlSpec *> ctrlSpecs, vector<meta *> sensors, map<int, response> rspMap,
-                         vector<bootloader> bootArgs, map<uint32_t, vector<meta *>*> canMap){
+                         map<string, Group *> subMap, vector<system_state *> stts, vector<statemachine *> FSM,
+                         int mode, vector<controlSpec *> ctrlSpecs, map<int, response> rspMap,
+                         vector<bootloader> bootArgs, map<uint32_t, vector<meta *>*> canMap, bootloader boot,
+                         vector<canItem> cSyncs, vector<i2cItem> iSyncs, vector<gpioItem> gSyncs, map<int,recordwindow*>recWins, map<int, meta*> sensMap){
 
     // set mode parameters
     systemMode = mode;
@@ -36,24 +37,53 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     responseMap = rspMap;
     subsystemMap = subMap;
     gpioInterface = gpio;
-    sensorVector = sensors;
     controlSpecs = ctrlSpecs;
     bootConfigs = bootArgs;
     systemTimer = new QTime;
     canSensorGroup = canMap;
+    bootCmds = boot;
+    recordMap = recWins;
+    sensorMap = sensMap;
     startSystemTimer();
-
-    
     
     //signal-slot connections
-    map<string, SubsystemThread *>::iterator it;
+    map<string, Group *>::iterator it;
+
+    for (uint i = 0; i < cSyncs.size(); i++){
+        syncTimer = new QTimer;
+        connect(syncTimer, SIGNAL(timeout()), this, SLOT(canSyncSlot()));
+        canSyncTimers.insert(make_pair(i, syncTimer));
+        canSyncs.insert(make_pair(i,cSyncs.at(i)));
+        syncTimer->start(cSyncs.at(i).rate_ms);
+    }
+
+    for (uint i = 0; i < iSyncs.size(); i++){
+        syncTimer = new QTimer;
+        connect(syncTimer, SIGNAL(timeout()), this, SLOT(i2cSyncSlot()));
+        i2cSyncTimers.insert(make_pair(i, syncTimer));
+        i2cSyncs.insert(make_pair(i,iSyncs.at(i)));
+        syncTimer->start(iSyncs.at(i).rate_ms);
+    }
+
+    for (uint i = 0; i < gSyncs.size(); i++){
+        syncTimer = new QTimer;
+        connect(syncTimer, SIGNAL(timeout()), this, SLOT(gpioSyncSlot()));
+        gpioSyncTimers.insert(make_pair(i, syncTimer));
+        gpioSyncs.insert(make_pair(i,gSyncs.at(i)));
+        syncTimer->start(gSyncs.at(i).rate_ms);
+    }
 
     for ( it = subsystemMap.begin(); it != subsystemMap.end(); it++ ){
         connect(it->second, SIGNAL(initiateRxn(int)), this,SLOT(executeRxn(int)));
         it->second->setSystemTimer(systemTimer);
     }
 
+    watchdogTimer = new QTimer;
+    connect(watchdogTimer, SIGNAL(timeout()), this, SLOT(feedWatchdog()));
+    watchdogTimer->start((WATCHDOG_PERIOD/2)*1000);
+
     connect(this, SIGNAL(pushGPIOData(int,int)), gpioInterface,SLOT(GPIOWrite(int,int)));
+    connect(this, SIGNAL(sendI2CData(int,int)), gpioInterface,SLOT(i2cWrite(int,int)));
     connect(this, SIGNAL(deactivateState(system_state *)), this,SLOT(deactivateLog(system_state *)));
     connect(this, SIGNAL(sendToUSB7204(uint8_t, float, bool*)), usb7204, SLOT(writeUSBData(uint8_t, float, bool*)));
     connect(this, SIGNAL(sendCANData(int, uint64_t)), canInterface, SLOT(sendData(int, uint64_t)));
@@ -85,12 +115,64 @@ string DataControl::getProgramTime(){
     return streamObj.str();
 }
 
+void DataControl::feedWatchdog(){
+    cout << "Feeding watchDog..." << endl;
+    system("echo 0 > watchdog.txt");
+}
+
+/**
+ * @brief DataControl::init_data - initializes vector of data to 0
+ */
+void DataControl::bootSubsystem(){
+    for (uint i = 0; i < bootCmds.bootCanCmds.size(); i++){
+        emit sendCANDataByte(bootCmds.bootCanCmds.at(i).address,bootCmds.bootCanCmds.at(i).data,bootCmds.bootCanCmds.at(i).dataSize);
+    }
+    for (uint i = 0; i < bootCmds.bootI2cCmds.size(); i++){
+        emit pushI2cData(bootCmds.bootI2cCmds.at(i));
+    }
+    for (uint i = 0; i < bootCmds.bootGPIOCmds.size(); i++){
+        emit pushGPIOData(bootCmds.bootGPIOCmds.at(i).pin, bootCmds.bootGPIOCmds.at(i).value);
+    }
+    string bootMsg = "Boot sequence completed";
+    pushMessage(bootMsg);
+}
+
+void DataControl::canSyncSlot(){
+    QObject * tmr = sender();
+    for (auto const &x: canSyncTimers){
+        if (x.second == tmr) {
+            canItem item = canSyncs[x.first];
+            emit sendCANDataByte(item.address,item.data,item.dataSize);
+        }
+    }
+}
+
+void DataControl::i2cSyncSlot(){
+    QObject * tmr = sender();
+    for (auto const &x: i2cSyncTimers){
+        if (x.second == tmr) {
+            i2cItem item = i2cSyncs[x.first];
+            emit sendI2CData(item.address,item.data);
+        }
+    }
+}
+
+void DataControl::gpioSyncSlot(){
+    QObject * tmr = sender();
+    for (auto const &x: gpioSyncTimers){
+        if (x.second == tmr) {
+            gpioItem item = gpioSyncs[x.first];
+            emit pushGPIOData(item.pin,item.value);
+        }
+    }
+}
+
 void DataControl::receive_sensor_data(meta * sensor){
     try{
-        subsystemMap[sensor->subsystem]->receiveData(sensor);
+        receiveData(sensor);
         for (uint i = 0; i < sensor->dependencies.size(); i++){
             meta * depSensor = static_cast<meta *>(sensor->dependencies.at(i));
-            subsystemMap[depSensor->subsystem]->receiveData(depSensor);
+            receiveData(depSensor);
         }
     } catch (...) {
         pushMessage("CRITICAL ERROR: Crash on receiving sensor data");
@@ -115,6 +197,11 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                     QCoreApplication::processEvents();
                     system_state * currState = currFSM->states.at(j);
                     if(currState->value == static_cast<int>(isolateData64(static_cast<uint>(currState->auxAddress),static_cast<uint>(currState->offset),data,currState->endianness))){
+                        for (const auto &x: recordMap){
+                            if (x.second->triggerFSM.compare(currFSM->name) == 0 && x.second->triggerState.compare(currState->name)){
+                                //check record windows
+                            }
+                        }
                         change_system_state(currState);
                     } else if (currState->active){
                         deactivateLog(currState);
@@ -156,21 +243,14 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
           for (uint i = 0; i < specSensors->size(); i++){
               QCoreApplication::processEvents();
               meta * currSensor = specSensors->at(i);
-              cout << "Isolating data: " << addr << endl;
-              fflush(stdout);
               currSensor->val = static_cast<int>(isolateData64(currSensor->auxAddress,currSensor->offset,data,currSensor->endianness));
-              cout << "Sending to subsystem: " << addr << endl;
-              fflush(stdout);
-              subsystemMap[currSensor->subsystem]->receiveData(currSensor);
+              receiveData(currSensor);
               QCoreApplication::processEvents();
-              cout << "Processing dependencies: " << addr << endl;
-              fflush(stdout);
               for (uint i = 0; i < currSensor->dependencies.size(); i++){
                   meta * depSensor = static_cast<meta *>(currSensor->dependencies.at(i));
-                  subsystemMap[depSensor->subsystem]->receiveData(depSensor);
+                  receiveData(depSensor);
               }
           }
-//          cout << "Done processing CAN data address: " << addr << endl;
         }
     } catch (...) {
         cout << "CRITICAL ERROR: Crash on receiving CAN data" << endl;
@@ -227,6 +307,312 @@ uint64_t DataControl::LSBto64Spec(uint auxAddress, uint offset, uint64_t data){
     data = data << lastAddr;
     data = data >> firstAddr;
     return data;
+}
+
+/**
+ * @brief DataControl::receiveData : receive sensor data
+ * @param currSensor
+ */
+void DataControl::receiveData(meta * currSensor){
+    calibrateData(currSensor);
+    checkRecordTriggers(currSensor);
+    checkThresholds(currSensor);
+    emit updateDisplay(currSensor);
+    logData(currSensor);
+}
+
+void DataControl::checkRecordTriggers(meta * currSensor){
+    if ( recordMap.find(currSensor->sensorIndex) == recordMap.end() ) {
+        // not found
+    } else {
+        recordwindow * rec = recordMap[currSensor->sensorIndex];
+        cout << "calval: " << currSensor->calVal << endl;
+        cout << "rec startval: " << rec->startVal << endl;
+        cout << "rec active: " << rec->active << endl;
+        if ((currSensor->calVal >= rec->startVal) && !rec->active){
+            rec->active = true;
+            ofstream dbScript;
+            string scriptName = rec->prefix + "_script.sql";
+            dbScript.open (scriptName);
+            dbScript << "create table if not exists sensor_data(" << endl;
+            string colString;
+            for (uint i = 0; i < rec->sensorIds.size(); i++){
+                colString += removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + ",";
+                string scriptLine = removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + " char not null,";
+                dbScript << scriptLine << endl;
+            }
+            dbScript << "time char not null" << endl;
+            dbScript << ");" << endl;
+            dbScript.close();
+            colString += "time";
+            string dbPath = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.db";
+            cout << "DB Path: " << dbPath << endl;
+            customDB = new DB_Engine(dbPath);
+            customDB->runScript(scriptName);
+            string deleteFileCmd = "rm " + scriptName;
+            system(deleteFileCmd.c_str());
+            recordDBMap.insert(make_pair(currSensor->sensorIndex,customDB));
+            recordColStrings.insert(make_pair(currSensor->sensorIndex,colString));
+        } else if ((currSensor->calVal <= rec->startVal) && rec->active){
+            cout << "Deactivating collection" << endl;
+            rec->active = false;
+            DB_Engine * currDB = recordDBMap[currSensor->sensorIndex];
+            vector<string> cols;
+            ofstream dataFile;
+            string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
+            dataFile.open(fileName);
+            cols.push_back("time");
+            dataFile << "time" << endl;
+            for (uint i = 0; i < rec->sensorIds.size(); i++){
+                cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
+                dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
+                if (i < rec->sensorIds.size()-1) dataFile << ",";
+            }
+            for (int i = 0; i < currDB->max_rowid("sensor_data"); i++){
+                vector<string> vals = currDB->get_row_values("sensor_data",cols,i);
+                string dataLine;
+                for (uint j = 0; j < vals.size(); j++){
+                    dataLine += vals.at(j);
+                    if (j < vals.size()-1) dataLine += ",";
+                }
+                dataFile << dataLine << endl;
+            }
+            dataFile.close();
+            if (recordDBMap.count(currSensor->sensorIndex) > 0) delete recordDBMap[currSensor->sensorIndex];
+            recordDBMap.erase(currSensor->sensorIndex);
+            incrementSessionNumber();
+        }
+    }
+}
+
+void DataControl::incrementSessionNumber(){
+    sessionNumber++;
+}
+
+/**
+ * @brief DataControl::logData - records specified sensor data in the respective database
+ * @param currSensor
+ */
+void DataControl::logData(meta * currSensor){
+    for (auto const& x : recordMap){
+        string colString;
+        string rowString;
+        if (x.second->active){
+            for (auto const &y: x.second->sensorIds){
+                if (currSensor->sensorIndex == y){
+                    colString = recordColStrings[x.first];
+                    for (auto const &z: x.second->sensorIds){
+                        rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
+                    }
+                }
+            }
+            if (rowString.compare("") != 0){
+                rowString += "'" + getProgramTime() + "'";
+                recordDBMap[x.first]->insert_row("sensor_data",colString,rowString);
+            }
+        }
+    }
+}
+
+/**
+ * @brief DataControl::checkThresholds - check whether specified sensor data exceeds configured thresholds
+ * @param sensor
+ */
+void DataControl::checkThresholds(meta * sensor){
+    string msg;
+    if (sensor->calVal >= sensor->maximum){
+        if (sensor->state != 1){
+            sensor->state = 1;
+            emit updateEditColor("red",sensor);
+            for (auto const &x : sensor->groups){
+                if (!subsystemMap[x]->error){
+                    subsystemMap[x]->error = true;
+                    emit subsystemMap[x]->updateHealth();
+                }
+            }
+            msg = sensor->sensorName + " exceeded upper threshold: " + to_string(sensor->maximum);
+            emit pushMessage(msg);
+            executeRxn(sensor->maxRxnCode);
+            pushMessage(msg);
+        }
+    } else if (sensor->calVal <= sensor->minimum){
+        if (sensor->state != -1){
+            sensor->state = -1;
+            emit updateEditColor("blue",sensor);
+            for (auto const &x : sensor->groups){
+                if (!subsystemMap[x]->error){
+                    subsystemMap[x]->error = true;
+                    emit subsystemMap[x]->updateHealth();
+                }
+            }
+            msg = sensor->sensorName + " below lower threshold: " + to_string(sensor->minimum);
+            emit pushMessage(msg);
+            executeRxn(sensor->minRxnCode);
+            pushMessage(msg);
+        }
+    } else {
+        if (sensor->state != 0){
+            sensor->state = 0;
+            emit updateEditColor("yellow",sensor);
+            executeRxn(sensor->normRxnCode);
+            for (auto const &x : sensor->groups){
+                if (subsystemMap[x]->error) {
+                    subsystemMap[x]->checkError();
+                    emit subsystemMap[x]->updateHealth();
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @brief DataControl::calibrateData : calibrates sensor data
+ * @param currSensor
+ */
+void DataControl::calibrateData(meta * currSensor){
+    currSensor->calData();
+    double data = 0;
+    vector<poly> pol = currSensor->calPolynomial;
+    if (pol.size() > 0){
+        for (uint i = 0; i < pol.size(); i++){
+            data += pol.at(i).coefficient*pow(currSensor->val,pol.at(i).exponent);
+        }
+        currSensor->calVal = data;
+    }
+    if (currSensor->senOperator > -1){
+        switch(currSensor->senOperator){
+        case SUM:   {
+                        currSensor->val = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->val += sen->val;
+                        }
+                        currSensor->calVal = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->calVal += sen->calVal;
+                        }
+                    }
+            break;
+        case DIFF:  {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->val = sen->val;
+                            else currSensor->val = abs(currSensor->val - sen->val);
+                        }
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->calVal = sen->calVal;
+                            else currSensor->calVal = abs(currSensor->calVal - sen->calVal);
+                        }
+                    }
+            break;
+        case MUL:   {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                          meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                          if (i == 0) currSensor->val = sen->val;
+                          else currSensor->val = currSensor->val*sen->val;
+                        }
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) {
+                                currSensor->calVal = sen->calVal;
+                            } else {
+                                currSensor->calVal = currSensor->calVal*sen->calVal;
+                            }
+                        }
+                    }
+            break;
+        case DIV:  {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->val = sen->val;
+                            else currSensor->val = currSensor->val/sen->val;
+                        }
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) currSensor->calVal = sen->calVal;
+                            else currSensor->calVal = currSensor->calVal/sen->calVal;
+                        }
+                    }
+            break;
+        case AVG:   {
+                        currSensor->val = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->val += sen->val;
+                        }
+                        currSensor->val = currSensor->val/currSensor->opSensors.size();
+                        currSensor->calVal = 0;
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            currSensor->calVal += sen->calVal;
+                        }
+                        currSensor->calVal = currSensor->calVal/currSensor->opSensors.size();
+                    }
+            break;
+        case MAX:   {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            } else if (sen->calVal > currSensor->calVal) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            }
+                        }
+        }
+            break;
+        case MIN:   {
+                        for (uint i = 0; i < currSensor->opSensors.size(); i++){
+                            meta * sen = static_cast<meta*>(currSensor->opSensors.at(i));
+                            if (i == 0) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            } else if (sen->calVal < currSensor->calVal) {
+                                currSensor->calVal = sen->calVal;
+                                currSensor->val = sen->val;
+                            }
+                        }
+                    }
+            break;
+        }
+    }
+}
+
+void DataControl::save_all_data(){
+    cout << "all data being saved" << endl;
+    for (auto const &x : recordMap){
+        recordwindow * rec = x.second;
+        if (rec->active){
+            rec->active = false;
+            DB_Engine * currDB = recordDBMap[x.first];
+            vector<string> cols;
+            ofstream dataFile;
+            string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
+            dataFile.open(fileName);
+            cols.push_back("time");
+            for (uint i = 0; i < rec->sensorIds.size(); i++){
+                cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
+                dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
+                if (i < rec->sensorIds.size()-1) dataFile << ",";
+            }
+            for (int i = 0; i < currDB->max_rowid("sensor_data"); i++){
+                vector<string> vals = currDB->get_row_values("sensor_data",cols,i);
+                string dataLine;
+                for (uint j = 0; j < vals.size(); j++){
+                    dataLine += vals.at(j);
+                    if (j < vals.size()-1) dataLine += ",";
+                }
+                dataFile << dataLine << endl;
+            }
+            dataFile.close();
+            if (recordDBMap.count(x.first) > 0) delete recordDBMap[x.first];
+            recordDBMap.erase(x.first);
+            incrementSessionNumber();
+        }
+    }
 }
 
 /**
@@ -342,7 +728,7 @@ void DataControl::saveSession(string name){
 }
 
 /**
- * @brief SubsystemThread::get_curr_time - retrieves current operation system time
+ * @brief DataControl::get_curr_time - retrieves current operation system time
  * @return
  */
 string DataControl::get_curr_time(){
@@ -351,4 +737,18 @@ string DataControl::get_curr_time(){
     char buf[20];
     strftime(buf, sizeof(buf),"%D_%T",&now);
     return buf;
+}
+
+/**
+ * @brief Function to remove all spaces from a given string
+ */
+string DataControl::removeSpaces(string &str)
+{
+    int size = str.length();
+    for(int j = 0; j<=size; j++){
+        for(int i = 0; i <=j; i++){
+            if(str[i] == ' ') str.erase(str.begin() + i);
+        }
+    }
+    return str;
 }

@@ -13,11 +13,11 @@ DEFINES += MAIN_QML=\\\"Basic.qml\\\"
 
 LIBS += -l sqlite3
 LIBS += -pthread
-#LIBS += -lusb-1.0
-LIBS += -l:libudev.so.1
-LIBS += -l:libc.so.6
-LIBS += -l:libusb-1.0.so.0
-LIBS += -l:ld-linux.so.3
+LIBS += -lusb-1.0
+#LIBS += -l:libudev.so.1
+#LIBS += -l:libc.so.6
+#LIBS += -l:libusb-1.0.so.0
+#LIBS += -l:ld-linux.so.3
 
 SOURCES += \
         main.cpp \
@@ -27,7 +27,6 @@ SOURCES += \
     mainwindow.cpp\
     qcustomplot.cpp \
     canbus_interface.cpp \
-    subsystemthread.cpp \
     gpio_interface.cpp \
     detailpage.cpp \
     dashboard.cpp \
@@ -41,7 +40,9 @@ SOURCES += \
     QKeyPushButton.cpp \
     widgetKeyBoard.cpp \
     traffictest.cpp \
-    examplemyfocus.cpp
+    examplemyfocus.cpp \
+    group.cpp \
+    watchdog.cpp
 
 HEADERS += \
     db_engine.h \
@@ -52,7 +53,6 @@ HEADERS += \
     qcustomplot.h\
     typedefs.h \
     canbus_interface.h \
-    subsystemthread.h \
     gpio_interface.h \
     detailpage.h \
     dashboard.h \
@@ -66,7 +66,9 @@ HEADERS += \
     QKeyPushButton.h \
     widgetKeyBoard.h \
     traffictest.h \
-    examplemyfocus.h
+    examplemyfocus.h \
+    group.h \
+    watchdog.h
 
 FORMS += \
         mainwindow.ui \

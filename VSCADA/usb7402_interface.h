@@ -16,7 +16,7 @@
 #include <QObject>
 #include <QTimer>
 #include "typedefs.h"
-#include "subsystemthread.h"
+#include "group.h"
 
 using namespace std;
 
@@ -24,7 +24,7 @@ class usb7402_interface : public QObject
 {
     Q_OBJECT
 public:
-    usb7402_interface(vector<meta *> sensors, vector<SubsystemThread *> subs);
+    usb7402_interface(vector<meta *> sensors);
     ~usb7402_interface();
 
     //member functions
@@ -37,7 +37,6 @@ public:
     //objects and instance vectors
     QTimer * timer;
     vector<meta *> sensorVector;
-    vector<SubsystemThread *> subsystems;
 
     //global variables
     bool isActive = 0;

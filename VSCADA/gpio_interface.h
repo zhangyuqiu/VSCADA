@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "typedefs.h"
-#include "subsystemthread.h"
 #include <sys/ioctl.h>			//Needed for I2C port
 #include <linux/i2c-dev.h>		//Needed for I2C port
 
@@ -28,7 +27,7 @@ class gpio_interface : public QObject
     Q_OBJECT
 
 public:
-    gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, vector<response> responses, vector<SubsystemThread *> subs);
+    gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, vector<response> responses);
     ~gpio_interface();
 
     void stopGPIOCheck();
@@ -40,7 +39,6 @@ public:
     int GPIOUnexport(int pin);
     void setSamplingRate(int newRate);
     int GPIODirection(int pin, int dir);
-    int i2cWrite(int address, int data);
 
     int samplingRate = 1000;
 
@@ -50,11 +48,11 @@ public:
     vector<int> i2cSlaveAddresses;
     vector<int> i2cFileDescriptors;
     vector<response> responseVector;
-    vector<SubsystemThread *> subsystems;
 
 public slots:
     void gpioCheckTasks();
     void GPIOWrite(int pin, int value);
+    int i2cWrite(int address, int data);
 
 signals:
     void sensorValueChanged(meta * sensor);

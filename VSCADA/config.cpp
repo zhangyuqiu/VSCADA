@@ -17,8 +17,9 @@ Config::~Config(){
     if (canInterface != nullptr) delete canInterface;
     if (dbase != nullptr) delete dbase;
 
-    for (uint i = 0; i < storedSensors.size(); i++){
-        if (storedSensors.at(i) != nullptr) delete storedSensors.at(i);
+
+    for (auto const& x : sensorMap){
+        if (x.second != nullptr) delete x.second;
     }
 
     for (uint i = 0; i < FSMs.size(); i++){
@@ -31,10 +32,6 @@ Config::~Config(){
 
     for (uint i = 0; i < controlSpecs.size(); i++){
         if (controlSpecs.at(i) != nullptr) delete controlSpecs.at(i);
-    }
-
-    for (uint i = 0; i < subsystems.size(); i++){
-        if (subsystems.at(i) != nullptr) delete subsystems.at(i);
     }
 }
 
@@ -82,18 +79,25 @@ bool Config::read_config_file_data(){
     QDomNodeList usb7204ConfRate = doc.elementsByTagName("usb7204rate");
     QDomNodeList systemControls = doc.elementsByTagName("systemcontrols");
     QDomNodeList responseNodes = doc.elementsByTagName("response");
-    QDomNodeList subsystemNodes = doc.elementsByTagName("subsystem");
+    QDomNodeList groupNodes = doc.elementsByTagName("group");
     QDomNodeList systemStatuses = doc.elementsByTagName("systemstatus");
     QDomNodeList stateMachines = doc.elementsByTagName("statemachine");
-    QDomNodeList systemLogic = doc.elementsByTagName("logic");
+    QDomNodeList sensorNodes = doc.elementsByTagName("sensor");
+    QDomNodeList canSyncNodes = doc.elementsByTagName("cansync");
+    QDomNodeList i2cSyncNodes = doc.elementsByTagName("i2csync");
+    QDomNodeList gpioSyncNodes = doc.elementsByTagName("gpiosync");
+    QDomNodeList canBootNodes = doc.elementsByTagName("bootcan");
+    QDomNodeList i2cBootNodes = doc.elementsByTagName("booti2c");
+    QDomNodeList gpioBootNodes = doc.elementsByTagName("bootgpio");
+    QDomNodeList recordNodes = doc.elementsByTagName("recordwindow");
 
 #ifdef CONFIG_PRINT
     cout << "Number of responses: " << responseNodes.size() << endl;
     cout << "Number of system controls: " << systemControls.size() << endl;
-    cout << "Number of subsystems: " << subsystemNodes.size() << endl;
-    cout << "Number of logic configurations: " << systemLogic.size() << endl;
+    cout << "Number of sensor groupings: " << groupNodes.size() << endl;
     cout << "Number of system states: " << systemStatuses.size() << endl;
     cout << "Number of state machines: " << stateMachines.size() << endl;
+    cout << "Number of configured sensors: " << sensorNodes.size() << endl;
 #endif
 
     //*****************************//
@@ -120,19 +124,12 @@ bool Config::read_config_file_data(){
     //*************************//
 
     for (int i = 0; i < mode.size(); i++){
-        QDomNodeList modeXteristics = mode.at(i).childNodes();
-        for (int j = 0; j < modeXteristics.size(); j++){
-            if (modeXteristics.at(j).nodeName().toStdString().compare("type") == 0){
-                if(modeXteristics.at(j).firstChild().nodeValue().toStdString().compare("DYNO") == 0){
-                    systemMode = DYNO;
-                } else if(modeXteristics.at(i).firstChild().nodeValue().toStdString().compare("CAR") == 0){
-                    systemMode = CAR;
-                } else if(modeXteristics.at(i).firstChild().nodeValue().toStdString().compare("TEST") == 0){
-                    systemMode = TEST;
-                } else {
-                    systemMode = CAR;
-                }
-            }
+        if (mode.at(i).firstChild().nodeValue().toStdString().compare("RUN") == 0){
+            systemMode = RUN;
+        } else if(mode.at(i).firstChild().nodeValue().toStdString().compare("TEST") == 0){
+            systemMode = TEST;
+        } else {
+            systemMode = RUN;
         }
     }
 
@@ -141,83 +138,81 @@ bool Config::read_config_file_data(){
     else cout << "System Mode: " << systemMode << ": DYNO" << endl;
 #endif
 
-    //**************************************************//
-    //*****for DYNO mode, process all control items*****//
-    //**************************************************//
-    if (systemMode == DYNO){
-        for (int i = 0; i < systemControls.size(); i++){
-            QDomNodeList ctrlSpecs = systemControls.at(i).childNodes();
-            for (int j = 0; j < ctrlSpecs.size(); j++){
-                currSpec = new controlSpec;
-                currSpec->button = false;
-                currSpec->slider = false;
-                currSpec->textField = false;
-                currSpec->minslider = -1;
-                currSpec->maxslider = -1;
-                currSpec->pressVal = -1;
-                currSpec->releaseVal = -1;
-                currSpec->usbChannel = -1;
-                currSpec->primAddress = 1000;
-                currSpec->auxAddress = 0;
-                currSpec->offset = 0;
-                currSpec->multiplier = 1;
-                currSpec->endianness = 1;
-                QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
-                for (int k = 0; k < controlXteristics.size(); k++){
-                    if (controlXteristics.at(k).nodeName().toStdString().compare("name") == 0){
-                        currSpec->name = controlXteristics.at(k).firstChild().nodeValue().toStdString();
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("usbchannel") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->usbChannel = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: USB channel not an integer");
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->primAddress = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: primary address not an integer");
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->auxAddress = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: aux address not an integer");
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->offset = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: address offset not an integer");
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("gpiopin") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->gpiopin = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: GPIO pin not an integer");
-                    }else if (controlXteristics.at(k).nodeName().toStdString().compare("minrange") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->minslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: min slider value not an integer");
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("maxrange") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->maxslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: max slider value not an integer");
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("multiplier") == 0){
-                            currSpec->multiplier = stod(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("type") == 0){
-                        if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("button") == 0){
-                            currSpec->button = true;
-                        } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("slider") == 0){
-                            currSpec->slider = true;
-                        } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("textfield") == 0){
-                            currSpec->textField = true;
-                        } else {
-                            configErrors.push_back("CONFIG ERROR: invalid control type");
-                        }
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("pressvalue") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->pressVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: press value not an integer");
-                    } else if (controlXteristics.at(k).nodeName().toStdString().compare("releasevalue") == 0){
-                        if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
-                            currSpec->releaseVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: release value not an integer");
+    //*******************************//
+    //*****process control items*****//
+    //*******************************//
+    for (int i = 0; i < systemControls.size(); i++){
+        QDomNodeList ctrlSpecs = systemControls.at(i).childNodes();
+        for (int j = 0; j < ctrlSpecs.size(); j++){
+            currSpec = new controlSpec;
+            currSpec->button = false;
+            currSpec->slider = false;
+            currSpec->textField = false;
+            currSpec->minslider = -1;
+            currSpec->maxslider = -1;
+            currSpec->pressVal = -1;
+            currSpec->releaseVal = -1;
+            currSpec->usbChannel = -1;
+            currSpec->primAddress = 1000;
+            currSpec->auxAddress = 0;
+            currSpec->offset = 0;
+            currSpec->multiplier = 1;
+            currSpec->endianness = 1;
+            QDomNodeList controlXteristics = ctrlSpecs.at(j).childNodes();
+            for (int k = 0; k < controlXteristics.size(); k++){
+                if (controlXteristics.at(k).nodeName().toStdString().compare("name") == 0){
+                    currSpec->name = controlXteristics.at(k).firstChild().nodeValue().toStdString();
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("usbchannel") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->usbChannel = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: USB channel not an integer");
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("primaddress") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->primAddress = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: primary address not an integer");
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("auxaddress") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->auxAddress = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: aux address not an integer");
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("offset") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->offset = stoul(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: address offset not an integer");
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("gpiopin") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->gpiopin = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: GPIO pin not an integer");
+                }else if (controlXteristics.at(k).nodeName().toStdString().compare("minrange") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->minslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: min slider value not an integer");
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("maxrange") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->maxslider = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: max slider value not an integer");
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("multiplier") == 0){
+                        currSpec->multiplier = stod(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("type") == 0){
+                    if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("button") == 0){
+                        currSpec->button = true;
+                    } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("slider") == 0){
+                        currSpec->slider = true;
+                    } else if(controlXteristics.at(k).firstChild().nodeValue().toStdString().compare("textfield") == 0){
+                        currSpec->textField = true;
+                    } else {
+                        configErrors.push_back("CONFIG ERROR: invalid control type");
                     }
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("pressvalue") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->pressVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: press value not an integer");
+                } else if (controlXteristics.at(k).nodeName().toStdString().compare("releasevalue") == 0){
+                    if (isInteger(controlXteristics.at(k).firstChild().nodeValue().toStdString()))
+                        currSpec->releaseVal = stoi(controlXteristics.at(k).firstChild().nodeValue().toStdString());
+                    else configErrors.push_back("CONFIG ERROR: release value not an integer");
                 }
-                controlSpecs.push_back(currSpec);
             }
+            controlSpecs.push_back(currSpec);
         }
     }
 
@@ -389,43 +384,6 @@ bool Config::read_config_file_data(){
     }
 #endif
 
-    //*********************************************//
-    //*****process system logic configurations*****//
-    //*********************************************//
-
-    for (int i = 0; i < systemLogic.size(); i++){
-        int id1 = -1;
-        int id2 = -1;
-        QDomNodeList logicConfigs = systemLogic.at(i).childNodes();
-        for (int j = 0; j < logicConfigs.size(); j++){
-            if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid1") == 0){
-                id1 = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
-                cout << "ID 1: " << id1 << endl;
-            } else if (logicConfigs.at(j).nodeName().toStdString().compare("sensorid2") == 0){
-                id2 = stoi(logicConfigs.at(j).firstChild().nodeValue().toStdString());
-                cout << "ID 2: " << id2 << endl;
-            } else if (logicConfigs.at(j).nodeName().toStdString().compare("state") == 0){
-                thisLogic = new logic;
-                thisLogic->active = false;
-                thisLogic->sensorId1 = id1;
-                thisLogic->sensorId2 = id2;
-                QDomNodeList stateNodes = logicConfigs.at(j).childNodes();
-                for (int k = 0; k < stateNodes.size(); k++){
-                    if (stateNodes.at(k).nodeName().toStdString().compare("val1") == 0){
-                        thisLogic->val1 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
-                    } else if (stateNodes.at(k).nodeName().toStdString().compare("val2") == 0){
-                        thisLogic->val2 = stod(stateNodes.at(k).firstChild().nodeValue().toStdString());
-                    } else if (stateNodes.at(k).nodeName().toStdString().compare("name") == 0){
-                        thisLogic->logicName = stateNodes.at(k).firstChild().nodeValue().toStdString();
-                    } else if (stateNodes.at(k).nodeName().toStdString().compare("responseid") == 0){
-                        thisLogic->rsp = stoi(stateNodes.at(k).firstChild().nodeValue().toStdString());
-                    }
-                }
-                logicVector.push_back(thisLogic);
-            }
-        }
-    }
-
 #ifdef CONFIG_PRINT
     cout << "Logic Configured: " << endl;
     for (uint i = 0; i < logicVector.size(); i++){
@@ -436,286 +394,394 @@ bool Config::read_config_file_data(){
     }
 #endif
 
-
-    //***********************************************//
-    //*****process system subsystems and sensors*****//
-    //***********************************************//
-
-    for (int i = 0; i < static_cast<int>(subsystemNodes.size()); i++){
-        int minrate = 0;
-        int maxrate = 0;
-        string subSystemId;
-        vector<meta *> sensors;
-        vector<meta *> mainMeta;
-        vector<canItem> broadCast;
-        bootloader bootCmds;
-
-        //get subsystem characteristics: subsystemId, minrate and maxrate
-        QDomNodeList subsystemXteristics = subsystemNodes.at(i).childNodes();
-        for (int j = 0; j < subsystemXteristics.size(); j++){
-            if (subsystemXteristics.at(j).nodeName().toStdString().compare("name") == 0){
-                subSystemId = subsystemXteristics.at(j).firstChild().nodeValue().toStdString();
-            } else if(subsystemXteristics.at(j).nodeName().toStdString().compare("minrate") == 0){
-                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    minrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: subsystem min rate not an integer");
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("maxrate") == 0){
-                if (isInteger(subsystemXteristics.at(j).firstChild().nodeValue().toStdString()))
-                    maxrate = stoi(subsystemXteristics.at(j).firstChild().nodeValue().toStdString());
-                else configErrors.push_back("CONFIG ERROR: subsystem max rate not an integer");
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("canbroadcast") == 0){
-                canItem item;
-                item.address = -1;
-                item.data = 0;
-                item.dataSize = 8;
-                QDomNodeList canItemList = subsystemXteristics.at(j).childNodes();
-                for (int m = 0; m < canItemList.size(); m++){
-                    if(canItemList.at(m).nodeName().toStdString().compare("address") == 0){
-                        if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
-                            item.address = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: broadcast CAN address not an integer");
-                    } else if(canItemList.at(m).nodeName().toStdString().compare("data") == 0){
-                        item.data = stoull(canItemList.at(m).firstChild().nodeValue().toStdString());
-                    } else if(canItemList.at(m).nodeName().toStdString().compare("bytes") == 0){
-                        if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
-                            item.dataSize = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
-                        else configErrors.push_back("CONFIG ERROR: broadcast CAN data size not an integer");
-                    }
-                }
-                broadCast.push_back(item);
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("bootsequence") == 0){
-                QDomNodeList bootCmdList = subsystemXteristics.at(j).childNodes();
-                for (int k = 0; k < bootCmdList.size(); k++){
-                    if(bootCmdList.at(k).nodeName().toStdString().compare("bootcan") == 0){
-                        canItem item;
-                        item.address = -1;
-                        item.data = 0;
-                        item.dataSize = 8;
-                        QDomNodeList canItemList = bootCmdList.at(k).childNodes();
-                        for (int m = 0; m < canItemList.size(); m++){
-                            if(canItemList.at(m).nodeName().toStdString().compare("address") == 0){
-                                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
-                                    item.address = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
-                                else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
-                            } else if(canItemList.at(m).nodeName().toStdString().compare("data") == 0){
-                                item.data = stoull(canItemList.at(m).firstChild().nodeValue().toStdString());
-                            } else if(canItemList.at(m).nodeName().toStdString().compare("bytes") == 0){
-                                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
-                                    item.dataSize = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
-                                else configErrors.push_back("CONFIG ERROR: boot CAN data size not an integer");
-                            }
-                        }
-                        bootCmds.bootCanCmds.push_back(item);
-                    } else if(bootCmdList.at(k).nodeName().toStdString().compare("booti2c") == 0){
-                        if (isInteger(bootCmdList.at(k).firstChild().nodeValue().toStdString()))
-                            bootCmds.bootI2cCmds.push_back(stoul(bootCmdList.at(k).firstChild().nodeValue().toStdString()));
-                        else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
-                    } else if(bootCmdList.at(k).nodeName().toStdString().compare("bootgpio") == 0){
-                        gpioItem item;
-                        item.mode = -1;
-                        item.pin = -1;
-                        item.value = 0;
-                        QDomNodeList gpioItemList = bootCmdList.at(k).childNodes();
-                        for (int m = 0; m < gpioItemList.size(); m++){
-                            if(gpioItemList.at(m).nodeName().toStdString().compare("pin") == 0){
-                                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
-                                    item.pin = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
-                                else configErrors.push_back("CONFIG ERROR: boot GPIO pin not an integer");
-                            } else if(gpioItemList.at(m).nodeName().toStdString().compare("value") == 0){
-                                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
-                                    item.value = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
-                                else configErrors.push_back("CONFIG ERROR: boot GPIO val not an integer");
-                            } else if(gpioItemList.at(m).nodeName().toStdString().compare("mode") == 0){
-                                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
-                                    item.mode = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
-                                else configErrors.push_back("CONFIG ERROR: boot GPIO mode not an integer");
-                            }
-                        }
-                        bootCmds.bootGPIOCmds.push_back(item);
-                    }
-                }
-            } else if (subsystemXteristics.at(j).nodeName().toStdString().compare("sensors") == 0){
-                QDomNodeList sensorsList = subsystemXteristics.at(j).childNodes();
-                for (int k = 0; k < sensorsList.size(); k++){
-                    meta thisSensor;
-                    storedSensor = new meta;
-                    storedSensor->val = 0;
-                    storedSensor->calVal = 0;
-                    storedSensor->main = 0;
-                    storedSensor->state = 0;
-                    storedSensor->sensorIndex = -1;
-                    storedSensor->minimum = -1;
-                    storedSensor->maximum = -1;
-                    storedSensor->checkRate = -1;
-                    storedSensor->maxRxnCode = 0;
-                    storedSensor->minRxnCode = 0;
-                    storedSensor->normRxnCode = 0;
-                    storedSensor->primAddress = 1000;
-                    storedSensor->auxAddress = 0;
-                    storedSensor->offset = 0;
-                    storedSensor->gpioPin = -1;
-                    storedSensor->calMultiplier = 1;
-                    storedSensor->calConst = 0;
-                    storedSensor->i2cAddress = -1;
-                    storedSensor->i2cReadPointer = 0;
-                    storedSensor->i2cReadDelay = 0;
-                    storedSensor->i2cDataField = 16;
-                    storedSensor->subsystem = subSystemId;
-                    storedSensor->endianness = 1;
-                    storedSensor->senOperator = -1;
-                    storedSensor->lutIndex = -1;
-                    QDomNode sensor = sensorsList.at(k);
-                    QDomNodeList attributeList = sensor.childNodes();
-                    for (int m = 0; m < attributeList.size(); m++){
-                        if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
-                            storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
-                        } else if(attributeList.at(m).nodeName().toStdString().compare("alias") == 0){
-                            storedSensor->alias = attributeList.at(m).firstChild().nodeValue().toStdString();
-                        } else if(attributeList.at(m).nodeName().toStdString().compare("unit") == 0){
-                            storedSensor->unit = attributeList.at(m).firstChild().nodeValue().toStdString();
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor index not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("primaddress") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->primAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor primary address not an integer");
-                            canSensors.push_back(storedSensor);
-                            if ( canAddressMap.find(storedSensor->primAddress) == canAddressMap.end() ) {
-                                canAddressMap.insert(make_pair(storedSensor->primAddress,1));
-                            } else {
-                              // found so skip
-                            }
-                            canSensorMap.insert(make_pair(storedSensor->primAddress+storedSensor->auxAddress, storedSensor));
-                            if ( canSensorGroup.find(storedSensor->primAddress) == canSensorGroup.end() ) {
-                                canVectorItem =  new vector<meta*>;
-                                canVectorItem->push_back(storedSensor);
-                                canSensorGroup.insert(make_pair(storedSensor->primAddress, canVectorItem));
-                            } else {
-                                uint32_t val = storedSensor->primAddress;
-                                vector<meta*> * item = canSensorGroup[val];
-                                item->push_back(storedSensor);
-                            }
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("auxaddress") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->auxAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor aux address not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("offset") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->offset = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor address offset not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
-                            storedSensor->minimum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("main") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->main = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor main field not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
-                            storedSensor->maximum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("minresponse") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor min reaction code not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("maxresponse") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor max reaction code not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("normresponse") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor norm reaction code not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor check rate not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("calconstant") == 0){
-                            storedSensor->calConst = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("calmultiplier") == 0){
-                            storedSensor->calMultiplier = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor GPIO pin not an integer");
-                            gpioSensors.push_back(storedSensor);
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("usbchannel") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->usbChannel = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
-                            usbSensors.push_back(storedSensor);
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("endianness") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->endianness = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor i2c address not an integer");
-                            i2cSensors.push_back(storedSensor);
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2creadpointer") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->i2cReadPointer = static_cast<uint8_t>(stoul(attributeList.at(m).firstChild().nodeValue().toStdString()));
-                            else configErrors.push_back("CONFIG ERROR: sensor i2c pointer set not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2cconfigdata") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->i2cConfigs.push_back(static_cast<uint32_t>(stoul(attributeList.at(m).firstChild().nodeValue().toStdString())));
-                            else configErrors.push_back("CONFIG ERROR: sensor i2c configuration stream not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2cdatafield") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->i2cDataField = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor i2c data field size not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("i2creaddelay") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->i2cReadDelay = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: sensor i2c read delay not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("lutindex") == 0){
-                            if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
-                                storedSensor->lutIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
-                            else configErrors.push_back("CONFIG ERROR: LUT index not an integer");
-                        } else if (attributeList.at(m).nodeName().toStdString().compare("sensoroperation") == 0){
-                            QDomNode opItem = attributeList.at(m);
-                            QDomNodeList opItemList = opItem.childNodes();
-                            for (int n = 0; n < opItemList.size(); n++){
-                                if (opItemList.at(n).nodeName().toStdString().compare("operation") == 0){
-                                    if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("SUM") == 0) storedSensor->senOperator = SUM;
-                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("DIFF") == 0) storedSensor->senOperator = DIFF;
-                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MUL") == 0) storedSensor->senOperator = MUL;
-                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("DIV") == 0) storedSensor->senOperator = DIV;
-                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("AVG") == 0) storedSensor->senOperator = AVG;
-                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MAX") == 0) storedSensor->senOperator = MAX;
-                                    else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MIN") == 0) storedSensor->senOperator = MIN;
-                                } else if (opItemList.at(n).nodeName().toStdString().compare("opalias") == 0){
-                                    storedSensor->opAliases.push_back(opItemList.at(n).firstChild().nodeValue().toStdString());
-                                }
-                            }
-                            dependentSensors.push_back(storedSensor);
-                        }else if (attributeList.at(m).nodeName().toStdString().compare("calpoly") == 0){
-                            QDomNode polyItem = attributeList.at(m);
-                            QDomNodeList polyItemList = polyItem.childNodes();
-                            int polyCount = 0;
-                            for (int n = 0; n < polyItemList.size(); n++){
-                                poly item;
-                                if (polyItemList.at(n).nodeName().toStdString().compare("coef") == 0){
-                                    item.exponent = polyCount;
-                                    item.coefficient = stod(polyItemList.at(n).firstChild().nodeValue().toStdString());
-                                    polyCount++;
-                                }
-                                storedSensor->calPolynomial.push_back(item);
-                            }
-                        }
-                    }
-                    storedSensors.push_back(storedSensor);
-                    sensors.push_back(storedSensor);
-                    allSensors.push_back(thisSensor);
-                    if (storedSensor->main == 1){
-                        mainMeta.push_back(storedSensor);
-                        mainSensors.push_back(storedSensor);
-                    }
-                }
-
+    //***************************************//
+    //*****process boot sequence signals*****//
+    //***************************************//
+    for (int i = 0; i < canBootNodes.size(); i++){
+        canItem item;
+        item.address = -1;
+        item.data = 0;
+        item.dataSize = 8;
+        QDomNodeList canItemList = canBootNodes.at(i).childNodes();
+        for (int m = 0; m < canItemList.size(); m++){
+            if(canItemList.at(m).nodeName().toStdString().compare("address") == 0){
+                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.address = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
+            } else if(canItemList.at(m).nodeName().toStdString().compare("data") == 0){
+                item.data = stoull(canItemList.at(m).firstChild().nodeValue().toStdString());
+            } else if(canItemList.at(m).nodeName().toStdString().compare("bytes") == 0){
+                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.dataSize = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: boot CAN data size not an integer");
             }
         }
+        bootCmds.bootCanCmds.push_back(item);
+    }
 
+    for (int i = 0; i < i2cBootNodes.size(); i++){
+        if (isInteger(i2cBootNodes.at(i).firstChild().nodeValue().toStdString()))
+            bootCmds.bootI2cCmds.push_back(stoul(i2cBootNodes.at(i).firstChild().nodeValue().toStdString()));
+        else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
+    }
+
+    for (int i = 0; i < i2cBootNodes.size(); i++){
+        gpioItem item;
+        item.mode = -1;
+        item.pin = -1;
+        item.value = 0;
+        QDomNodeList gpioItemList = i2cBootNodes.at(i).childNodes();
+        for (int m = 0; m < gpioItemList.size(); m++){
+            if(gpioItemList.at(m).nodeName().toStdString().compare("pin") == 0){
+                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.pin = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: boot GPIO pin not an integer");
+            } else if(gpioItemList.at(m).nodeName().toStdString().compare("value") == 0){
+                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.value = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: boot GPIO val not an integer");
+            } else if(gpioItemList.at(m).nodeName().toStdString().compare("mode") == 0){
+                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.mode = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: boot GPIO mode not an integer");
+            }
+        }
+        bootCmds.bootGPIOCmds.push_back(item);
+    }
+
+    cout << "Boot sequence processed" << endl;
+
+    //**********************************//
+    //*****process sync signals*****//
+    //**********************************//
+    for (int i = 0; i < canSyncNodes.size(); i++){
+        canItem item;
+        item.address = -1;
+        item.data = 0;
+        item.dataSize = 8;
+        QDomNodeList canItemList = canSyncNodes.at(i).childNodes();
+        for (int m = 0; m < canItemList.size(); m++){
+            if(canItemList.at(m).nodeName().toStdString().compare("address") == 0){
+                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.address = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: broadcast CAN address not an integer");
+            } else if(canItemList.at(m).nodeName().toStdString().compare("data") == 0){
+                item.data = stoull(canItemList.at(m).firstChild().nodeValue().toStdString());
+            } else if(canItemList.at(m).nodeName().toStdString().compare("bytes") == 0){
+                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.dataSize = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: broadcast CAN data size not an integer");
+            } else if(canItemList.at(m).nodeName().toStdString().compare("ratems") == 0){
+                if (isInteger(canItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.rate_ms = stoi(canItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: broadcast CAN data size not an integer");
+            }
+        }
+        canSyncs.push_back(item);
+    }
+
+    for (int i = 0; i < i2cSyncNodes.size(); i++){
+        i2cItem item;
+        item.address = -1;
+        item.data = 0;
+        QDomNodeList i2cItemList = i2cSyncNodes.at(i).childNodes();
+        for (int m = 0; m < i2cItemList.size(); m++){
+            if(i2cItemList.at(m).nodeName().toStdString().compare("address") == 0){
+                if (isInteger(i2cItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.address = stoi(i2cItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: broadcast I2C address not an integer");
+            } else if(i2cItemList.at(m).nodeName().toStdString().compare("data") == 0){
+                item.data = stoi(i2cItemList.at(m).firstChild().nodeValue().toStdString());
+            } else if(i2cItemList.at(m).nodeName().toStdString().compare("ratems") == 0){
+                if (isInteger(i2cItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.rate_ms = stoi(i2cItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: broadcast CAN data size not an integer");
+            }
+        }
+        i2cSyncs.push_back(item);
+    }
+
+    for (int i = 0; i < gpioSyncNodes.size(); i++){
+        gpioItem item;
+        item.pin = -1;
+        item.value = 0;
+        QDomNodeList gpioItemList = gpioSyncNodes.at(i).childNodes();
+        for (int m = 0; m < gpioItemList.size(); m++){
+            if(gpioItemList.at(m).nodeName().toStdString().compare("pin") == 0){
+                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.pin = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: broadcast GPIO address not an integer");
+            } else if(gpioItemList.at(m).nodeName().toStdString().compare("data") == 0){
+                item.value = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+            } else if(gpioItemList.at(m).nodeName().toStdString().compare("ratems") == 0){
+                if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
+                    item.rate_ms = stoi(gpioItemList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: broadcast CAN data size not an integer");
+            }
+        }
+        gpioSyncs.push_back(item);
+    }
+
+    cout << "Sync signals processed" << endl;
+
+    //****************************************//
+    //*****process data recording windows*****//
+    //****************************************//
+    for (int i = 0; i < recordNodes.size(); i++){
+        recWin = new recordwindow;
+        recWin->active = false;
+        recWin->startVal = 0;
+        recWin->stopVal = 0;
+        recWin->triggerSensor = 0;
+        recWin->triggerFSM = "";
+        recWin->triggerState = "";
+        QDomNodeList recWinList = recordNodes.at(i).childNodes();
+        for (int m = 0; m < recWinList.size(); m++){
+            if(recWinList.at(m).nodeName().toStdString().compare("triggersensor") == 0){
+                if (isInteger(recWinList.at(m).firstChild().nodeValue().toStdString()))
+                    recWin->triggerSensor = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: trigger sensor not an integer");
+            } else if(recWinList.at(m).nodeName().toStdString().compare("startvalue") == 0){
+                recWin->startVal = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
+            } else if(recWinList.at(m).nodeName().toStdString().compare("stopvalue") == 0){
+                recWin->stopVal = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
+            } else if(recWinList.at(m).nodeName().toStdString().compare("savepath") == 0){
+                recWin->savePath = recWinList.at(m).firstChild().nodeValue().toStdString();
+            } else if(recWinList.at(m).nodeName().toStdString().compare("saveprefix") == 0){
+                recWin->prefix = recWinList.at(m).firstChild().nodeValue().toStdString();
+            } else if(recWinList.at(m).nodeName().toStdString().compare("triggerstate") == 0){
+                QDomNode recItem = recWinList.at(m);
+                QDomNodeList recItemList = recItem.childNodes();
+                for (int n = 0; n < recItemList.size(); n++){
+                    if (recItemList.at(n).nodeName().toStdString().compare("fsm") == 0) {
+                        string fsmName = recItemList.at(n).firstChild().nodeValue().toStdString();
+                        for (uint p = 0; p < FSMs.size(); p++){
+                            if (FSMs.at(p)->name.compare(fsmName) == 0) recWin->triggerFSM = fsmName;
+                        }
+                        if (recWin->triggerFSM.compare("") == 0) configErrors.push_back("CONFIG ERROR: no such FSM configured for record window");
+                    } else if (recItemList.at(n).nodeName().toStdString().compare("state") == 0){
+                        string stateName = recItemList.at(n).firstChild().nodeValue().toStdString();
+                        for (uint p = 0; p < FSMs.size(); p++){
+                            for (uint q = 0; q < FSMs.at(p)->states.size(); q++){
+                                if (FSMs.at(p)->states.at(q)->name.compare(stateName) == 0) recWin->triggerState = stateName;
+                            }
+                        }
+                        if (recWin->triggerState.compare("") == 0) configErrors.push_back("CONFIG ERROR: no such state configured for record window");
+                    }
+                }
+            }else if(recWinList.at(m).nodeName().toStdString().compare("sensors") == 0){
+                QDomNode recItem = recWinList.at(m);
+                QDomNodeList recItemList = recItem.childNodes();
+                for (int n = 0; n < recItemList.size(); n++){
+                    if (isInteger(recItemList.at(n).firstChild().nodeValue().toStdString())) {
+                        recWin->sensorIds.push_back(stoi(recItemList.at(n).firstChild().nodeValue().toStdString()));
+                    }
+                    else configErrors.push_back("CONFIG ERROR: record sensor id not an integer");
+                }
+            }
+        }
+        cout << "Record Window Parameters: " << endl;
+        cout << "FSM Name : " << recWin->triggerFSM << endl;
+        cout << "State Name: " << recWin->triggerState << endl;
+        recordConfigs.insert(make_pair(recWin->triggerSensor,recWin));
+    }
+
+    cout << "Data recording windows processed" << endl;
+
+    //*************************//
+    //*****process sensors*****//
+    //*************************//
+    for (int k = 0; k < sensorNodes.size(); k++){
+        meta thisSensor;
+        storedSensor = new meta;
+        storedSensor->val = 0;
+        storedSensor->calVal = 0;
+        storedSensor->main = 0;
+        storedSensor->state = 0;
+        storedSensor->sensorIndex = -1;
+        storedSensor->minimum = -1;
+        storedSensor->maximum = -1;
+        storedSensor->checkRate = -1;
+        storedSensor->maxRxnCode = 0;
+        storedSensor->minRxnCode = 0;
+        storedSensor->normRxnCode = 0;
+        storedSensor->primAddress = 1000;
+        storedSensor->auxAddress = 0;
+        storedSensor->offset = 0;
+        storedSensor->gpioPin = -1;
+        storedSensor->calMultiplier = 1;
+        storedSensor->calConst = 0;
+        storedSensor->i2cAddress = -1;
+        storedSensor->i2cReadPointer = 0;
+        storedSensor->i2cReadDelay = 0;
+        storedSensor->i2cDataField = 16;
+        storedSensor->endianness = 1;
+        storedSensor->senOperator = -1;
+        storedSensor->lutIndex = -1;
+        QDomNodeList attributeList = sensorNodes.at(k).childNodes();
+        for (int m = 0; m < attributeList.size(); m++){
+            if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
+                storedSensor->sensorName = attributeList.at(m).firstChild().nodeValue().toStdString();
+            } else if(attributeList.at(m).nodeName().toStdString().compare("alias") == 0){
+                storedSensor->alias = attributeList.at(m).firstChild().nodeValue().toStdString();
+            } else if(attributeList.at(m).nodeName().toStdString().compare("unit") == 0){
+                storedSensor->unit = attributeList.at(m).firstChild().nodeValue().toStdString();
+            } else if (attributeList.at(m).nodeName().toStdString().compare("id") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor index not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("primaddress") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->primAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor primary address not an integer");
+                canSensors.push_back(storedSensor);
+                if ( canAddressMap.find(storedSensor->primAddress) == canAddressMap.end() ) {
+                    canAddressMap.insert(make_pair(storedSensor->primAddress,1));
+                } else {
+                  // found so skip
+                }
+                canSensorMap.insert(make_pair(storedSensor->primAddress+storedSensor->auxAddress, storedSensor));
+                if ( canSensorGroup.find(storedSensor->primAddress) == canSensorGroup.end() ) {
+                    canVectorItem =  new vector<meta*>;
+                    canVectorItem->push_back(storedSensor);
+                    canSensorGroup.insert(make_pair(storedSensor->primAddress, canVectorItem));
+                } else {
+                    uint32_t val = storedSensor->primAddress;
+                    vector<meta*> * item = canSensorGroup[val];
+                    item->push_back(storedSensor);
+                }
+            } else if (attributeList.at(m).nodeName().toStdString().compare("auxaddress") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->auxAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor aux address not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("offset") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->offset = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor address offset not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("minimum") == 0){
+                storedSensor->minimum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
+            } else if (attributeList.at(m).nodeName().toStdString().compare("main") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->main = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor main field not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("maximum") == 0){
+                storedSensor->maximum = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
+            } else if (attributeList.at(m).nodeName().toStdString().compare("minresponse") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->minRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor min reaction code not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("maxresponse") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->maxRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor max reaction code not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("normresponse") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->normRxnCode = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor norm reaction code not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("checkrate") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->checkRate = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor check rate not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("calconstant") == 0){
+                storedSensor->calConst = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
+            } else if (attributeList.at(m).nodeName().toStdString().compare("calmultiplier") == 0){
+                storedSensor->calMultiplier = stod(attributeList.at(m).firstChild().nodeValue().toStdString());
+            } else if (attributeList.at(m).nodeName().toStdString().compare("gpiopin") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->gpioPin = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor GPIO pin not an integer");
+                gpioSensors.push_back(storedSensor);
+            } else if (attributeList.at(m).nodeName().toStdString().compare("usbchannel") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->usbChannel = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
+                usbSensors.push_back(storedSensor);
+            } else if (attributeList.at(m).nodeName().toStdString().compare("endianness") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->endianness = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor USB channel not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("i2caddress") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->i2cAddress = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor i2c address not an integer");
+                i2cSensors.push_back(storedSensor);
+            } else if (attributeList.at(m).nodeName().toStdString().compare("i2creadpointer") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->i2cReadPointer = static_cast<uint8_t>(stoul(attributeList.at(m).firstChild().nodeValue().toStdString()));
+                else configErrors.push_back("CONFIG ERROR: sensor i2c pointer set not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("i2cconfigdata") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->i2cConfigs.push_back(static_cast<uint32_t>(stoul(attributeList.at(m).firstChild().nodeValue().toStdString())));
+                else configErrors.push_back("CONFIG ERROR: sensor i2c configuration stream not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("i2cdatafield") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->i2cDataField = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor i2c data field size not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("i2creaddelay") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->i2cReadDelay = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: sensor i2c read delay not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("lutindex") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->lutIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: LUT index not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("sensoroperation") == 0){
+                QDomNode opItem = attributeList.at(m);
+                QDomNodeList opItemList = opItem.childNodes();
+                for (int n = 0; n < opItemList.size(); n++){
+                    if (opItemList.at(n).nodeName().toStdString().compare("operation") == 0){
+                        if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("SUM") == 0) storedSensor->senOperator = SUM;
+                        else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("DIFF") == 0) storedSensor->senOperator = DIFF;
+                        else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MUL") == 0) storedSensor->senOperator = MUL;
+                        else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("DIV") == 0) storedSensor->senOperator = DIV;
+                        else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("AVG") == 0) storedSensor->senOperator = AVG;
+                        else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MAX") == 0) storedSensor->senOperator = MAX;
+                        else if (opItemList.at(n).firstChild().nodeValue().toStdString().compare("MIN") == 0) storedSensor->senOperator = MIN;
+                    } else if (opItemList.at(n).nodeName().toStdString().compare("opalias") == 0){
+                        storedSensor->opAliases.push_back(opItemList.at(n).firstChild().nodeValue().toStdString());
+                    }
+                }
+                dependentSensors.push_back(storedSensor);
+            }else if (attributeList.at(m).nodeName().toStdString().compare("calpoly") == 0){
+                QDomNode polyItem = attributeList.at(m);
+                QDomNodeList polyItemList = polyItem.childNodes();
+                int polyCount = 0;
+                for (int n = 0; n < polyItemList.size(); n++){
+                    poly item;
+                    if (polyItemList.at(n).nodeName().toStdString().compare("coef") == 0){
+                        item.exponent = polyCount;
+                        item.coefficient = stod(polyItemList.at(n).firstChild().nodeValue().toStdString());
+                        polyCount++;
+                    }
+                    storedSensor->calPolynomial.push_back(item);
+                }
+            }
+        }
+        sensorMap.insert(make_pair(storedSensor->sensorIndex,storedSensor));
+        cout << "Sensor " << sensorMap[storedSensor->sensorIndex]->sensorName << " inserted into map" << endl;
+    }
+
+    cout << "Sensors Processed" << endl;
+    //**************************************//
+    //*****process group member sensors*****//
+    //**************************************//
+    for (int i = 0; i < groupNodes.size(); i++){
+        string groupId;
+        int sensorId;
+        vector<meta *> sensors;
+
+        //get group characteristics: groupId, minrate and maxrate
+        QDomNodeList groupXteristics = groupNodes.at(i).childNodes();
+        for (int j = 0; j < groupXteristics.size(); j++){
+            if (groupXteristics.at(j).nodeName().toStdString().compare("name") == 0){
+                groupId = groupXteristics.at(j).firstChild().nodeValue().toStdString();
+            } else if (groupXteristics.at(j).nodeName().toStdString().compare("sensorid") == 0){
+                sensorId = stoi(groupXteristics.at(j).firstChild().nodeValue().toStdString());
+                sensors.push_back(sensorMap[sensorId]);
+                sensorMap[sensorId]->groups.push_back(groupId);
+            }
+        }
+    cout << "Group Sensors Processed" << endl;
 #ifdef CONFIG_PRINT
     cout << "Boot Configuration: " << endl;
     for (uint i = 0; i < bootCmds.bootCanCmds.size(); i++){
@@ -729,29 +795,18 @@ bool Config::read_config_file_data(){
     }
 #endif
 
-#ifdef CONFIG_PRINT
-    cout << "CAN Broadcast: " << endl;
-    for (uint i = 0; i < broadCast.size(); i++){
-        cout << "CAN address: " << broadCast.at(i).address << " data: " << broadCast.at(i).data << " size: " << broadCast.at(i).dataSize << endl;
-    }
-#endif
-
-        //launch a subsystem thread
-
-        SubsystemThread * thread = new SubsystemThread(sensors,subSystemId,allResponses,logicVector,mainMeta,broadCast,bootCmds);
-        subsystems.push_back(thread);
-        sensorVector.push_back(sensors);
-        minrates.push_back(minrate);
-        subsystemMap.insert(make_pair(thread->subsystemId,thread));
+        //create group object
+        grp = new Group(sensors,groupId,allResponses,logicVector,sensors,bootCmds);
+        groupMap.insert(make_pair(grp->groupId,grp));
     }
 
     cout << "****************** depsensors size: " << dependentSensors.size() << endl;
     for (uint i = 0; i < dependentSensors.size(); i++){
         for (uint j = 0; j < dependentSensors.at(i)->opAliases.size(); j++){
-            for (uint k = 0; k < storedSensors.size(); k++){
-                if (storedSensors.at(k)->alias.compare(dependentSensors.at(i)->opAliases.at(j)) == 0){
-                    storedSensors.at(k)->dependencies.push_back(dependentSensors.at(i));
-                    dependentSensors.at(i)->opSensors.push_back(storedSensors.at(k));
+            for (auto const& x : sensorMap){
+                if (x.second->alias.compare(dependentSensors.at(i)->opAliases.at(j)) == 0){
+                    x.second->dependencies.push_back(dependentSensors.at(i));
+                    dependentSensors.at(i)->opSensors.push_back(x.second);
                 }
             }
         }
@@ -776,10 +831,17 @@ bool Config::read_config_file_data(){
     dbScript << "message char not null" << endl;
     dbScript << ");" << endl;
 
+    dbScript << "create table if not exists sensor_data(" << endl;
+    dbScript << "time char not null," << endl;
+    dbScript << "sensorindex char not null," << endl;
+    dbScript << "sensorname char not null," << endl;
+    dbScript << "rawdata char not null," << endl;
+    dbScript << "caldata char not null" << endl;
+    dbScript << ");" << endl;
+
     dbScript << "create table if not exists sensors(" << endl;
     dbScript << "sensorindex char not null," << endl;
     dbScript << "sensorname char not null," << endl;
-    dbScript << "subsystem char not null," << endl;
     dbScript << "minthreshold char not null," << endl;
     dbScript << "maxthreshold char not null," << endl;
     dbScript << "maxresponseid char not null," << endl;
@@ -787,26 +849,13 @@ bool Config::read_config_file_data(){
     dbScript << "calconstant char not null" << endl;
     dbScript << ");" << endl;
 
-    //create subsystem tables
-    for (uint i = 0; i < subsystems.size(); i++){
-        string subsystemName = removeSpaces(subsystems.at(i)->subsystemId);
-        string scriptTableArg = "create table if not exists " + subsystemName + "_rawdata(";
+    //create group tables
+    for (auto const &x : groupMap){
+        string groupName = removeSpaces(x.second->groupId);
+        string scriptTableArg = "create table if not exists " + groupName + "_sensors(";
         dbScript << scriptTableArg << endl;
-        dbScript << "time char not null," << endl;
         dbScript << "sensorindex char not null," << endl;
-        dbScript << "sensorname char not null," << endl;
-        dbScript << "value char not null" << endl;
-        dbScript << ");" << endl;
-    }
-
-    for (uint i = 0; i < subsystems.size(); i++){
-        string subsystemName = removeSpaces(subsystems.at(i)->subsystemId);
-        string scriptTableArg = "create table if not exists " + subsystemName + "_caldata(";
-        dbScript << scriptTableArg << endl;
-        dbScript << "time char not null," << endl;
-        dbScript << "sensorindex char not null," << endl;
-        dbScript << "sensorname char not null," << endl;
-        dbScript << "value char not null" << endl;
+        dbScript << "sensorname char not null" << endl;
         dbScript << ");" << endl;
     }
     dbScript.close();
@@ -814,30 +863,39 @@ bool Config::read_config_file_data(){
     system("rm ./savedsessions/system.db");
 
     //run script
-    dbase = new DB_Engine();
+    dbase = new DB_Engine("./savedsessions/system.db");
     dbase->runScript("script.sql");
 
     //****************************************//
     //*****record all sensors to database*****//
     //****************************************//
-    sensorColString = "sensorindex,sensorname,subsystem,minthreshold,maxthreshold,maxresponseid,minresponseid,calconstant";
-    for (uint n = 0; n < storedSensors.size(); n++){
-        sensorRowString = "'" + to_string(storedSensors.at(n)->sensorIndex) + "','" + storedSensors.at(n)->sensorName + "','" + storedSensors.at(n)->subsystem +
-            "','" + to_string(storedSensors.at(n)->minimum) + "','" + to_string(storedSensors.at(n)->maximum) + "','" + to_string(storedSensors.at(n)->maxRxnCode) +
-            "','" + to_string(storedSensors.at(n)->minRxnCode) + "','" + to_string(storedSensors.at(n)->calConst) + "'";
+    sensorColString = "sensorindex,sensorname,minthreshold,maxthreshold,maxresponseid,minresponseid,calconstant";
+    for (auto const& x : sensorMap){
+        sensorRowString = "'" + to_string(x.second->sensorIndex) + "','" + x.second->sensorName + "','" + to_string(x.second->minimum)
+                + "','" + to_string(x.second->maximum) + "','" + to_string(x.second->maxRxnCode) +
+                "','" + to_string(x.second->minRxnCode) + "','" + to_string(x.second->calConst) + "'";
         dbase->insert_row("sensors",sensorColString,sensorRowString);
+    }
+
+    for (auto const &x: groupMap){
+        string grpSensorCol = "sensorindex,sensorname";
+        string table_name = x.second->groupId + "_sensors";
+        for (auto const &m: x.second->get_metadata()){
+            string grpSensorRow = "'" + to_string(m->sensorIndex) + "','" + m->sensorName + "'";
+            dbase->insert_row(table_name,grpSensorCol,grpSensorRow);
+        }
     }
 
     //****************************************//
     //*****launch internal worker modules*****//
     //****************************************//
-    usb7204 = new usb7402_interface(usbSensors,subsystems);
-    gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses,subsystems);
-    canInterface = new canbus_interface(canRate, subsystems, canSensors);
-    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,subsystemMap,sysStates,FSMs,
-                               systemMode,controlSpecs,storedSensors,responseMap,bootConfigs,canSensorGroup);
+    usb7204 = new usb7402_interface(usbSensors);
+    gpioInterface = new gpio_interface(gpioSensors,i2cSensors,allResponses);
+    canInterface = new canbus_interface(canRate, canSensors);
+    dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,groupMap,sysStates,FSMs,
+                               systemMode,controlSpecs,responseMap,bootConfigs,canSensorGroup,
+                               bootCmds,canSyncs,i2cSyncs,gpioSyncs,recordConfigs,sensorMap);
     trafficTest = new TrafficTest(canSensorMap,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
-
 
     //********************************//
     //*****initialize system info*****//
@@ -846,16 +904,11 @@ bool Config::read_config_file_data(){
     systemRowString = "'" + get_curr_time() + "','0'";
     dbase->insert_row("system_info",systemColString,systemRowString);
 
-
-    //**********************************//
-    //*****launch subsystem threads*****//
-    //**********************************//
-    for (uint i = 0; i < subsystems.size(); i++){
-        SubsystemThread * thread = subsystems.at(i);
-        thread->set_rate(minrates.at(i));
-        thread->setDB(dbase);
-        subsystems.at(i)->bootSubsystem();
-        subsystems.at(i)->start();
+    //*****************************//
+    //*****set group databases*****//
+    //*****************************//
+    for (auto const &x: groupMap){
+        x.second->setDB(dbase);
     }
 
     cout << "Returning from config" << endl;

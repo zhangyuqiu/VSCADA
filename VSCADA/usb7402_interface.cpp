@@ -3,11 +3,9 @@
 /**
  * @brief usb7402_interface::usb7402_interface : class constructor
  * @param sensors : configures USB7204 configured sensors
- * @param subs : configured subsystems
  */
-usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThread *> subs)
+usb7402_interface::usb7402_interface(vector<meta *> sensors)
 {
-    subsystems = subs;
     sensorVector = sensors;
     udev = nullptr;
 
@@ -68,8 +66,6 @@ usb7402_interface::usb7402_interface(vector<meta *> sensors, vector<SubsystemThr
     connect(timer, SIGNAL(timeout()), this, SLOT(usbCheckTasks()));
 
     if (isActive){
-        for (uint i = 0; i < subsystems.size(); i++){
-        }
         pushMessage(initSuccess);
     } else {
         pushMessage(initErr);
@@ -155,7 +151,7 @@ void usb7402_interface::usbCheckTasks(){
 
 void usb7402_interface::rebootUSB7204(){
     if (isActive){
-        timer->stop();
+        stopUSBCheck();
     }
 
     libusb_close(udev);
@@ -215,9 +211,7 @@ void usb7402_interface::rebootUSB7204(){
     }
 
     if (isActive){
-        for (uint i = 0; i < subsystems.size(); i++){
-            timer->start();
-        }
+        startUSBCheck();
         pushMessage(initSuccess);
     }
 }

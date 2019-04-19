@@ -14,7 +14,7 @@
 #include "config.h"
 #include "typedefs.h"
 #include "canbus_interface.h"
-#include "subsystemthread.h"
+#include "group.h"
 
 namespace Ui {
 class postProcess;

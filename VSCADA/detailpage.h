@@ -13,7 +13,7 @@
 #include "config.h"
 #include "typedefs.h"
 #include "canbus_interface.h"
-#include "subsystemthread.h"
+#include "group.h"
 
 
 namespace Ui {
@@ -28,10 +28,10 @@ public:
     explicit detailPage(QWidget *parent = nullptr);
     ~detailPage();
 
-    void setCurrentSystem(SubsystemThread * subsystem);
+    void setCurrentSystem(Group * subsystem);
     void setConfObject(Config * config);
 
-    SubsystemThread * currentSubSystem;
+    Group * currentGroup;
 
     QString ** systemName;
 

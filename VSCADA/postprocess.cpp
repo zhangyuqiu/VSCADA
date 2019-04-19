@@ -11,7 +11,7 @@ postProcess::postProcess(QWidget *parent) :
     mainLayout = new QVBoxLayout();
     displayTable = new QTableWidget();
     plot = new QCustomPlot();
-    db = new DB_Engine();
+    db = new DB_Engine("~/savedsessions/system.db");
 
     central->setLayout(mainLayout);
 

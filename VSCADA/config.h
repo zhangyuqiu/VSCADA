@@ -14,7 +14,7 @@
 #include "db_engine.h"
 #include "gpio_interface.h"
 #include "canbus_interface.h"
-#include "subsystemthread.h"
+#include "group.h"
 #include <QtXml/QtXml>
 #include "usb7402_interface.h"
 #include "traffictest.h"
@@ -49,6 +49,9 @@ public:
     statemachine * thisFSM;
     system_state * thisState;
     condition * thisCondition;
+    bootloader bootCmds;
+    Group * grp;
+    recordwindow * recWin;
 
     //dbase args strings
     string sensorColString;
@@ -62,16 +65,19 @@ public:
     vector<meta *> i2cSensors;
     vector<meta *> gpioSensors;
     vector<string> configErrors;
-    vector<meta *> storedSensors;
     vector<meta *> mainSensors;
+    vector<canItem> canSyncs;
+    vector<i2cItem> i2cSyncs;
+    vector<gpioItem> gpioSyncs;
 
     map<int,meta *> canSensorMap;
+    map<int,meta *> sensorMap;
     map<uint32_t, int> canAddressMap;
     vector<meta*> * canVectorItem;
-    map<string, SubsystemThread *> subsystemMap;
+    map<string, Group *> groupMap;
     map<uint32_t,vector<meta *> *> canSensorGroup;
     map<int,response> responseMap;
-
+    map<int,recordwindow *> recordConfigs;
 
     vector<statemachine *> FSMs;
     vector<system_state *> sysStates;
@@ -86,7 +92,7 @@ public:
     usb7402_interface * usb7204;
     gpio_interface * gpioInterface;
     canbus_interface * canInterface;
-    vector<SubsystemThread *> subsystems;
+    vector<Group *> subsystems;
     vector<bootloader> bootConfigs;
 };
 #endif // CONFIG_H

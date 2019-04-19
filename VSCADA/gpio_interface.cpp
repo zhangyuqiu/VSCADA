@@ -5,11 +5,9 @@
  * @param gpioSen : configured GPIO sensors
  * @param i2cSen : configured I2C sensors
  * @param responses : configured responses
- * @param subs : configured subsystems
  */
-gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, vector<response> responses, vector<SubsystemThread *> subs)
+gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, vector<response> responses)
 {
-    subsystems = subs;
     timer = new QTimer;
     i2cSensors = i2cSen;
     gpioSensors = gpioSen;
@@ -54,10 +52,6 @@ gpio_interface::gpio_interface(vector<meta *> gpioSen, vector<meta *> i2cSen, ve
             GPIOExport(currRsp.gpioPin);
             GPIODirection(currRsp.gpioPin,OUT);
         }
-    }
-
-    for (uint i = 0; i < subsystems.size(); i++){
-        connect(subsystems.at(i), SIGNAL(pushGPIOData(int, int)), this,SLOT(GPIOWrite(int, int)));
     }
 
     connect(timer, SIGNAL(timeout()), this, SLOT(gpioCheckTasks()));
@@ -221,7 +215,6 @@ void gpio_interface::GPIOWrite(int pin, int value)
 void gpio_interface::gpioCheckTasks(){
     cout << "Checking GPIO sensors" << endl;
     for (uint i = 0; i < gpioSensors.size(); i++){
-        QCoreApplication::processEvents();
         if (GPIORead(gpioSensors.at(i)) == 0){
             emit sensorValueChanged(gpioSensors.at(i));
         } else {
@@ -230,7 +223,6 @@ void gpio_interface::gpioCheckTasks(){
     }
 
     for (uint i = 0; i < i2cSensors.size(); i++){
-        QCoreApplication::processEvents();
         if (i2cRead(i2cSensors.at(i)) == 0){
             emit sensorValueChanged(i2cSensors.at(i));
         } else {

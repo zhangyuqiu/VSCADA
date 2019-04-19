@@ -18,7 +18,7 @@ class DB_Engine
 public:
 
     // member function declarations
-    DB_Engine();
+    DB_Engine(string dbName);
     ~DB_Engine();
 
     int empty_buffer();
@@ -41,7 +41,7 @@ public:
     vector<QString> getTargetColumn(QString table, QString column, QString condit_col, QString condition);
 
     // global items
-    string db_file = "./savedsessions/system.db";
+    string db_file;
     sqlite3 * db;
     std::mutex dbMutex;
     vector<string> dbCmds;
