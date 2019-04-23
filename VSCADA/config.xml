@@ -234,6 +234,7 @@
 	</statemachine>
 
 	<recordwindow>
+		<id>1</id>
 		<triggersensor>13</triggersensor>
 		<startvalue>0</startvalue>
 		<stopvalue>1</stopvalue>
@@ -247,6 +248,7 @@
 	</recordwindow>
 
 	<recordwindow>
+		<id>2</id>
 		<triggersensor>2</triggersensor>
 		<startvalue>50</startvalue>
 		<stopvalue>30</stopvalue>
@@ -262,6 +264,7 @@
 	</recordwindow>
 
 	<recordwindow>
+		<id>3</id>
 		<triggerstate>
 			<fsm>Drive_States</fsm>
 			<state>Init</state>

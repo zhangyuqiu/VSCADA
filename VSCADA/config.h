@@ -77,7 +77,8 @@ public:
     map<string, Group *> groupMap;
     map<uint32_t,vector<meta *> *> canSensorGroup;
     map<int,response> responseMap;
-    map<int,recordwindow *> recordConfigs;
+    map<int,recordwindow *> recordSensorConfigs;
+    map<int,recordwindow *> recordStateConfigs;
 
     vector<statemachine *> FSMs;
     vector<system_state *> sysStates;

@@ -532,12 +532,16 @@ bool Config::read_config_file_data(){
         recWin->active = false;
         recWin->startVal = 0;
         recWin->stopVal = 0;
-        recWin->triggerSensor = 0;
+        recWin->triggerSensor = -1;
         recWin->triggerFSM = "";
         recWin->triggerState = "";
         QDomNodeList recWinList = recordNodes.at(i).childNodes();
         for (int m = 0; m < recWinList.size(); m++){
-            if(recWinList.at(m).nodeName().toStdString().compare("triggersensor") == 0){
+            if(recWinList.at(m).nodeName().toStdString().compare("id") == 0){
+                if (isInteger(recWinList.at(m).firstChild().nodeValue().toStdString()))
+                    recWin->id = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: record window ID not an integer");
+            } else if(recWinList.at(m).nodeName().toStdString().compare("triggersensor") == 0){
                 if (isInteger(recWinList.at(m).firstChild().nodeValue().toStdString()))
                     recWin->triggerSensor = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: trigger sensor not an integer");
@@ -569,7 +573,7 @@ bool Config::read_config_file_data(){
                         if (recWin->triggerState.compare("") == 0) configErrors.push_back("CONFIG ERROR: no such state configured for record window");
                     }
                 }
-            }else if(recWinList.at(m).nodeName().toStdString().compare("sensors") == 0){
+            } else if(recWinList.at(m).nodeName().toStdString().compare("sensors") == 0){
                 QDomNode recItem = recWinList.at(m);
                 QDomNodeList recItemList = recItem.childNodes();
                 for (int n = 0; n < recItemList.size(); n++){
@@ -580,10 +584,8 @@ bool Config::read_config_file_data(){
                 }
             }
         }
-        cout << "Record Window Parameters: " << endl;
-        cout << "FSM Name : " << recWin->triggerFSM << endl;
-        cout << "State Name: " << recWin->triggerState << endl;
-        recordConfigs.insert(make_pair(recWin->triggerSensor,recWin));
+        if (recWin->triggerSensor >= 0) recordSensorConfigs.insert(make_pair(recWin->id,recWin));
+        if (recWin->triggerState.compare("") != 0 && recWin->triggerFSM.compare("") != 0) recordStateConfigs.insert(make_pair(recWin->id,recWin));
     }
 
     cout << "Data recording windows processed" << endl;
@@ -894,7 +896,7 @@ bool Config::read_config_file_data(){
     canInterface = new canbus_interface(canRate, canSensors);
     dataCtrl = new DataControl(gpioInterface,canInterface,usb7204,dbase,groupMap,sysStates,FSMs,
                                systemMode,controlSpecs,responseMap,bootConfigs,canSensorGroup,
-                               bootCmds,canSyncs,i2cSyncs,gpioSyncs,recordConfigs,sensorMap);
+                               bootCmds,canSyncs,i2cSyncs,gpioSyncs,recordSensorConfigs,recordStateConfigs,sensorMap);
     trafficTest = new TrafficTest(canSensorMap,gpioSensors,i2cSensors,usbSensors,canRate,gpioRate,usb7204Rate,dataCtrl);
 
     //********************************//

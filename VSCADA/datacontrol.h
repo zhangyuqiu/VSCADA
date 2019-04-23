@@ -32,7 +32,7 @@ public:
                 map<string, Group *> subMap, vector<system_state *> stts, vector<statemachine *> FSMs,
                 int mode, vector<controlSpec *> ctrlSpecs, map<int,response> rspMap, vector<bootloader> bootArgs,
                 map<uint32_t, vector<meta *> *> canMap, bootloader boot, vector<canItem> cSyncs, vector<i2cItem> iSyncs,
-                vector<gpioItem> gSyncs, map<int, recordwindow *> recWins, map<int, meta *> sensMap);
+                vector<gpioItem> gSyncs, map<int, recordwindow *> recSenWins, map<int, recordwindow *> recStateWins, map<int, meta *> sensMap);
     ~DataControl();
 
     void setMode(int md);
@@ -49,7 +49,8 @@ public:
     void calibrateData(meta * currSensor);
     void checkThresholds(meta * sensor);
     void logData(meta * currSensor);
-    void checkRecordTriggers(meta * currSensor);
+    void checkSensorRecordTriggers(meta * currSensor);
+    void checkStateRecordTriggers(recordwindow *recWindow);
     void incrementSessionNumber();
     string removeSpaces(string &str);
     void save_all_data();
@@ -66,7 +67,8 @@ public:
     gpio_interface * gpioInterface;
     canbus_interface * canInterface;
     map<int,response> responseMap;
-    map<int,recordwindow *> recordMap;
+    map<int,recordwindow *> recordSensorMap;
+    map<int,recordwindow *> recordStateMap;
     map<int,DB_Engine*> recordDBMap;
     map<int,string> recordColStrings;
     vector<controlSpec *> controlSpecs;
