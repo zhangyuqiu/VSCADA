@@ -179,6 +179,7 @@ typedef struct{
 } bootloader;
 
 typedef struct{
+    int id;
     std::vector<int> sensorIds;
     int triggerSensor;
     std::string triggerFSM;

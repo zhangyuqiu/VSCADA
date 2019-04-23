@@ -18,7 +18,8 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
                          map<string, Group *> subMap, vector<system_state *> stts, vector<statemachine *> FSM,
                          int mode, vector<controlSpec *> ctrlSpecs, map<int, response> rspMap,
                          vector<bootloader> bootArgs, map<uint32_t, vector<meta *>*> canMap, bootloader boot,
-                         vector<canItem> cSyncs, vector<i2cItem> iSyncs, vector<gpioItem> gSyncs, map<int,recordwindow*>recWins, map<int, meta*> sensMap){
+                         vector<canItem> cSyncs, vector<i2cItem> iSyncs, vector<gpioItem> gSyncs,
+                         map<int,recordwindow*>recSenWins, map<int, recordwindow *> recStateWins, map<int, meta*> sensMap){
 
     // set mode parameters
     systemMode = mode;
@@ -42,7 +43,8 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     systemTimer = new QTime;
     canSensorGroup = canMap;
     bootCmds = boot;
-    recordMap = recWins;
+    recordSensorMap = recSenWins;
+    recordStateMap = recStateWins;
     sensorMap = sensMap;
     startSystemTimer();
     
@@ -197,9 +199,9 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                     QCoreApplication::processEvents();
                     system_state * currState = currFSM->states.at(j);
                     if(currState->value == static_cast<int>(isolateData64(static_cast<uint>(currState->auxAddress),static_cast<uint>(currState->offset),data,currState->endianness))){
-                        for (const auto &x: recordMap){
-                            if (x.second->triggerFSM.compare(currFSM->name) == 0 && x.second->triggerState.compare(currState->name)){
-                                //check record windows
+                        for (const auto &x: recordStateMap){
+                            if (x.second->triggerFSM.compare(currFSM->name) == 0 && x.second->triggerState.compare(currState->name) == 0){
+                                checkStateRecordTriggers(x.second);
                             }
                         }
                         change_system_state(currState);
@@ -315,72 +317,128 @@ uint64_t DataControl::LSBto64Spec(uint auxAddress, uint offset, uint64_t data){
  */
 void DataControl::receiveData(meta * currSensor){
     calibrateData(currSensor);
-    checkRecordTriggers(currSensor);
+    checkSensorRecordTriggers(currSensor);
     checkThresholds(currSensor);
     emit updateDisplay(currSensor);
     logData(currSensor);
 }
 
-void DataControl::checkRecordTriggers(meta * currSensor){
-    if ( recordMap.find(currSensor->sensorIndex) == recordMap.end() ) {
-        // not found
-    } else {
-        recordwindow * rec = recordMap[currSensor->sensorIndex];
-        cout << "calval: " << currSensor->calVal << endl;
-        cout << "rec startval: " << rec->startVal << endl;
-        cout << "rec active: " << rec->active << endl;
-        if ((currSensor->calVal >= rec->startVal) && !rec->active){
-            rec->active = true;
-            ofstream dbScript;
-            string scriptName = rec->prefix + "_script.sql";
-            dbScript.open (scriptName);
-            dbScript << "create table if not exists sensor_data(" << endl;
-            string colString;
-            for (uint i = 0; i < rec->sensorIds.size(); i++){
-                colString += removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + ",";
-                string scriptLine = removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + " char not null,";
-                dbScript << scriptLine << endl;
+void DataControl::checkStateRecordTriggers(recordwindow * rec){
+    cout << "Checking State Record Triggers..............................." << endl;
+    if (!rec->active){
+        cout << "Activating Record" << endl;
+        rec->active = true;
+        ofstream dbScript;
+        string scriptName = rec->prefix + "_script.sql";
+        dbScript.open (scriptName);
+        dbScript << "create table if not exists sensor_data(" << endl;
+        string colString;
+        for (uint i = 0; i < rec->sensorIds.size(); i++){
+            colString += removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + ",";
+            string scriptLine = removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + " char not null,";
+            dbScript << scriptLine << endl;
+        }
+        dbScript << "time char not null" << endl;
+        dbScript << ");" << endl;
+        dbScript.close();
+        colString += "time";
+        string dbPath = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.db";
+        cout << "DB Path: " << dbPath << endl;
+        customDB = new DB_Engine(dbPath);
+        customDB->runScript(scriptName);
+        string deleteFileCmd = "rm " + scriptName;
+        system(deleteFileCmd.c_str());
+        recordDBMap.insert(make_pair(rec->id,customDB));
+        recordColStrings.insert(make_pair(rec->id,colString));
+    } else if (rec->active){
+        cout << "Deactivating collection" << endl;
+        rec->active = false;
+        DB_Engine * currDB = recordDBMap[rec->id];
+        vector<string> cols;
+        ofstream dataFile;
+        string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
+        dataFile.open(fileName);
+        cols.push_back("time");
+        dataFile << "time" << endl;
+        for (uint i = 0; i < rec->sensorIds.size(); i++){
+            cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
+            dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
+            if (i < rec->sensorIds.size()-1) dataFile << ",";
+        }
+        for (int i = 0; i < currDB->max_rowid("sensor_data"); i++){
+            vector<string> vals = currDB->get_row_values("sensor_data",cols,i);
+            string dataLine;
+            for (uint j = 0; j < vals.size(); j++){
+                dataLine += vals.at(j);
+                if (j < vals.size()-1) dataLine += ",";
             }
-            dbScript << "time char not null" << endl;
-            dbScript << ");" << endl;
-            dbScript.close();
-            colString += "time";
-            string dbPath = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.db";
-            cout << "DB Path: " << dbPath << endl;
-            customDB = new DB_Engine(dbPath);
-            customDB->runScript(scriptName);
-            string deleteFileCmd = "rm " + scriptName;
-            system(deleteFileCmd.c_str());
-            recordDBMap.insert(make_pair(currSensor->sensorIndex,customDB));
-            recordColStrings.insert(make_pair(currSensor->sensorIndex,colString));
-        } else if ((currSensor->calVal <= rec->startVal) && rec->active){
-            cout << "Deactivating collection" << endl;
-            rec->active = false;
-            DB_Engine * currDB = recordDBMap[currSensor->sensorIndex];
-            vector<string> cols;
-            ofstream dataFile;
-            string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
-            dataFile.open(fileName);
-            cols.push_back("time");
-            dataFile << "time" << endl;
-            for (uint i = 0; i < rec->sensorIds.size(); i++){
-                cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
-                dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
-                if (i < rec->sensorIds.size()-1) dataFile << ",";
-            }
-            for (int i = 0; i < currDB->max_rowid("sensor_data"); i++){
-                vector<string> vals = currDB->get_row_values("sensor_data",cols,i);
-                string dataLine;
-                for (uint j = 0; j < vals.size(); j++){
-                    dataLine += vals.at(j);
-                    if (j < vals.size()-1) dataLine += ",";
+            dataFile << dataLine << endl;
+        }
+        dataFile.close();
+        if (recordDBMap.count(rec->id) > 0) recordDBMap.erase(rec->id);
+        incrementSessionNumber();
+    }
+}
+
+void DataControl::checkSensorRecordTriggers(meta * currSensor){
+    for (const auto &x: recordSensorMap){
+        if ( currSensor->sensorIndex == x.second->triggerSensor ) {
+            recordwindow * rec = x.second;
+            cout << "calval: " << currSensor->calVal << endl;
+            cout << "rec startval: " << rec->startVal << endl;
+            cout << "rec active: " << rec->active << endl;
+            if ((currSensor->calVal >= rec->startVal) && !rec->active){
+                rec->active = true;
+                ofstream dbScript;
+                string scriptName = rec->prefix + "_script.sql";
+                dbScript.open (scriptName);
+                dbScript << "create table if not exists sensor_data(" << endl;
+                string colString;
+                for (uint i = 0; i < rec->sensorIds.size(); i++){
+                    colString += removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + ",";
+                    string scriptLine = removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName) + " char not null,";
+                    dbScript << scriptLine << endl;
                 }
-                dataFile << dataLine << endl;
+                dbScript << "time char not null" << endl;
+                dbScript << ");" << endl;
+                dbScript.close();
+                colString += "time";
+                string dbPath = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.db";
+                cout << "DB Path: " << dbPath << endl;
+                customDB = new DB_Engine(dbPath);
+                customDB->runScript(scriptName);
+                string deleteFileCmd = "rm " + scriptName;
+                system(deleteFileCmd.c_str());
+                recordDBMap.insert(make_pair(x.first,customDB));
+                recordColStrings.insert(make_pair(x.first,colString));
+            } else if ((currSensor->calVal <= rec->startVal) && rec->active){
+                cout << "Deactivating collection" << endl;
+                rec->active = false;
+                DB_Engine * currDB = recordDBMap[x.first];
+                vector<string> cols;
+                ofstream dataFile;
+                string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
+                dataFile.open(fileName);
+                cols.push_back("time");
+                dataFile << "time" << endl;
+                for (uint i = 0; i < rec->sensorIds.size(); i++){
+                    cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
+                    dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
+                    if (i < rec->sensorIds.size()-1) dataFile << ",";
+                }
+                for (int i = 0; i < currDB->max_rowid("sensor_data"); i++){
+                    vector<string> vals = currDB->get_row_values("sensor_data",cols,i);
+                    string dataLine;
+                    for (uint j = 0; j < vals.size(); j++){
+                        dataLine += vals.at(j);
+                        if (j < vals.size()-1) dataLine += ",";
+                    }
+                    dataFile << dataLine << endl;
+                }
+                dataFile.close();
+                if (recordDBMap.count(x.first) > 0) recordDBMap.erase(x.first);
+                incrementSessionNumber();
             }
-            dataFile.close();
-            if (recordDBMap.count(currSensor->sensorIndex) > 0) delete recordDBMap[currSensor->sensorIndex];
-            recordDBMap.erase(currSensor->sensorIndex);
-            incrementSessionNumber();
         }
     }
 }
@@ -394,7 +452,25 @@ void DataControl::incrementSessionNumber(){
  * @param currSensor
  */
 void DataControl::logData(meta * currSensor){
-    for (auto const& x : recordMap){
+    for (auto const& x : recordSensorMap){
+        string colString;
+        string rowString;
+        if (x.second->active){
+            for (auto const &y: x.second->sensorIds){
+                if (currSensor->sensorIndex == y){
+                    colString = recordColStrings[x.first];
+                    for (auto const &z: x.second->sensorIds){
+                        rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
+                    }
+                }
+            }
+            if (rowString.compare("") != 0){
+                rowString += "'" + getProgramTime() + "'";
+                recordDBMap[x.first]->insert_row("sensor_data",colString,rowString);
+            }
+        }
+    }
+    for (auto const& x : recordStateMap){
         string colString;
         string rowString;
         if (x.second->active){
@@ -583,7 +659,37 @@ void DataControl::calibrateData(meta * currSensor){
 
 void DataControl::save_all_data(){
     cout << "all data being saved" << endl;
-    for (auto const &x : recordMap){
+    for (auto const &x : recordSensorMap){
+        recordwindow * rec = x.second;
+        if (rec->active){
+            rec->active = false;
+            DB_Engine * currDB = recordDBMap[x.first];
+            vector<string> cols;
+            ofstream dataFile;
+            string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
+            dataFile.open(fileName);
+            cols.push_back("time");
+            for (uint i = 0; i < rec->sensorIds.size(); i++){
+                cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
+                dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
+                if (i < rec->sensorIds.size()-1) dataFile << ",";
+            }
+            for (int i = 0; i < currDB->max_rowid("sensor_data"); i++){
+                vector<string> vals = currDB->get_row_values("sensor_data",cols,i);
+                string dataLine;
+                for (uint j = 0; j < vals.size(); j++){
+                    dataLine += vals.at(j);
+                    if (j < vals.size()-1) dataLine += ",";
+                }
+                dataFile << dataLine << endl;
+            }
+            dataFile.close();
+            if (recordDBMap.count(x.first) > 0) delete recordDBMap[x.first];
+            recordDBMap.erase(x.first);
+            incrementSessionNumber();
+        }
+    }
+    for (auto const &x : recordStateMap){
         recordwindow * rec = x.second;
         if (rec->active){
             rec->active = false;
