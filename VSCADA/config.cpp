@@ -98,6 +98,7 @@ bool Config::read_config_file_data(){
     cout << "Number of system states: " << systemStatuses.size() << endl;
     cout << "Number of state machines: " << stateMachines.size() << endl;
     cout << "Number of configured sensors: " << sensorNodes.size() << endl;
+    cout << "Number of record nodes: " << recordNodes.size() << endl;
 #endif
 
     //*****************************//
