@@ -200,7 +200,9 @@ void DataControl::receive_can_data(uint32_t addr, uint64_t data){
                     system_state * currState = currFSM->states.at(j);
                     if(currState->value == static_cast<int>(isolateData64(static_cast<uint>(currState->auxAddress),static_cast<uint>(currState->offset),data,currState->endianness))){
                         for (const auto &x: recordStateMap){
-                            if (x.second->triggerFSM.compare(currFSM->name) == 0 && x.second->triggerState.compare(currState->name) == 0){
+                            if (x.second->triggerFSM.compare(currFSM->name) == 0 && x.second->triggerState.compare(currState->name) == 0 && !x.second->active){
+                                checkStateRecordTriggers(x.second);
+                            } else if (x.second->triggerFSM.compare(currFSM->name) == 0 && x.second->triggerState.compare(currState->name) != 0 && x.second->active){
                                 checkStateRecordTriggers(x.second);
                             }
                         }
@@ -359,7 +361,7 @@ void DataControl::checkStateRecordTriggers(recordwindow * rec){
         string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
         dataFile.open(fileName);
         cols.push_back("time");
-        dataFile << "time" << endl;
+        dataFile << "time,";
         for (uint i = 0; i < rec->sensorIds.size(); i++){
             cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
             dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
@@ -413,7 +415,7 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
                 string deleteFileCmd = "rm " + scriptName;
                 system(deleteFileCmd.c_str());
                 recordDBMap.insert(make_pair(x.first,customDB));
-                recordColStrings.insert(make_pair(x.first,colString));
+                recordColStrings.insert(make_pair(x.second->id,colString));
             } else if ((currSensor->calVal <= rec->startVal) && rec->active){
                 cout << "Deactivating collection" << endl;
                 DB_Engine * currDB = recordDBMap[x.first];
@@ -422,7 +424,7 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
                 string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
                 dataFile.open(fileName);
                 cols.push_back("time");
-                dataFile << "time" << endl;
+                dataFile << "time,";
                 for (uint i = 0; i < rec->sensorIds.size(); i++){
                     cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
                     dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
@@ -464,7 +466,7 @@ void DataControl::logData(meta * currSensor){
         if (x.second->active){
             for (auto const &y: x.second->sensorIds){
                 if (currSensor->sensorIndex == y){
-                    colString = recordColStrings[x.first];
+                    colString = recordColStrings[x.second->id];
                     for (auto const &z: x.second->sensorIds){
                         rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
                     }
@@ -482,7 +484,7 @@ void DataControl::logData(meta * currSensor){
         if (x.second->active){
             for (auto const &y: x.second->sensorIds){
                 if (currSensor->sensorIndex == y){
-                    colString = recordColStrings[x.first];
+                    colString = recordColStrings[x.second->id];
                     for (auto const &z: x.second->sensorIds){
                         rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
                     }
@@ -490,6 +492,8 @@ void DataControl::logData(meta * currSensor){
             }
             if (rowString.compare("") != 0){
                 rowString += "'" + getProgramTime() + "'";
+                cout << "Column query: " << colString << endl;
+                cout << "Row Args: " << rowString << endl;
                 recordDBMap[x.first]->insert_row("sensor_data",colString,rowString);
             }
         }
@@ -675,6 +679,7 @@ void DataControl::save_all_data(){
             string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
             dataFile.open(fileName);
             cols.push_back("time");
+            dataFile << "time,";
             for (uint i = 0; i < rec->sensorIds.size(); i++){
                 cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
                 dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;
@@ -690,8 +695,10 @@ void DataControl::save_all_data(){
                 dataFile << dataLine << endl;
             }
             dataFile.close();
-            if (recordDBMap.count(x.first) > 0) delete recordDBMap[x.first];
-            recordDBMap.erase(x.first);
+            if (recordDBMap.count(x.first) > 0) {
+//                delete recordDBMap[x.first];
+//                recordDBMap.erase(x.first);
+            }
             incrementSessionNumber();
         }
     }
@@ -705,6 +712,7 @@ void DataControl::save_all_data(){
             string fileName = rec->savePath + rec->prefix + to_string(sessionNumber) + "_data.csv";
             dataFile.open(fileName);
             cols.push_back("time");
+            dataFile << "time,";
             for (uint i = 0; i < rec->sensorIds.size(); i++){
                 cols.push_back(removeSpaces(sensorMap[rec->sensorIds.at(i)]->sensorName));
                 dataFile << sensorMap[rec->sensorIds.at(i)]->sensorName;

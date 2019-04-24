@@ -1,5 +1,5 @@
 <system>
-	<mode>RUN</mode>
+	<mode>TEST</mode>
 	<gpiorate>1000</gpiorate>
 	<usb7204rate>1000</usb7204rate>
 	<canrate>125000</canrate>
@@ -232,6 +232,7 @@
 	</statemachine>
 
 	<recordwindow>
+		<id>1</id>
 		<triggersensor>13</triggersensor>
 		<startvalue>1</startvalue>
 		<stopvalue>0</stopvalue>
@@ -245,6 +246,7 @@
 	</recordwindow>
 
 	<recordwindow>
+		<id>2</id>
 		<triggersensor>2</triggersensor>
 		<startvalue>50</startvalue>
 		<stopvalue>30</stopvalue>
@@ -260,6 +262,7 @@
 	</recordwindow>
 
 	<recordwindow>
+		<id>3</id>
 		<triggerstate>
 			<fsm>Drive_States</fsm>
 			<state>Init</state>
@@ -286,7 +289,7 @@
                         <offset>8</offset>
                         <checkrate>6000</checkrate>
                         <unit>C</unit>
-                        <main>1</main>
+                        <main>0</main>
                         <minimum>0</minimum>
                         <maximum>70</maximum>
                         <minresponse>0</minresponse>

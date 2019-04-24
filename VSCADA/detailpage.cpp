@@ -128,13 +128,12 @@ void detailPage::update(){
 
 void detailPage::setConfObject(Config * config){
     this->conf = config;
-    connect(conf->dataCtrl, SIGNAL(updateEdits(meta *)), this, SLOT(updateEdits(meta *)));
+    connect(conf->dataCtrl, SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
+    connect(conf->dataCtrl, SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
 }
 
 void detailPage::setCurrentSystem(Group * subsystem){
     currentGroup = subsystem;
-    connect(currentGroup, SIGNAL(updateDisplay(meta *)), this, SLOT(updateEdits(meta *)));
-    connect(currentGroup, SIGNAL(updateEditColor(string, meta *)), this, SLOT(changeEditColor(string, meta *)));
     update();
     vector<meta*> allSensors = currentGroup->get_metadata();
     for(uint i = 0; i < allSensors.size(); i++){
