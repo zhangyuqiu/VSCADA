@@ -1,5 +1,5 @@
 <system>
-	<mode>TEST</mode>
+	<mode>RUN</mode>
 	<gpiorate>1000</gpiorate>
 	<usb7204rate>1000</usb7204rate>
 	<canrate>125000</canrate>
@@ -12,29 +12,25 @@
 		<sensorid>3</sensorid>
 		<sensorid>4</sensorid>
 		<sensorid>5</sensorid>
+		<sensorid>18</sensorid>
 	</group>
 	<group>
 		<name>TSI</name>
 		<sensorid>8</sensorid>
 		<sensorid>9</sensorid>
 		<sensorid>10</sensorid>
+		<sensorid>11</sensorid>
+		<sensorid>19</sensorid>
+		<sensorid>20</sensorid>
 	</group>
 	<group>
 		<name>GLV</name>
-		<sensorid>11</sensorid>
 		<sensorid>12</sensorid>
 		<sensorid>13</sensorid>
 		<sensorid>14</sensorid>
 		<sensorid>15</sensorid>
 		<sensorid>16</sensorid>
-	</group>
-	<group>
-		<name>HUFFBOX</name>
 		<sensorid>17</sensorid>
-	</group>
-	<group>
-		<name>TSV</name>
-		<sensorid>18</sensorid>
 	</group>
 
 	<bootsequence>
@@ -57,7 +53,7 @@
 		<booti2c>770</booti2c>
 	</bootsequence>
 
-	<sync>
+	<!--sync>
 		<cansync>
 			<address>128</address>
 			<data>0</data>
@@ -71,14 +67,14 @@
 			<ratems>1000</ratems>
 		</cansync>
 		<cansync>
-			<address>769</address>
-			<data>48</data>
-			<bytes>1</bytes>
+			<address>513</address>
+			<data>682</data>
+			<bytes>2</bytes>
 			<ratems>1000</ratems>
 		</cansync>
-	</sync>
+	</sync-->
 
-	<systemcontrols>
+	<!--systemcontrols>
 		<control>
 			<name>Valve</name>
 			<type>slider</type>
@@ -103,15 +99,15 @@
 			<auxaddress>52</auxaddress>
 			<offset>8</offset>
 		</control>
-	</systemcontrols>
+	</systemcontrols-->
 
-	<systemstatus>
+	<!--systemstatus>
 		<name>Brake</name>
 		<primaddress>300</primaddress>
 		<auxaddress>61</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
-	</systemstatus>
+	</systemstatus-->
 
 	<responses>
 		<response>
@@ -123,12 +119,6 @@
 			<description>Writing to GPIO pin</description>
 			<gpiopin>20</gpiopin>
 			<gpioval>1</gpioval>
-		</response>
-		<response>
-			<id>7</id>
-			<description>Turn off PIN 20</description>
-			<gpiopin>20</gpiopin>
-			<gpioval>0</gpioval>
 		</response>
 		<response>
 			<id>2</id>
@@ -151,20 +141,20 @@
 		<response>
 			<id>4</id>
 			<description>SCADA Relay Closed</description>
-			<gpiopin>21</gpiopin>
-			<gpioval>1</gpioval>
+			<gpiopin>4</gpiopin>
+			<gpioval>0</gpioval>
 		</response>
 		<response>
 			<id>5</id>
 			<description>SCADA Relay Opened</description>
 			<gpiopin>21</gpiopin>
-			<gpioval>0</gpioval>
+			<gpioval>1</gpioval>
 		</response>
 	</responses>
 	
 	<statemachine>
 		<name>Drive_States</name>
-            	<primaddress>1024</primaddress>
+            	<primaddress>768</primaddress>
             	<auxaddress>48</auxaddress>
             	<offset>8</offset>
 	    	<state>
@@ -184,13 +174,21 @@
 		        <value>3</value>
 	    	</state>
 	    	<state>
-		        <name>Drive</name>
+		        <name>RTDS</name>
 		        <value>4</value>
 	    	</state>
 	    	<state>
-		        <name>Overcurrent</name>
+		        <name>Drive</name>
 		        <value>5</value>
 	    	</state>
+		<state>
+			<name>Overcurrent</name>
+			<value>6</value>
+		</state>
+		<state>
+			<name>Drv Rtn</name>
+			<value>8</value>
+		</state>
             	<condition>
                 	<name>Throttle Pressed</name>
                 	<auxaddress>0</auxaddress>
@@ -234,10 +232,9 @@
 	</statemachine>
 
 	<recordwindow>
-		<id>1</id>
 		<triggersensor>13</triggersensor>
-		<startvalue>0</startvalue>
-		<stopvalue>1</stopvalue>
+		<startvalue>1</startvalue>
+		<stopvalue>0</stopvalue>
 		<saveprefix>test</saveprefix>
 		<savepath>./savedsessions/</savepath>
 		<sensors>
@@ -248,7 +245,6 @@
 	</recordwindow>
 
 	<recordwindow>
-		<id>2</id>
 		<triggersensor>2</triggersensor>
 		<startvalue>50</startvalue>
 		<stopvalue>30</stopvalue>
@@ -264,7 +260,6 @@
 	</recordwindow>
 
 	<recordwindow>
-		<id>3</id>
 		<triggerstate>
 			<fsm>Drive_States</fsm>
 			<state>Init</state>
@@ -415,7 +410,7 @@
             	<sensor>
 			<id>8</id>
 			<name>Cooling Temp1</name>
-			<primaddress>1024</primaddress>
+			<primaddress>768</primaddress>
 			<auxaddress>24</auxaddress>
 			<offset>8</offset>
 			<checkrate>4000</checkrate>
@@ -434,10 +429,10 @@
 				<coef>0.0000002</coef>
 			</calpoly>
             	</sensor>
-	    	<!--sensor>
-		        <id>3</id>
+	    	<sensor>
+		        <id>9</id>
 		        <name>Cooling Temp2</name>
-		        <primaddress>1024</primaddress>
+		        <primaddress>768</primaddress>
 		        <auxaddress>32</auxaddress>
 		        <offset>8</offset>
 		        <checkrate>4000</checkrate>
@@ -455,11 +450,11 @@
 		                <coef>-0.0001</coef>
 		                <coef>0.0000002</coef>
 		        </calpoly>
-	    	</sensor-->
+	    	</sensor>
 		<sensor>
-			<id>9</id>
+			<id>10</id>
 			<name>Flow Rate</name>
-			<primaddress>1024</primaddress>
+			<primaddress>768</primaddress>
 			<auxaddress>40</auxaddress>
 			<offset>8</offset>
 			<checkrate>4000</checkrate>
@@ -471,27 +466,27 @@
 			<maxresponse>0</maxresponse>
 			<calmultiplier>1</calmultiplier>
 			<calpoly>
-                	        <coef>0.0605</coef>
-                       	 	<coef>0.03314</coef>
-                	</calpoly>
+				<coef>0.0605</coef>
+				<coef>0.03314</coef>
+			</calpoly>
 		</sensor>
 		<sensor>
-                        <id>10</id>
-                        <name>TSI TEST</name>
-                        <primaddress>768</primaddress>
-                        <auxaddress>0</auxaddress>
-                        <offset>64</offset>
-                        <checkrate>4000</checkrate>
-                        <main>1</main>
-                        <unit>A</unit>
-                        <minimum>0</minimum>
-                        <maximum>20</maximum>
-                        <minresponse>0</minresponse>
-                        <maxresponse>0</maxresponse>
-                        <calmultiplier>1</calmultiplier>
-                </sensor>
-		<sensor>
 			<id>11</id>
+			<name>HV Current</name>
+			<primaddress>768</primaddress>
+			<auxaddress>56</auxaddress>
+			<offset>8</offset>
+			<checkrate>4000</checkrate>
+			<main>1</main>
+			<unit>A</unit>
+			<minimum>0</minimum>
+			<maximum>100</maximum>
+			<minresponse>0</minresponse>
+			<maxresponse>0</maxresponse>
+			<calmultiplier>1</calmultiplier>
+		</sensor>
+		<sensor>
+			<id>12</id>
 			<name>GLVCurrent</name>
 			<i2caddress>64</i2caddress>
 			<i2creadpointer>4</i2creadpointer>
@@ -509,7 +504,7 @@
 			<calmultiplier>0.001</calmultiplier>
 		</sensor>
 		<sensor>
-			<id>12</id>
+			<id>13</id>
 			<name>F1 Signal</name>
 			<gpiopin>19</gpiopin>
 			<checkrate>4500</checkrate>
@@ -521,7 +516,7 @@
 			<calmultiplier>1</calmultiplier>
 		</sensor>
 		<sensor>
-			<id>13</id>
+			<id>14</id>
 			<name>F2 Signal</name>
 			<gpiopin>26</gpiopin>
 			<checkrate>5500</checkrate>
@@ -533,7 +528,7 @@
 			<calmultiplier>1</calmultiplier>
 		</sensor>
 		<sensor>
-			<id>14</id>
+			<id>15</id>
 			<name>GLVTemp</name>
 			<i2caddress>16</i2caddress>
 			<i2creadpointer>64</i2creadpointer>
@@ -553,7 +548,7 @@
 			<calmultiplier>0.37679</calmultiplier>
 		</sensor>
 		<sensor>
-			<id>15</id>
+			<id>16</id>
 			<name>GLVVoltage</name>
 			<i2caddress>64</i2caddress>
 			<i2creadpointer>2</i2creadpointer>
@@ -571,23 +566,23 @@
 			<calmultiplier>0.00125</calmultiplier>
 		</sensor>
 		<sensor>
-                        <id>16</id>
-                        <name>GLVPower</name>
-                        <i2caddress>64</i2caddress>
-                        <i2creadpointer>3</i2creadpointer>
-                        <i2cconfigdata>2572544</i2cconfigdata>
-			<i2cconfigdata>2565</i2cconfigdata>
-                        <i2cdatafield>16</i2cdatafield>
-                        <i2creaddelayus>20000</i2creaddelayus>
-                        <checkrate>5000</checkrate>
-                        <main>1</main>
-                        <unit>W</unit>
-                        <minimum>0</minimum>
-                        <maximum>20</maximum>
-                        <calmultiplier>0.025</calmultiplier>
-                </sensor>
-		<sensor>
 			<id>17</id>
+			<name>GLVPower</name>
+			<i2caddress>64</i2caddress>
+			<i2creadpointer>3</i2creadpointer>
+			<i2cconfigdata>2572544</i2cconfigdata>
+			<i2cconfigdata>2565</i2cconfigdata>
+			<i2cdatafield>16</i2cdatafield>
+			<i2creaddelayus>20000</i2creaddelayus>
+			<checkrate>5000</checkrate>
+			<main>1</main>
+			<unit>W</unit>
+			<minimum>0</minimum>
+			<maximum>20</maximum>
+			<calmultiplier>0.025</calmultiplier>
+		</sensor>
+		<sensor>
+			<id>18</id>
 			<name>Strain Gauge</name>
 			<checkrate>5000</checkrate>
 			<main>1</main>
@@ -599,19 +594,34 @@
 			<usbchannel>1</usbchannel>
 		</sensor>
 		<sensor>
-                        <id>18</id>
-                        <name>TSV TEST</name>
-                        <primaddress>1024</primaddress>
-                        <auxaddress>0</auxaddress>
-                        <offset>64</offset>
-                        <checkrate>4000</checkrate>
-                        <main>1</main>
-                        <unit>...</unit>
-                        <minimum>0</minimum>
-                        <maximum>100</maximum>
-                        <minresponse>0</minresponse>
-                        <maxresponse>0</maxresponse>
-                        <calmultiplier>1</calmultiplier>
-                </sensor>
+			<id>19</id>
+			<name>MC_Plus</name>
+			<primaddress>768</primaddress>
+			<auxaddress>8</auxaddress>
+			<offset>8</offset>
+			<checkrate>4000</checkrate>
+			<main>1</main>
+			<unit>V</unit>
+			<minimum>0</minimum>
+			<maximum>100</maximum>
+			<minresponse>0</minresponse>
+			<maxresponse>0</maxresponse>
+			<calmultiplier>1</calmultiplier>
+		</sensor>
+		<sensor>
+			<id>20</id>
+			<name>MC_Minus</name>
+			<primaddress>768</primaddress>
+			<auxaddress>16</auxaddress>
+			<offset>8</offset>
+			<checkrate>4000</checkrate>
+			<main>1</main>
+			<unit>V</unit>
+			<minimum>0</minimum>
+			<maximum>100</maximum>
+			<minresponse>0</minresponse>
+			<maxresponse>0</maxresponse>
+			<calmultiplier>1</calmultiplier>
+		</sensor>
 	</sensors>
 </system>

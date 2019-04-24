@@ -27,19 +27,11 @@ create table if not exists GLV_sensors(
 sensorindex char not null,
 sensorname char not null
 );
-create table if not exists HUFFBOX_sensors(
-sensorindex char not null,
-sensorname char not null
-);
 create table if not exists MOTOR_CONTROLLER_sensors(
 sensorindex char not null,
 sensorname char not null
 );
 create table if not exists TSI_sensors(
-sensorindex char not null,
-sensorname char not null
-);
-create table if not exists TSV_sensors(
 sensorindex char not null,
 sensorname char not null
 );

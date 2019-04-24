@@ -426,12 +426,12 @@ bool Config::read_config_file_data(){
         else configErrors.push_back("CONFIG ERROR: boot CAN address not an integer");
     }
 
-    for (int i = 0; i < i2cBootNodes.size(); i++){
+    for (int i = 0; i < gpioBootNodes.size(); i++){
         gpioItem item;
         item.mode = -1;
         item.pin = -1;
         item.value = 0;
-        QDomNodeList gpioItemList = i2cBootNodes.at(i).childNodes();
+        QDomNodeList gpioItemList = gpioBootNodes.at(i).childNodes();
         for (int m = 0; m < gpioItemList.size(); m++){
             if(gpioItemList.at(m).nodeName().toStdString().compare("pin") == 0){
                 if (isInteger(gpioItemList.at(m).firstChild().nodeValue().toStdString()))
@@ -780,23 +780,14 @@ bool Config::read_config_file_data(){
                 groupId = groupXteristics.at(j).firstChild().nodeValue().toStdString();
             } else if (groupXteristics.at(j).nodeName().toStdString().compare("sensorid") == 0){
                 sensorId = stoi(groupXteristics.at(j).firstChild().nodeValue().toStdString());
-                sensors.push_back(sensorMap[sensorId]);
-                sensorMap[sensorId]->groups.push_back(groupId);
+                if (sensorMap.count(sensorId) > 0) {
+                    sensors.push_back(sensorMap[sensorId]);
+                    sensorMap[sensorId]->groups.push_back(groupId);
+                }
+                else configErrors.push_back("CONFIG ERROR: sensor Id mismatch. Check IDs");
             }
         }
-    cout << "Group Sensors Processed" << endl;
-#ifdef CONFIG_PRINT
-    cout << "Boot Configuration: " << endl;
-    for (uint i = 0; i < bootCmds.bootCanCmds.size(); i++){
-        cout << "CAN address: " << bootCmds.bootCanCmds.at(i).address << " data: " << bootCmds.bootCanCmds.at(i).data << " size: " << bootCmds.bootCanCmds.at(i).dataSize << endl;
-    }
-    for (uint i = 0; i < bootCmds.bootI2cCmds.size(); i++){
-        cout << " I2c data: " << bootCmds.bootI2cCmds.at(i) << endl;
-    }
-    for (uint i = 0; i < bootCmds.bootGPIOCmds.size(); i++){
-        cout << "GPIO pin: " << bootCmds.bootGPIOCmds.at(i).pin << " value: " << bootCmds.bootGPIOCmds.at(i).value << " mode: " << bootCmds.bootGPIOCmds.at(i).mode << endl;
-    }
-#endif
+        cout << "Group Sensors Processed" << endl;
 
         //create group object
         grp = new Group(sensors,groupId,allResponses,logicVector,sensors,bootCmds);
@@ -814,6 +805,19 @@ bool Config::read_config_file_data(){
             }
         }
     }
+
+#ifdef CONFIG_PRINT
+    cout << "Boot Configuration: " << endl;
+    for (uint i = 0; i < bootCmds.bootCanCmds.size(); i++){
+        cout << "CAN address: " << bootCmds.bootCanCmds.at(i).address << " data: " << bootCmds.bootCanCmds.at(i).data << " size: " << bootCmds.bootCanCmds.at(i).dataSize << endl;
+    }
+    for (uint i = 0; i < bootCmds.bootI2cCmds.size(); i++){
+        cout << " I2c data: " << bootCmds.bootI2cCmds.at(i) << endl;
+    }
+    for (uint i = 0; i < bootCmds.bootGPIOCmds.size(); i++){
+        cout << "GPIO pin: " << bootCmds.bootGPIOCmds.at(i).pin << " value: " << bootCmds.bootGPIOCmds.at(i).value << " mode: " << bootCmds.bootGPIOCmds.at(i).mode << endl;
+    }
+#endif
 
     //********************************************************//
     //              PREPARE DATABASE INIT SCRIPT              //

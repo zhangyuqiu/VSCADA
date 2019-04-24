@@ -375,7 +375,10 @@ void DataControl::checkStateRecordTriggers(recordwindow * rec){
             dataFile << dataLine << endl;
         }
         dataFile.close();
-        if (recordDBMap.count(rec->id) > 0) recordDBMap.erase(rec->id);
+        if (recordDBMap.count(rec->id) > 0) {
+//            if (recordDBMap[rec->id] != nullptr) delete recordDBMap[rec->id];
+//            recordDBMap.erase(rec->id);
+        }
         incrementSessionNumber();
     }
 }
@@ -413,7 +416,6 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
                 recordColStrings.insert(make_pair(x.first,colString));
             } else if ((currSensor->calVal <= rec->startVal) && rec->active){
                 cout << "Deactivating collection" << endl;
-                rec->active = false;
                 DB_Engine * currDB = recordDBMap[x.first];
                 vector<string> cols;
                 ofstream dataFile;
@@ -436,8 +438,12 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
                     dataFile << dataLine << endl;
                 }
                 dataFile.close();
-                if (recordDBMap.count(x.first) > 0) recordDBMap.erase(x.first);
+                if (recordDBMap.count(x.first) > 0) {
+//                    if (x.second != nullptr) delete x.second;
+//                    recordDBMap.erase(x.first);
+                }
                 incrementSessionNumber();
+                rec->active = false;
             }
         }
     }

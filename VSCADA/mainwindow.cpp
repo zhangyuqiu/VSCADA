@@ -186,6 +186,8 @@ void MainWindow::update(){
         headerLabel->setStyleSheet("font:"+grpLabelFont+"pt;");
         headerLabel->setFixedWidth(400);
         healthButtons.insert(make_pair(currGrp->groupId,headerLabel));
+        connect(headerLabel, SIGNAL(clicked()), this, SLOT(detailButtonPushed()));
+        detailButtons.insert(make_pair(currGrp->groupId,headerLabel));
         groupSectionLayout->addWidget(headerLabel,fieldRowCount,fieldColCount,1,2,Qt::AlignCenter);
         fieldRowCount++;
 
@@ -221,44 +223,44 @@ void MainWindow::update(){
         else groupSectionLayout->addWidget(hBorder1,fieldRowCount,fieldColCount,1,4);
         fieldRowCount++;
 
-        QPushButton * rebootBtn = new QPushButton;
-        rebootBtn->setText("Reboot");
-        QPalette rebootPal = rebootBtn->palette();
-        rebootPal.setColor(QPalette::Button, QColor(0,0,255));
-        rebootBtn->setPalette(rebootPal);
-        rebootBtn->setAutoFillBackground(true);
-        QString  butLabelFont = QString::number(stringSize*2);
-        rebootBtn->setStyleSheet("font:"+butLabelFont+"pt;");
-        rebootBtn->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        rebootBtn->setFixedHeight(static_cast<int>(unitHeight));
-//        healthButtons.push_back(rebootBtn);
-        groupSectionLayout->addWidget(rebootBtn,fieldRowCount,fieldColCount,Qt::AlignCenter);
+//        QPushButton * rebootBtn = new QPushButton;
+//        rebootBtn->setText("Reboot");
+//        QPalette rebootPal = rebootBtn->palette();
+//        rebootPal.setColor(QPalette::Button, QColor(0,0,255));
+//        rebootBtn->setPalette(rebootPal);
+//        rebootBtn->setAutoFillBackground(true);
+//        QString  butLabelFont = QString::number(stringSize*2);
+//        rebootBtn->setStyleSheet("font:"+butLabelFont+"pt;");
+//        rebootBtn->setFixedWidth(static_cast<int>(unitWidth*1.5));
+//        rebootBtn->setFixedHeight(static_cast<int>(unitHeight));
+////        healthButtons.push_back(rebootBtn);
+//        groupSectionLayout->addWidget(rebootBtn,fieldRowCount,fieldColCount,Qt::AlignCenter);
 
-        QPushButton * detailButton = new QPushButton;
-        detailButton->setStyleSheet("font:10pt;");
-        detailButton->setText("Detail");
-        QPalette detailPal = detailButton->palette();
-        detailPal.setColor(QPalette::Button, QColor(0,0,255));
-        detailButton->setPalette(detailPal);
-        detailButton->setAutoFillBackground(true);
-        QString  detailLabelFont = QString::number(stringSize*2);
-        detailButton->setStyleSheet("font:"+detailLabelFont+"pt;");
-        detailButton->setFixedWidth(static_cast<int>(unitWidth*1.5));
-        detailButton->setFixedHeight(static_cast<int>(unitHeight));
+//        QPushButton * detailButton = new QPushButton;
+//        detailButton->setStyleSheet("font:10pt;");
+//        detailButton->setText("Detail");
+//        QPalette detailPal = detailButton->palette();
+//        detailPal.setColor(QPalette::Button, QColor(0,0,255));
+//        detailButton->setPalette(detailPal);
+//        detailButton->setAutoFillBackground(true);
+//        QString  detailLabelFont = QString::number(stringSize*2);
+//        detailButton->setStyleSheet("font:"+detailLabelFont+"pt;");
+//        detailButton->setFixedWidth(static_cast<int>(unitWidth*1.5));
+//        detailButton->setFixedHeight(static_cast<int>(unitHeight));
 
-        connect(detailButton, SIGNAL(clicked()), this, SLOT(detailButtonPushed()));
+//        connect(detailButton, SIGNAL(clicked()), this, SLOT(detailButtonPushed()));
 
-        detailButtons.insert(make_pair(currGrp->groupId,detailButton));
-        groupSectionLayout->addWidget(detailButton,fieldRowCount,fieldColCount+1,Qt::AlignCenter);
-        fieldRowCount++;
+//        detailButtons.insert(make_pair(currGrp->groupId,detailButton));
+//        groupSectionLayout->addWidget(detailButton,fieldRowCount,fieldColCount+1,Qt::AlignCenter);
+//        fieldRowCount++;
 
-        QFrame * hBorder2 = new QFrame(this);
-        hBorder2->setLineWidth(2);
-        hBorder2->setMidLineWidth(1);
-        hBorder2->setFrameShape(QFrame::HLine);
-        hBorder2->setFrameShadow(QFrame::Raised);
-        if (fieldColCount != 0) groupSectionLayout->addWidget(hBorder2,fieldRowCount,fieldColCount-1,1,4);
-        else groupSectionLayout->addWidget(hBorder2,fieldRowCount,fieldColCount,1,4);
+//        QFrame * hBorder2 = new QFrame(this);
+//        hBorder2->setLineWidth(2);
+//        hBorder2->setMidLineWidth(1);
+//        hBorder2->setFrameShape(QFrame::HLine);
+//        hBorder2->setFrameShadow(QFrame::Raised);
+//        if (fieldColCount != 0) groupSectionLayout->addWidget(hBorder2,fieldRowCount,fieldColCount-1,1,4);
+//        else groupSectionLayout->addWidget(hBorder2,fieldRowCount,fieldColCount,1,4);
 
         fieldRowCount = 0;
         fieldColCount = fieldColCount + 2;
@@ -268,7 +270,7 @@ void MainWindow::update(){
         vBorder->setMidLineWidth(1);
         vBorder->setFrameShape(QFrame::VLine);
         vBorder->setFrameShadow(QFrame::Raised);
-        groupSectionLayout->addWidget(vBorder,fieldRowCount,fieldColCount,maxSensorRow+5,1);
+        groupSectionLayout->addWidget(vBorder,fieldRowCount,fieldColCount,maxSensorRow+3,1);
         fieldColCount++;
     }
 
@@ -406,6 +408,7 @@ void MainWindow::update(){
     stateBorder->setFrameShadow(QFrame::Raised);
     mainLayout->addWidget(stateBorder);
 
+    if (conf->controlSpecs.size() > 0){
         controlsLayout = new QHBoxLayout;
         currLabel = new QLabel("CONTROLS: ");
         currLabel->setStyleSheet("font:"+labelFont+"pt;");
@@ -477,7 +480,7 @@ void MainWindow::update(){
         controlBorder->setFrameShape(QFrame::HLine);
         controlBorder->setFrameShadow(QFrame::Raised);
         mainLayout->addWidget(controlBorder);
-
+    }
 
     QString footerFont = QString::fromStdString(to_string(stringSize*3));
 
@@ -787,44 +790,31 @@ reprompt:
 }
 
 void MainWindow::shutdownSystem(){
-    int wdogpid = 0;
-    fstream  wdpidfile;
-    wdpidfile.open("watchdogpid.txt", ios::out | ios::in );
-    wdpidfile >> wdogpid;
-    wdpidfile.close();
-    cout << "Expect message: " << endl;
-    cout << "Killing watchdog with pid :" << wdogpid << endl;
-    kill((pid_t)wdogpid,SIGKILL);
-
-    int confirmation = active_dialog("Save Session?");
-    string clearMsg = "Save session as?\nPlease enter name without space characters";
-    string errMsg = "Name contains space characters. Please try again:";
-    bool error = 0;
-    string name = "";
+    int confirmation = active_dialog("Are you sure you want to exit?");
+//    string clearMsg = "Save session as?\nPlease enter name without space characters";
+//    string errMsg = "Name contains space characters. Please try again:";
+//    bool error = 0;
+//    string name = "";
     if (confirmation == QDialog::Accepted){
-
-repeat:
-        if (error) name = info_dialog(errMsg);
-        else name = info_dialog(clearMsg);
-
-        if (name.compare("0") != 0){
-            for (uint i = 0; i < name.size(); ++i){
-                if (name[i] == ' '){
-                    goto repeat;
-                }
-            }
-            conf->dataCtrl->save_all_data();
-            conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
-            conf->dataCtrl->saveSession(name);
-            passive_dialog("Saved!");
-            conf->dbase->empty_buffer();
-            this->close();
-        }
-    } else if (confirmation == QDialog::Rejected){
+        int wdogpid = 0;
+        fstream  wdpidfile;
+        wdpidfile.open("watchdogpid.txt", ios::out | ios::in );
+        wdpidfile >> wdogpid;
+        wdpidfile.close();
+        cout << "Expect message: " << endl;
+        cout << "Killing watchdog with pid :" << wdogpid << endl;
+        kill((pid_t)wdogpid,SIGKILL);
         conf->dataCtrl->save_all_data();
         conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
+//        conf->dataCtrl->saveSession(name);
+//        passive_dialog("Saved!");
         conf->dbase->empty_buffer();
         this->close();
+    } else {
+//        conf->dataCtrl->save_all_data();
+//        conf->dbase->update_value("system_info","endtime","rowid","1",conf->get_curr_time());
+//        conf->dbase->empty_buffer();
+//        this->close();
     }
 }
 
