@@ -1,5 +1,5 @@
 <system>
-	<mode>TEST</mode>
+	<mode>RUN</mode>
 	<gpiorate>1000</gpiorate>
 	<usb7204rate>1000</usb7204rate>
 	<canrate>125000</canrate>
@@ -101,13 +101,69 @@
 		</control>
 	</systemcontrols-->
 
-	<!--systemstatus>
-		<name>Brake</name>
-		<primaddress>300</primaddress>
-		<auxaddress>61</auxaddress>
+	<systemstatus>
+		<name>PC_Ready</name>
+		<primaddress>768</primaddress>
+		<auxaddress>0</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
-	</systemstatus-->
+	</systemstatus>
+
+	<systemstatus>
+		<name>MC_Active</name>
+		<primaddress>768</primaddress>
+		<auxaddress>1</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
+	</systemstatus>
+
+	<systemstatus>
+		<name>Brake</name>
+		<primaddress>768</primaddress>
+		<auxaddress>2</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
+	</systemstatus>
+
+	<systemstatus>
+		<name>Drv_Btn</name>
+		<primaddress>768</primaddress>
+		<auxaddress>3</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
+	</systemstatus>
+
+	<systemstatus>
+		<name>SLOOP</name>
+		<primaddress>768</primaddress>
+		<auxaddress>4</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
+	</systemstatus>
+
+	<systemstatus>
+		<name>Overcurr</name>
+		<primaddress>768</primaddress>
+		<auxaddress>5</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
+	</systemstatus>
+
+	<systemstatus>
+		<name>Thr_impl</name>
+		<primaddress>768</primaddress>
+		<auxaddress>6</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
+	</systemstatus>
+
+	<systemstatus>
+		<name>Throttle</name>
+		<primaddress>768</primaddress>
+		<auxaddress>7</auxaddress>
+		<offset>1</offset>
+		<value>1</value>
+	</systemstatus>
 
 	<responses>
 		<response>
@@ -247,10 +303,10 @@
 
 	<recordwindow>
 		<id>2</id>
-		<triggersensor>2</triggersensor>
-		<startvalue>50</startvalue>
-		<stopvalue>30</stopvalue>
-		<saveprefix>hv</saveprefix>
+		<triggersensor>18</triggersensor>
+		<startvalue>10</startvalue>
+		<stopvalue>10</stopvalue>
+		<saveprefix>strain</saveprefix>
 		<savepath>./savedsessions/</savepath>
 		<sensors>
 			<sensorid>0</sensorid>
@@ -265,11 +321,9 @@
 		<id>3</id>
 		<triggerstate>
 			<fsm>Drive_States</fsm>
-			<state>Init</state>
+			<state>Precharge</state>
 		</triggerstate>
-		<startvalue>50</startvalue>
-		<stopvalue>30</stopvalue>
-		<saveprefix>initState</saveprefix>
+		<saveprefix>prechargeState</saveprefix>
 		<savepath>./savedsessions/</savepath>
 		<sensors>
 			<sensorid>0</sensorid>
@@ -486,7 +540,8 @@
 			<maximum>100</maximum>
 			<minresponse>0</minresponse>
 			<maxresponse>0</maxresponse>
-			<calmultiplier>1</calmultiplier>
+			<calmultiplier>1.3755</calmultiplier>
+			<calconstant>-1.3642</calconstant>
 		</sensor>
 		<sensor>
 			<id>12</id>
@@ -598,7 +653,7 @@
 		</sensor>
 		<sensor>
 			<id>19</id>
-			<name>MC_Plus</name>
+			<name>MC_Voltage</name>
 			<primaddress>768</primaddress>
 			<auxaddress>8</auxaddress>
 			<offset>8</offset>
@@ -609,11 +664,12 @@
 			<maximum>100</maximum>
 			<minresponse>0</minresponse>
 			<maxresponse>0</maxresponse>
-			<calmultiplier>1</calmultiplier>
+			<calmultiplier>3.14</calmultiplier>
+			<calconstant>-176.39</calconstant>
 		</sensor>
 		<sensor>
 			<id>20</id>
-			<name>MC_Minus</name>
+			<name>TS_Voltage</name>
 			<primaddress>768</primaddress>
 			<auxaddress>16</auxaddress>
 			<offset>8</offset>
@@ -624,7 +680,8 @@
 			<maximum>100</maximum>
 			<minresponse>0</minresponse>
 			<maxresponse>0</maxresponse>
-			<calmultiplier>1</calmultiplier>
+			<calmultiplier>3.14</calmultiplier>
+			<calconstant>-176.39</calconstant>
 		</sensor>
 	</sensors>
 </system>

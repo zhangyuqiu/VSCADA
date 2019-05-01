@@ -285,12 +285,12 @@ void MainWindow::update(){
 
     mainLayout->addWidget(groupArea);
 
-    QString  butLabelFont = QString::number(stringSize*2);
+    QString  butLabelFont = QString::number(stringSize);
     QString  labelFont = QString::number(stringSize*2.5);
     QGridLayout * stateButtonLayout = new QGridLayout;
 
     QLabel * label = new QLabel;
-    label->setText("STATES & STATUSES: ");
+    label->setText("CONTROLS: ");
     label->setStyleSheet("font:"+labelFont+"pt;");
     label->setFixedWidth(label->width());
     stateButtonLayout->addWidget(label,0,0,Qt::AlignLeft);
@@ -328,12 +328,12 @@ void MainWindow::update(){
     btnsLayout->addWidget(usbResetButton,Qt::AlignCenter);
     QObject::connect(usbResetButton, SIGNAL (clicked()), conf->usb7204 , SLOT(rebootUSB7204()));
 
-    QFrame * stateFrame = new QFrame(this);
-    stateFrame->setLineWidth(2);
-    stateFrame->setMidLineWidth(1);
-    stateFrame->setFrameShape(QFrame::VLine);
-    stateFrame->setFrameShadow(QFrame::Raised);
-    btnsLayout->addWidget(stateFrame, Qt::AlignCenter);
+//    QFrame * stateFrame = new QFrame(this);
+//    stateFrame->setLineWidth(2);
+//    stateFrame->setMidLineWidth(1);
+//    stateFrame->setFrameShape(QFrame::VLine);
+//    stateFrame->setFrameShadow(QFrame::Raised);
+//    btnsLayout->addWidget(stateFrame, Qt::AlignCenter);
 
     for(uint t = 0; t < conf->FSMs.size(); t++){
         QVBoxLayout * FSMLayout = new QVBoxLayout;
@@ -354,37 +354,37 @@ void MainWindow::update(){
         btnsLayout->addLayout(FSMLayout,Qt::AlignCenter);
     }
 
-    for(uint s = 0; s < conf->sysStates.size(); s++){
-        if (s == 0){
-            QFrame * stateFrame = new QFrame(this);
-            stateFrame->setLineWidth(2);
-            stateFrame->setMidLineWidth(1);
-            stateFrame->setFrameShape(QFrame::VLine);
-            stateFrame->setFrameShadow(QFrame::Raised);
-            btnsLayout->addWidget(stateFrame, Qt::AlignCenter);
-        }
+//    for(uint s = 0; s < conf->sysStates.size(); s++){
+//        if (s == 0){
+//            QFrame * stateFrame = new QFrame(this);
+//            stateFrame->setLineWidth(2);
+//            stateFrame->setMidLineWidth(1);
+//            stateFrame->setFrameShape(QFrame::VLine);
+//            stateFrame->setFrameShadow(QFrame::Raised);
+//            btnsLayout->addWidget(stateFrame, Qt::AlignCenter);
+//        }
 
-        QFrame * stateFrame = new QFrame(this);
-        stateFrame->setLineWidth(2);
-        stateFrame->setMidLineWidth(1);
-        stateFrame->setFrameShape(QFrame::VLine);
-        stateFrame->setFrameShadow(QFrame::Raised);
-        btnsLayout->addWidget(stateFrame, Qt::AlignCenter);
+//        QFrame * stateFrame = new QFrame(this);
+//        stateFrame->setLineWidth(2);
+//        stateFrame->setMidLineWidth(1);
+//        stateFrame->setFrameShape(QFrame::VLine);
+//        stateFrame->setFrameShadow(QFrame::Raised);
+//        btnsLayout->addWidget(stateFrame, Qt::AlignCenter);
 
-        stateButton = new QPushButton();
-        stateButton->setText(QString::fromStdString(conf->sysStates.at(s)->name));
-        QPalette palplot = stateButton->palette();
-        palplot.setColor(QPalette::Button, QColor(70,70,70));
-        stateButton->setPalette(palplot);
-        stateButton->setAutoFillBackground(true);
-        stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
-        stateButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
-        stateButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
-        stateButtons.push_back(stateButton);
-        btnsLayout->addWidget(stateButton, Qt::AlignCenter);
-    }
+//        stateButton = new QPushButton();
+//        stateButton->setText(QString::fromStdString(conf->sysStates.at(s)->name));
+//        QPalette palplot = stateButton->palette();
+//        palplot.setColor(QPalette::Button, QColor(70,70,70));
+//        stateButton->setPalette(palplot);
+//        stateButton->setAutoFillBackground(true);
+//        stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
+//        stateButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
+//        stateButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
+//        stateButtons.push_back(stateButton);
+//        btnsLayout->addWidget(stateButton, Qt::AlignCenter);
+//    }
 
-    stateButtonLayout->addLayout(btnsLayout,0,1,Qt::AlignCenter);
+//    stateButtonLayout->addLayout(btnsLayout,0,1,Qt::AlignCenter);
 
     exitButton = new QToolButton();
     exitButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
@@ -399,6 +399,7 @@ void MainWindow::update(){
     stateButtonLayout->addWidget(exitButton,0,2,Qt::AlignRight);
     QObject::connect(exitButton, SIGNAL (clicked()), this , SLOT(shutdownSystem()));
 
+    stateButtonLayout->addLayout(btnsLayout,0,1,Qt::AlignCenter);
     mainLayout->addLayout(stateButtonLayout);
 
     QFrame * stateBorder = new QFrame(this);
@@ -407,6 +408,56 @@ void MainWindow::update(){
     stateBorder->setFrameShape(QFrame::HLine);
     stateBorder->setFrameShadow(QFrame::Raised);
     mainLayout->addWidget(stateBorder);
+
+    QGridLayout * statusButtonLayout = new QGridLayout;
+    QHBoxLayout * statusBtnsLayout = new QHBoxLayout;
+    statusBtnsLayout->setAlignment(Qt::AlignCenter);
+
+    QLabel * statusLabel = new QLabel;
+    label->setText("STATUSES: ");
+    label->setStyleSheet("font:"+labelFont+"pt;");
+    label->setFixedWidth(label->width());
+    statusButtonLayout->addWidget(statusLabel,0,0,Qt::AlignLeft);
+
+    for(uint s = 0; s < conf->sysStates.size(); s++){
+        if (s == 0){
+            QFrame * stateFrame = new QFrame(this);
+            stateFrame->setLineWidth(2);
+            stateFrame->setMidLineWidth(1);
+            stateFrame->setFrameShape(QFrame::VLine);
+            stateFrame->setFrameShadow(QFrame::Raised);
+            statusBtnsLayout->addWidget(stateFrame, Qt::AlignCenter);
+        }
+
+        QFrame * stateFrame = new QFrame(this);
+        stateFrame->setLineWidth(2);
+        stateFrame->setMidLineWidth(1);
+        stateFrame->setFrameShape(QFrame::VLine);
+        stateFrame->setFrameShadow(QFrame::Raised);
+        statusBtnsLayout->addWidget(stateFrame, Qt::AlignCenter);
+
+        stateButton = new QPushButton();
+        stateButton->setText(QString::fromStdString(conf->sysStates.at(s)->name));
+        QPalette palplot = stateButton->palette();
+        palplot.setColor(QPalette::Button, QColor(70,70,70));
+        stateButton->setPalette(palplot);
+        stateButton->setAutoFillBackground(true);
+        stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
+        stateButton->setFixedWidth(static_cast<int>(unitWidth));
+        stateButton->setFixedHeight(static_cast<int>(unitHeight));
+        stateButtons.push_back(stateButton);
+        statusBtnsLayout->addWidget(stateButton, Qt::AlignCenter);
+    }
+
+    statusButtonLayout->addLayout(statusBtnsLayout,0,1,Qt::AlignCenter);
+    mainLayout->addLayout(statusButtonLayout);
+
+    QFrame * statusBorder = new QFrame(this);
+    statusBorder->setLineWidth(2);
+    statusBorder->setMidLineWidth(1);
+    statusBorder->setFrameShape(QFrame::HLine);
+    statusBorder->setFrameShadow(QFrame::Raised);
+    mainLayout->addWidget(statusBorder);
 
     if (conf->controlSpecs.size() > 0){
         controlsLayout = new QHBoxLayout;
