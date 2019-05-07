@@ -366,7 +366,8 @@ void DataControl::checkStateRecordTriggers(recordwindow * rec){
         DB_Engine * currDB = recordDBMap[rec->id];
         vector<string> cols;
         ofstream dataFile;
-        string fileName = rec->savePath + rec->prefix + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+        string fileName = rec->savePath + rec->prefix + "_" + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+        cout << fileName << endl;
         dataFile.open(fileName);
         cols.push_back("time");
         dataFile << "time,";
@@ -426,7 +427,8 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
                 DB_Engine * currDB = recordDBMap[x.first];
                 vector<string> cols;
                 ofstream dataFile;
-                string fileName = rec->savePath + rec->prefix + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+                string fileName = rec->savePath + rec->prefix + "_" + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+                cout << fileName << endl;
                 dataFile.open(fileName);
                 cols.push_back("time");
                 dataFile << "time,";
@@ -682,7 +684,8 @@ void DataControl::save_all_data(){
             DB_Engine * currDB = recordDBMap[x.first];
             vector<string> cols;
             ofstream dataFile;
-            string fileName = rec->savePath + rec->prefix + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+            string fileName = rec->savePath + rec->prefix + "_" + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+            cout << fileName << endl;
             dataFile.open(fileName);
             cols.push_back("time");
             dataFile << "time,";
@@ -715,7 +718,8 @@ void DataControl::save_all_data(){
             DB_Engine * currDB = recordDBMap[x.first];
             vector<string> cols;
             ofstream dataFile;
-            string fileName = rec->savePath + rec->prefix + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+            string fileName = rec->savePath + rec->prefix + "_" + get_curr_date() + "_" + to_string(sessionNumber) + "_data.csv";
+            cout << fileName << endl;
             dataFile.open(fileName);
             cols.push_back("time");
             dataFile << "time,";
@@ -870,6 +874,7 @@ string DataControl::get_curr_date(){
     struct tm now = *localtime(&t);
     char buf[20];
     strftime(buf, sizeof(buf),"%D",&now);
+    remove(std::begin(buf), std::end(buf), '/');
     return buf;
 }
 
