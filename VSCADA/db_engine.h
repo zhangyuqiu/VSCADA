@@ -27,6 +27,7 @@ public:
     int max_rowid(string table);
     int runScript(string filename);
     int clear_table(string table);
+    int clear_tables_except(string table);
     string sql_file_to_string(string fileName);
     int delete_item(string table, string condition, string condition_val);
     static int sql_get_rownum(void* data, int count, char** rows, char**);

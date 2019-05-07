@@ -829,7 +829,8 @@ bool Config::read_config_file_data(){
     // write create universal tables
     dbScript << "create table if not exists system_info(" << endl;
     dbScript << "starttime char not null," << endl;
-    dbScript << "endtime char not null" << endl;
+    dbScript << "endtime char not null," << endl;
+    dbScript << "recordindex char not null" << endl;
     dbScript << ");" << endl;
 
     dbScript << "create table if not exists system_log(" << endl;
@@ -867,10 +868,11 @@ bool Config::read_config_file_data(){
     }
     dbScript.close();
 
-    system("rm ./savedsessions/system.db");
+//    system("rm ./savedsessions/system.db");
 
     //run script
     dbase = new DB_Engine("./savedsessions/system.db");
+    dbase->clear_tables_except("system_info");
     dbase->runScript("script.sql");
 
     //****************************************//
@@ -907,9 +909,13 @@ bool Config::read_config_file_data(){
     //********************************//
     //*****initialize system info*****//
     //********************************//
-    systemColString = "starttime,endtime";
-    systemRowString = "'" + get_curr_time() + "','0'";
-    dbase->insert_row("system_info",systemColString,systemRowString);
+    systemColString = "starttime,endtime,recordindex";
+    systemRowString = "'" + get_curr_time() + "','0','0'";
+    if (dbase->number_of_rows("system_info") == 0) dbase->insert_row("system_info",systemColString,systemRowString);
+    else {
+        dbase->update_value("system_info","starttime","rowid","1",get_curr_time());
+        dbase->update_value("system_info","endtime","rowid","1",to_string(0));
+    }
 
     //*****************************//
     //*****set group databases*****//

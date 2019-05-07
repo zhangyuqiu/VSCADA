@@ -46,6 +46,14 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     recordSensorMap = recSenWins;
     recordStateMap = recStateWins;
     sensorMap = sensMap;
+
+    vector<string> cols;
+    cols.push_back("recordindex");
+    vector<string> result = dbase->get_row_values("system_info",cols,1);
+    if (result.size() > 0) {
+        sessionNumber = stoi(result.at(0));
+    }
+    cout << "Record Index: " << sessionNumber << endl;
     startSystemTimer();
     
     //signal-slot connections
@@ -353,7 +361,7 @@ void DataControl::checkStateRecordTriggers(recordwindow * rec){
         recordDBMap.insert(make_pair(rec->id,customDB));
         recordColStrings.insert(make_pair(rec->id,colString));
     } else if (rec->active){
-        cout << "Deactivating collection" << endl;
+//        cout << "Deactivating collection" << endl;
         rec->active = false;
         DB_Engine * currDB = recordDBMap[rec->id];
         vector<string> cols;
@@ -389,9 +397,6 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
     for (const auto &x: recordSensorMap){
         if ( currSensor->sensorIndex == x.second->triggerSensor ) {
             recordwindow * rec = x.second;
-            cout << "calval: " << currSensor->calVal << endl;
-            cout << "rec startval: " << rec->startVal << endl;
-            cout << "rec active: " << rec->active << endl;
             if ((currSensor->calVal >= rec->startVal) && !rec->active){
                 rec->active = true;
                 ofstream dbScript;
@@ -417,7 +422,7 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
                 recordDBMap.insert(make_pair(x.first,customDB));
                 recordColStrings.insert(make_pair(x.second->id,colString));
             } else if ((currSensor->calVal <= rec->startVal) && rec->active){
-                cout << "Deactivating collection" << endl;
+//                cout << "Deactivating collection" << endl;
                 DB_Engine * currDB = recordDBMap[x.first];
                 vector<string> cols;
                 ofstream dataFile;
@@ -453,6 +458,7 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
 
 void DataControl::incrementSessionNumber(){
     sessionNumber++;
+    dbase->update_value("system_info","recordindex","rowid", "1", to_string(sessionNumber));
 }
 
 /**

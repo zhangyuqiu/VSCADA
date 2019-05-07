@@ -1,6 +1,7 @@
 create table if not exists system_info(
 starttime char not null,
-endtime char not null
+endtime char not null,
+recordindex char not null
 );
 create table if not exists system_log(
 time char not null,

@@ -286,6 +286,7 @@ void MainWindow::update(){
     mainLayout->addWidget(groupArea);
 
     QString  butLabelFont = QString::number(stringSize);
+    QString  butLabelFontLarge = QString::number(stringSize*1.5);
     QString  labelFont = QString::number(stringSize*2.5);
     QGridLayout * stateButtonLayout = new QGridLayout;
 
@@ -301,28 +302,28 @@ void MainWindow::update(){
     int btnWidth = static_cast<int>(unitWidth*1.2);
     int btnHeight = static_cast<int>(unitHeight*1.8);
     canResetButton =new QToolButton();
-    canResetButton->setText("CAN");
-    QPixmap canpixmap("reset_btn.png");
-    QIcon canButtonIcon(canpixmap);
-    canResetButton->setIcon(canButtonIcon);
+    canResetButton->setText("CAN\nReset");
+//    QPixmap canpixmap("reset_btn.png");
+//    QIcon canButtonIcon(canpixmap);
+//    canResetButton->setIcon(canButtonIcon);
     canResetButton->setIconSize(QSize(btnWidth/1.6,btnHeight/1.6));
-    canResetButton->setAutoRaise(true);
-    canResetButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    canResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
+//    canResetButton->setAutoRaise(true);
+//    canResetButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    canResetButton->setStyleSheet("font:"+butLabelFontLarge+"pt;");
     canResetButton->setFixedWidth(btnWidth);
     canResetButton->setFixedHeight(btnHeight);
     btnsLayout->addWidget(canResetButton,Qt::AlignCenter);
     QObject::connect(canResetButton, SIGNAL (clicked()), conf->canInterface , SLOT(rebootCAN()));
 
     usbResetButton =new QToolButton();
-    usbResetButton->setText("USB7204");
-    QPixmap usbpixmap("reset_btn.png");
-    QIcon usbButtonIcon(usbpixmap);
-    usbResetButton->setIcon(usbButtonIcon);
+    usbResetButton->setText("USB7204\nReset");
+//    QPixmap usbpixmap("reset_btn.png");
+//    QIcon usbButtonIcon(usbpixmap);
+//    usbResetButton->setIcon(usbButtonIcon);
     usbResetButton->setIconSize(QSize(btnWidth/1.6,btnHeight/1.6));
-    usbResetButton->setAutoRaise(true);
-    usbResetButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    usbResetButton->setStyleSheet("font:"+butLabelFont+"pt;");
+//    usbResetButton->setAutoRaise(true);
+//    usbResetButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    usbResetButton->setStyleSheet("font:"+butLabelFontLarge+"pt;");
     usbResetButton->setFixedWidth(static_cast<int>(unitWidth*1.2));
     usbResetButton->setFixedHeight(static_cast<int>(unitHeight*1.8));
     btnsLayout->addWidget(usbResetButton,Qt::AlignCenter);
@@ -344,7 +345,7 @@ void MainWindow::update(){
         QPalette palplot = stateButton->palette();
         stateButton->setPalette(palplot);
         stateButton->setAutoFillBackground(true);
-        stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
+//        stateButton->setStyleSheet("font:"+butLabelFont+"pt;");
         stateButton->setFixedWidth(static_cast<int>(unitWidth*2));
         stateButton->setFixedHeight(static_cast<int>(unitHeight*1.5));
         FSMButtons.push_back(stateButton);
@@ -414,13 +415,13 @@ void MainWindow::update(){
     statusBtnsLayout->setAlignment(Qt::AlignCenter);
 
     QLabel * statusLabel = new QLabel;
-    label->setText("STATUSES: ");
-    label->setStyleSheet("font:"+labelFont+"pt;");
-    label->setFixedWidth(label->width());
+    statusLabel->setText("STATUSES: ");
+    statusLabel->setStyleSheet("font:"+labelFont+"pt;");
+    statusLabel->setFixedWidth(label->width());
     statusButtonLayout->addWidget(statusLabel,0,0,Qt::AlignLeft);
 
     for(uint s = 0; s < conf->sysStates.size(); s++){
-        if (s == 0){
+        if (s != 0){
             QFrame * stateFrame = new QFrame(this);
             stateFrame->setLineWidth(2);
             stateFrame->setMidLineWidth(1);
@@ -429,12 +430,12 @@ void MainWindow::update(){
             statusBtnsLayout->addWidget(stateFrame, Qt::AlignCenter);
         }
 
-        QFrame * stateFrame = new QFrame(this);
-        stateFrame->setLineWidth(2);
-        stateFrame->setMidLineWidth(1);
-        stateFrame->setFrameShape(QFrame::VLine);
-        stateFrame->setFrameShadow(QFrame::Raised);
-        statusBtnsLayout->addWidget(stateFrame, Qt::AlignCenter);
+//        QFrame * stateFrame = new QFrame(this);
+//        stateFrame->setLineWidth(2);
+//        stateFrame->setMidLineWidth(1);
+//        stateFrame->setFrameShape(QFrame::VLine);
+//        stateFrame->setFrameShadow(QFrame::Raised);
+//        statusBtnsLayout->addWidget(stateFrame, Qt::AlignCenter);
 
         stateButton = new QPushButton();
         stateButton->setText(QString::fromStdString(conf->sysStates.at(s)->name));
@@ -852,7 +853,6 @@ void MainWindow::shutdownSystem(){
         wdpidfile.open("watchdogpid.txt", ios::out | ios::in );
         wdpidfile >> wdogpid;
         wdpidfile.close();
-        cout << "Expect message: " << endl;
         cout << "Killing watchdog with pid :" << wdogpid << endl;
         kill((pid_t)wdogpid,SIGKILL);
         conf->dataCtrl->save_all_data();

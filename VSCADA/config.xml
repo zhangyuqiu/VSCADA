@@ -1,5 +1,5 @@
 <system>
-	<mode>RUN</mode>
+	<mode>TEST</mode>
 	<gpiorate>1000</gpiorate>
 	<usb7204rate>1000</usb7204rate>
 	<canrate>125000</canrate>

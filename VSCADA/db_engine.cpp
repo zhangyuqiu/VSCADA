@@ -366,6 +366,21 @@ int DB_Engine::clear_table(string table){
     return 1;
 }
 
+int DB_Engine::clear_tables_except(string table){
+    sqlite3_open(db_file.c_str(), &db);
+    string sql = "pragma writable_schema = 1;";
+    sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+    sql = "delete from sqlite_master where type = 'table' and name not in ('" + table + "');";
+    cout << sql << endl;
+    sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+    sql = "pragma writable_schema = 0;";
+    sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+    sql = "vacuum;";
+    sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+    sqlite3_close(db);
+    return 1;
+}
+
 void DB_Engine::setFile(string name){
     db_file = name;
 }
