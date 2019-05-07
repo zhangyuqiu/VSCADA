@@ -37,6 +37,7 @@ public:
 
     void setMode(int md);
     string get_curr_time();
+    string get_curr_date();
     void startSystemTimer();
     string getProgramTime();
     void saveSession(string name);
