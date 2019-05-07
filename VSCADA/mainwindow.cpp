@@ -290,11 +290,11 @@ void MainWindow::update(){
     QString  labelFont = QString::number(stringSize*2.5);
     QGridLayout * stateButtonLayout = new QGridLayout;
 
-    QLabel * label = new QLabel;
-    label->setText("CONTROLS: ");
-    label->setStyleSheet("font:"+labelFont+"pt;");
-    label->setFixedWidth(label->width());
-    stateButtonLayout->addWidget(label,0,0,Qt::AlignLeft);
+//    QLabel * label = new QLabel;
+//    label->setText("CONTROLS: ");
+//    label->setStyleSheet("font:"+labelFont+"pt;");
+//    label->setFixedWidth(label->width());
+//    stateButtonLayout->addWidget(label,0,0,Qt::AlignLeft);
 
     QHBoxLayout * btnsLayout = new QHBoxLayout;
     btnsLayout->setAlignment(Qt::AlignCenter);
@@ -414,11 +414,11 @@ void MainWindow::update(){
     QHBoxLayout * statusBtnsLayout = new QHBoxLayout;
     statusBtnsLayout->setAlignment(Qt::AlignCenter);
 
-    QLabel * statusLabel = new QLabel;
-    statusLabel->setText("STATUSES: ");
-    statusLabel->setStyleSheet("font:"+labelFont+"pt;");
-    statusLabel->setFixedWidth(label->width());
-    statusButtonLayout->addWidget(statusLabel,0,0,Qt::AlignLeft);
+//    QLabel * statusLabel = new QLabel;
+//    statusLabel->setText("STATUSES: ");
+//    statusLabel->setStyleSheet("font:"+labelFont+"pt;");
+//    statusLabel->setFixedWidth(statusLabel->width());
+//    statusButtonLayout->addWidget(statusLabel,0,0,Qt::AlignLeft);
 
     for(uint s = 0; s < conf->sysStates.size(); s++){
         if (s != 0){
