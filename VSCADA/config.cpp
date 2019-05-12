@@ -621,6 +621,7 @@ bool Config::read_config_file_data(){
         storedSensor->endianness = 1;
         storedSensor->senOperator = -1;
         storedSensor->lutIndex = -1;
+        storedSensor->precision = 2;
         QDomNodeList attributeList = sensorNodes.at(k).childNodes();
         for (int m = 0; m < attributeList.size(); m++){
             if(attributeList.at(m).nodeName().toStdString().compare("name") == 0){
@@ -633,6 +634,10 @@ bool Config::read_config_file_data(){
                 if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                     storedSensor->sensorIndex = stoi(attributeList.at(m).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: sensor index not an integer");
+            } else if (attributeList.at(m).nodeName().toStdString().compare("precision") == 0){
+                if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
+                    storedSensor->precision = static_cast<uint8_t>(stoi(attributeList.at(m).firstChild().nodeValue().toStdString()));
+                else configErrors.push_back("CONFIG ERROR: sensor precision not an integer");
             } else if (attributeList.at(m).nodeName().toStdString().compare("primaddress") == 0){
                 if (isInteger(attributeList.at(m).firstChild().nodeValue().toStdString()))
                     storedSensor->primAddress = stoul(attributeList.at(m).firstChild().nodeValue().toStdString());

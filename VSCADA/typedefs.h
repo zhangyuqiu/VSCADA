@@ -61,6 +61,7 @@ typedef struct{
     std::vector<void *> opSensors;
     std::vector<void *> dependencies;
     uint32_t primAddress;
+    uint8_t precision;
     double calMultiplier;
     int state;
     std::vector<poly> calPolynomial;

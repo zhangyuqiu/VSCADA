@@ -536,6 +536,7 @@
 			<checkrate>4000</checkrate>
 			<main>1</main>
 			<unit>A</unit>
+			<precision>0</precision>
 			<minimum>0</minimum>
 			<maximum>100</maximum>
 			<minresponse>0</minresponse>

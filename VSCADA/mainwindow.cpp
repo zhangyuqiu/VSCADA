@@ -876,7 +876,7 @@ void MainWindow::updateEdits(meta * sensor){
     double num = sensor->calVal;
     ostringstream streamObj;
     streamObj << fixed;
-    streamObj << setprecision(2);
+    streamObj << setprecision(sensor->precision);
     streamObj << num;
     string val = streamObj.str();
     editTimers[sensor->sensorIndex]->start(sensor->checkRate);
