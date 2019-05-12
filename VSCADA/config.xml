@@ -290,6 +290,7 @@
 	<recordwindow>
 		<id>1</id>
 		<triggersensor>13</triggersensor>
+		<period>500</period>
 		<startvalue>1</startvalue>
 		<stopvalue>0</stopvalue>
 		<saveprefix>test</saveprefix>
@@ -304,6 +305,7 @@
 	<recordwindow>
 		<id>2</id>
 		<triggersensor>18</triggersensor>
+		<period>500</period>
 		<startvalue>10</startvalue>
 		<stopvalue>10</stopvalue>
 		<saveprefix>strain</saveprefix>
@@ -323,6 +325,7 @@
 			<fsm>Drive_States</fsm>
 			<state>Precharge</state>
 		</triggerstate>
+		<period>500</period>
 		<saveprefix>prechargeState</saveprefix>
 		<savepath>./savedsessions/</savepath>
 		<sensors>

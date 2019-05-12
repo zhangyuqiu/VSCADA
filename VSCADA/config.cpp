@@ -546,6 +546,10 @@ bool Config::read_config_file_data(){
                 if (isInteger(recWinList.at(m).firstChild().nodeValue().toStdString()))
                     recWin->triggerSensor = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
                 else configErrors.push_back("CONFIG ERROR: trigger sensor not an integer");
+            } else if(recWinList.at(m).nodeName().toStdString().compare("period") == 0){
+                if (isInteger(recWinList.at(m).firstChild().nodeValue().toStdString()))
+                    recWin->period = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
+                else configErrors.push_back("CONFIG ERROR: record period not an integer");
             } else if(recWinList.at(m).nodeName().toStdString().compare("startvalue") == 0){
                 recWin->startVal = stoi(recWinList.at(m).firstChild().nodeValue().toStdString());
             } else if(recWinList.at(m).nodeName().toStdString().compare("stopvalue") == 0){

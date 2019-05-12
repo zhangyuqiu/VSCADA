@@ -181,6 +181,7 @@ typedef struct{
 
 typedef struct{
     int id;
+    int period;
     std::vector<int> sensorIds;
     int triggerSensor;
     std::string triggerFSM;
@@ -190,6 +191,7 @@ typedef struct{
     std::string savePath;
     std::string prefix;
     bool active;
+    void * timer;
 } recordwindow;
 
 #endif // TYPEDEFS_H

@@ -92,6 +92,18 @@ DataControl::DataControl(gpio_interface * gpio, canbus_interface * can, usb7402_
     connect(watchdogTimer, SIGNAL(timeout()), this, SLOT(feedWatchdog()));
     watchdogTimer->start((WATCHDOG_PERIOD/2)*1000);
 
+    for (auto const &x: recordSensorMap){
+        recordTimer = new QTimer;
+        x.second->timer = recordTimer;
+        connect(recordTimer, SIGNAL(timeout()), this, SLOT(logData()));
+    }
+
+    for (auto const &x: recordStateMap){
+        recordTimer = new QTimer;
+        x.second->timer = recordTimer;
+        connect(recordTimer, SIGNAL(timeout()), this, SLOT(logData()));
+    }
+
     connect(this, SIGNAL(pushGPIOData(int,int)), gpioInterface,SLOT(GPIOWrite(int,int)));
     connect(this, SIGNAL(sendI2CData(int,int)), gpioInterface,SLOT(i2cWrite(int,int)));
     connect(this, SIGNAL(deactivateState(system_state *)), this,SLOT(deactivateLog(system_state *)));
@@ -330,7 +342,7 @@ void DataControl::receiveData(meta * currSensor){
     checkSensorRecordTriggers(currSensor);
     checkThresholds(currSensor);
     emit updateDisplay(currSensor);
-    logData(currSensor);
+//    logData(currSensor);
 }
 
 void DataControl::checkStateRecordTriggers(recordwindow * rec){
@@ -422,8 +434,12 @@ void DataControl::checkSensorRecordTriggers(meta * currSensor){
                 system(deleteFileCmd.c_str());
                 recordDBMap.insert(make_pair(x.first,customDB));
                 recordColStrings.insert(make_pair(x.second->id,colString));
+                QTimer * tmr = static_cast<QTimer *>(rec->timer);
+                tmr->start(rec->period);
             } else if ((currSensor->calVal <= rec->startVal) && rec->active){
 //                cout << "Deactivating collection" << endl;
+                QTimer * tmr = static_cast<QTimer *>(rec->timer);
+                tmr->stop();
                 DB_Engine * currDB = recordDBMap[x.first];
                 vector<string> cols;
                 ofstream dataFile;
@@ -467,18 +483,16 @@ void DataControl::incrementSessionNumber(){
  * @brief DataControl::logData - records specified sensor data in the respective database
  * @param currSensor
  */
-void DataControl::logData(meta * currSensor){
+void DataControl::logData(){
+    QObject* obj = sender();
     for (auto const& x : recordSensorMap){
+        if (obj != x.second->timer) continue;
         string colString;
         string rowString;
         if (x.second->active){
-            for (auto const &y: x.second->sensorIds){
-                if (currSensor->sensorIndex == y){
-                    colString = recordColStrings[x.second->id];
-                    for (auto const &z: x.second->sensorIds){
-                        rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
-                    }
-                }
+            colString = recordColStrings[x.second->id];
+            for (auto const &z: x.second->sensorIds){
+                rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
             }
             if (rowString.compare("") != 0){
                 rowString += "'" + getProgramTime() + "'";
@@ -487,16 +501,13 @@ void DataControl::logData(meta * currSensor){
         }
     }
     for (auto const& x : recordStateMap){
+        if (obj != x.second->timer) continue;
         string colString;
         string rowString;
         if (x.second->active){
-            for (auto const &y: x.second->sensorIds){
-                if (currSensor->sensorIndex == y){
-                    colString = recordColStrings[x.second->id];
-                    for (auto const &z: x.second->sensorIds){
-                        rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
-                    }
-                }
+            colString = recordColStrings[x.second->id];
+            for (auto const &z: x.second->sensorIds){
+                rowString += "'" + to_string(sensorMap[z]->calVal) + "',";
             }
             if (rowString.compare("") != 0){
                 rowString += "'" + getProgramTime() + "'";

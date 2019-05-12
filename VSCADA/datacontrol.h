@@ -49,7 +49,7 @@ public:
     void receiveData(meta * currSensor);
     void calibrateData(meta * currSensor);
     void checkThresholds(meta * sensor);
-    void logData(meta * currSensor);
+//    void logData(meta * currSensor);
     void checkSensorRecordTriggers(meta * currSensor);
     void checkStateRecordTriggers(recordwindow *recWindow);
     void incrementSessionNumber();
@@ -86,6 +86,7 @@ public:
     map<int, QTimer *> i2cSyncTimers;
     map<int, QTimer *> gpioSyncTimers;
 
+    QTimer * recordTimer;
 
     // overall system status info
     int systemMode;
@@ -105,6 +106,7 @@ public slots:
     void i2cSyncSlot();
     void gpioSyncSlot();
     void feedWatchdog();
+    void logData();
 signals:
     void sendI2CData(int address, int data);
     void pushI2cData(uint32_t value);
