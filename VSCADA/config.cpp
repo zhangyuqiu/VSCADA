@@ -536,6 +536,7 @@ bool Config::read_config_file_data(){
         recWin->triggerSensor = -1;
         recWin->triggerFSM = "";
         recWin->triggerState = "";
+        recWin->period = 1000;
         QDomNodeList recWinList = recordNodes.at(i).childNodes();
         for (int m = 0; m < recWinList.size(); m++){
             if(recWinList.at(m).nodeName().toStdString().compare("id") == 0){
