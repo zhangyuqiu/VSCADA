@@ -115,7 +115,7 @@ int DB_Engine::number_of_rows(string table){
     int count = 0;
 
     fflush(stdout);
-    string sql = "SELECT Count FROM "+table;
+    string sql = "SELECT Count(*) FROM "+table;
 #ifdef DEBUG
     cout << sql << endl;
 #endif
@@ -132,9 +132,9 @@ int DB_Engine::max_rowid(string table){
     int count = 0;
 
     string sql = "SELECT max(rowid) FROM "+table;
-#ifdef DEBUG
+//#ifdef DEBUG
     cout << sql << endl;
-#endif
+//#endif
     sqlite3_exec(db, sql.c_str(), sql_get_rownum, &count, nullptr);
     //sqlite3_free(zErrMsg);
     //sqlite3_db_release_memory(db);

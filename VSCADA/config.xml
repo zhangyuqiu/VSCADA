@@ -1,5 +1,5 @@
 <system>
-	<mode>TEST</mode>
+	<mode>RUN</mode>
 	<gpiorate>1000</gpiorate>
 	<usb7204rate>1000</usb7204rate>
 	<canrate>125000</canrate>
@@ -86,9 +86,7 @@
 		<control>
 			<name>Brake</name>
 			<type>button</type>
-			<primaddress>301</primaddress>
-			<auxaddress>60</auxaddress>
-			<offset>1</offset>
+			<gpiopin>4<gpiopin>
 			<pressvalue>1</pressvalue>
 			<releasevalue>0</releasevalue>
 		</control>
@@ -103,7 +101,7 @@
 
 	<systemstatus>
 		<name>PC_Ready</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>0</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -111,7 +109,7 @@
 
 	<systemstatus>
 		<name>MC_Active</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>1</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -119,7 +117,7 @@
 
 	<systemstatus>
 		<name>Brake</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>2</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -127,7 +125,7 @@
 
 	<systemstatus>
 		<name>Drv_Btn</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>3</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -135,7 +133,7 @@
 
 	<systemstatus>
 		<name>SLOOP</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>4</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -143,7 +141,7 @@
 
 	<systemstatus>
 		<name>Overcurr</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>5</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -151,7 +149,7 @@
 
 	<systemstatus>
 		<name>Thr_impl</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>6</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -159,7 +157,7 @@
 
 	<systemstatus>
 		<name>Throttle</name>
-		<primaddress>768</primaddress>
+		<primaddress>1365</primaddress>
 		<auxaddress>7</auxaddress>
 		<offset>1</offset>
 		<value>1</value>
@@ -203,14 +201,14 @@
 		<response>
 			<id>5</id>
 			<description>SCADA Relay Opened</description>
-			<gpiopin>21</gpiopin>
+			<gpiopin>4</gpiopin>
 			<gpioval>1</gpioval>
 		</response>
 	</responses>
 	
 	<statemachine>
 		<name>Drive_States</name>
-            	<primaddress>768</primaddress>
+            	<primaddress>1365</primaddress>
             	<auxaddress>48</auxaddress>
             	<offset>8</offset>
 	    	<state>
@@ -245,52 +243,11 @@
 			<name>Drv Rtn</name>
 			<value>8</value>
 		</state>
-            	<condition>
-                	<name>Throttle Pressed</name>
-                	<auxaddress>0</auxaddress>
-			<offset>1</offset>
-            	</condition>
-            	<condition>
-                	<name>Throttle Implausibility</name>
-                	<auxaddress>0</auxaddress>
-			<offset>2</offset>
-            	</condition>
-            	<condition>
-                	<name>Over Current Limit</name>
-                	<auxaddress>0</auxaddress>
-			<offset>3</offset>
-            	</condition>
-            	<condition>
-                	<name>Safty loop Closed</name>
-                	<auxaddress>0</auxaddress>
-			<offset>4</offset>
-            	</condition>
-            	<condition>
-                	<name>Drive Button Pressed</name>
-                	<auxaddress>0</auxaddress>
-			<offset>5</offset>
-            	</condition>
-            	<condition>
-                	<name>Break Pressed</name>
-                	<auxaddress>0</auxaddress>
-			<offset>6</offset>
-            	</condition>
-            	<condition>
-                	<name>Motor Controller Active</name>
-               		<auxaddress>0</auxaddress>
-			<offset>7</offset>
-            	</condition>
-            	<condition>
-                	<name>Throttle Voltage over 0.5V</name>
-                	<auxaddress>0</auxaddress>
-			<offset>8</offset>
-            	</condition>
 	</statemachine>
 
-	<recordwindow>
+	<!--recordwindow>
 		<id>1</id>
 		<triggersensor>13</triggersensor>
-		<period>500</period>
 		<startvalue>1</startvalue>
 		<stopvalue>0</stopvalue>
 		<saveprefix>test</saveprefix>
@@ -300,7 +257,7 @@
 			<sensorid>14</sensorid>
 			<sensorid>15</sensorid>
 		</sensors>
-	</recordwindow>
+	</recordwindow-->
 
 	<recordwindow>
 		<id>2</id>
@@ -325,7 +282,7 @@
 			<fsm>Drive_States</fsm>
 			<state>Precharge</state>
 		</triggerstate>
-		<period>500</period>
+		<period>200</period>
 		<saveprefix>prechargeState</saveprefix>
 		<savepath>./savedsessions/</savepath>
 		<sensors>
@@ -470,7 +427,7 @@
             	<sensor>
 			<id>8</id>
 			<name>Cooling Temp1</name>
-			<primaddress>768</primaddress>
+			<primaddress>1365</primaddress>
 			<auxaddress>24</auxaddress>
 			<offset>8</offset>
 			<checkrate>4000</checkrate>
@@ -492,7 +449,7 @@
 	    	<sensor>
 		        <id>9</id>
 		        <name>Cooling Temp2</name>
-		        <primaddress>768</primaddress>
+		        <primaddress>1365</primaddress>
 		        <auxaddress>32</auxaddress>
 		        <offset>8</offset>
 		        <checkrate>4000</checkrate>
@@ -514,7 +471,7 @@
 		<sensor>
 			<id>10</id>
 			<name>Flow Rate</name>
-			<primaddress>768</primaddress>
+			<primaddress>1365</primaddress>
 			<auxaddress>40</auxaddress>
 			<offset>8</offset>
 			<checkrate>4000</checkrate>
@@ -526,26 +483,25 @@
 			<maxresponse>0</maxresponse>
 			<calmultiplier>1</calmultiplier>
 			<calpoly>
-				<coef>0.0605</coef>
-				<coef>0.03314</coef>
+				<coef>0.0535</coef>
+				<coef>0.1212</coef>
 			</calpoly>
 		</sensor>
 		<sensor>
 			<id>11</id>
 			<name>HV Current</name>
-			<primaddress>768</primaddress>
+			<primaddress>1365</primaddress>
 			<auxaddress>56</auxaddress>
 			<offset>8</offset>
 			<checkrate>4000</checkrate>
 			<main>1</main>
 			<unit>A</unit>
-			<precision>0</precision>
 			<minimum>0</minimum>
 			<maximum>100</maximum>
 			<minresponse>0</minresponse>
 			<maxresponse>0</maxresponse>
-			<calmultiplier>1.3755</calmultiplier>
-			<calconstant>-1.3642</calconstant>
+			<calmultiplier>2.293</calmultiplier>
+			<calconstant>-0.7239</calconstant>
 		</sensor>
 		<sensor>
 			<id>12</id>
@@ -568,7 +524,7 @@
 		<sensor>
 			<id>13</id>
 			<name>F1 Signal</name>
-			<gpiopin>19</gpiopin>
+			<gpiopin>14</gpiopin>
 			<checkrate>4500</checkrate>
 			<main>1</main>
 			<minimum>-1</minimum>
@@ -580,7 +536,7 @@
 		<sensor>
 			<id>14</id>
 			<name>F2 Signal</name>
-			<gpiopin>26</gpiopin>
+			<gpiopin>15</gpiopin>
 			<checkrate>5500</checkrate>
 			<main>1</main>
 			<minimum>-1</minimum>
@@ -622,9 +578,9 @@
 			<unit>V</unit>
 			<minimum>12</minimum>
 			<maximum>25</maximum>
-			<minresponse>5</minresponse>
-			<normresponse>4</normresponse>
-			<maxresponse>5</maxresponse>
+			<minresponse>0</minresponse>
+			<normresponse>0</normresponse>
+			<maxresponse>0</maxresponse>
 			<calmultiplier>0.00125</calmultiplier>
 		</sensor>
 		<sensor>
@@ -640,7 +596,7 @@
 			<main>1</main>
 			<unit>W</unit>
 			<minimum>0</minimum>
-			<maximum>20</maximum>
+			<maximum>50</maximum>
 			<calmultiplier>0.025</calmultiplier>
 		</sensor>
 		<sensor>
@@ -651,6 +607,8 @@
 			<minimum>0</minimum>
 			<maximum>40</maximum>
 			<unit>ftLbs</unit>
+			<!--normresponse>4</normresponse>
+			<maxresponse>5</maxresponse-->
 			<calmultiplier>75.018</calmultiplier>
 			<calconstant>107.33</calconstant>
 			<usbchannel>1</usbchannel>
@@ -658,7 +616,7 @@
 		<sensor>
 			<id>19</id>
 			<name>MC_Voltage</name>
-			<primaddress>768</primaddress>
+			<primaddress>1365</primaddress>
 			<auxaddress>8</auxaddress>
 			<offset>8</offset>
 			<checkrate>4000</checkrate>
@@ -674,7 +632,7 @@
 		<sensor>
 			<id>20</id>
 			<name>TS_Voltage</name>
-			<primaddress>768</primaddress>
+			<primaddress>1365</primaddress>
 			<auxaddress>16</auxaddress>
 			<offset>8</offset>
 			<checkrate>4000</checkrate>
